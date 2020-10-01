@@ -7,7 +7,7 @@ android {
     buildToolsVersion "29.0.3"
     defaultConfig {
         applicationId "com.example.sample"
-        minSdkVersion 15
+        minSdkVersion 16
         targetSdkVersion 30
         versionCode 1
         versionName "1.0"
@@ -44,6 +44,9 @@ dependencies {
 
     // Mapbox
     implementation 'com.mapbox.mapboxsdk:mapbox-android-sdk:9.2.1'
+
+    // Tangram
+    implementation 'com.mapzen.tangram:tangram:0.13.0'
 }
 
 androidExtensions {

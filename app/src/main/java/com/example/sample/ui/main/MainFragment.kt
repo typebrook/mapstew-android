@@ -9,7 +9,9 @@ import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.add
 import androidx.fragment.app.commit
 import com.example.sample.MapboxFragment
+import com.example.sample.TangramFragment
 import com.example.sample.R
+import com.example.sample.TangramFragment
 
 class MainFragment : Fragment() {
 
@@ -21,6 +23,7 @@ class MainFragment : Fragment() {
 
         requireActivity().supportFragmentManager.commit {
             add<MapboxFragment>(R.id.map_container, null)
+//            add<TangramFragment>(R.id.map_container, null)
         }
 
         return inflater.inflate(R.layout.main_fragment, container, false)

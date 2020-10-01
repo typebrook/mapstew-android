@@ -1,0 +1,40 @@
+sources:
+    mapstew:
+        type: MVT
+        url: https://typebrook.github.io/mapstew/tiles/{z}/{x}/{y}.pbf
+
+layers:
+    water:
+        data: { source: mapstew }
+        draw:
+            polygons:
+                order: 2
+                color: '#353535'
+
+    landuse:
+        data: { source: mapstew }
+        draw:
+            polygons:
+                order: 3
+                color: '#666666'
+    transportation:
+        data: { source: mapstew}
+        filter: { not: { class: [rail, ferry] } }
+        draw:
+            lines:
+                order: 4
+                color: '#ffffff'
+                width: [[7,0.0px], [10, .5px], [15, .75px], [17, 5m]]
+        highway:
+            filter: { class: [primary, secondary, tertiary] }
+            draw:
+                lines:
+                    order: 5
+                    width: [[8,0px], [8,.25px], [11, 1.5px], [14, 2px], [16, 4px], [17, 10m]]
+    building:
+        data: { source: mapstew }
+        draw:
+            polygons:
+                order: 7
+                color: '#999999'
+                extrude: true
