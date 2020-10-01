@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">sample</string>
+    <string name="uri_style_rudymap">https://raw.githubusercontent.com/typebrook/mapstew/master/styles/topographique.json</string>
 </resources>
