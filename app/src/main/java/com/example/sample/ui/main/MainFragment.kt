@@ -11,11 +11,11 @@ import androidx.fragment.app.commit
 import com.example.sample.MapboxFragment
 import com.example.sample.TangramFragment
 import com.example.sample.R
-import com.example.sample.TangramFragment
+import kotlinx.android.synthetic.main.main_fragment.*
 
 class MainFragment : Fragment() {
 
-    private val viewModel by activityViewModels<MainViewModel>()
+    private val mapModel by activityViewModels<MapViewModel>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -24,6 +24,10 @@ class MainFragment : Fragment() {
         requireActivity().supportFragmentManager.commit {
             add<MapboxFragment>(R.id.map_container, null)
 //            add<TangramFragment>(R.id.map_container, null)
+        }
+
+        mapModel.coordinate.observe(viewLifecycleOwner) {
+            coordinates.text = "%.6f %.6f".format(it.first, it.second)
         }
 
         return inflater.inflate(R.layout.main_fragment, container, false)
