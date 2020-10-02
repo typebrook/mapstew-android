@@ -47,6 +47,9 @@ dependencies {
 
     // Tangram
     implementation 'com.mapzen.tangram:tangram:0.13.0'
+
+    // OSGeo
+    implementation group: 'org.osgeo', name: 'proj4j', version: '0.1.0'
 }
 
 androidExtensions {

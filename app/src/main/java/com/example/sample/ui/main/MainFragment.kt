@@ -11,6 +11,7 @@ import androidx.fragment.app.commit
 import com.example.sample.MapboxFragment
 import com.example.sample.TangramFragment
 import com.example.sample.R
+import com.example.sample.geometry.xy2DMSString
 import kotlinx.android.synthetic.main.main_fragment.*
 
 class MainFragment : Fragment() {
@@ -27,7 +28,7 @@ class MainFragment : Fragment() {
         }
 
         mapModel.coordinate.observe(viewLifecycleOwner) {
-            coordinates.text = "%.6f %.6f".format(it.first, it.second)
+            coordinates.text = xy2DMSString(it).run { "$first $second"}
         }
 
         return inflater.inflate(R.layout.main_fragment, container, false)
