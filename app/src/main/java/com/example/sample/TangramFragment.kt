@@ -41,8 +41,7 @@ class TangramFragment : Fragment(), MapReadyCallback {
             override fun onViewComplete() {}
             override fun onRegionWillChange(animated: Boolean) {}
             fun updateModel() {
-                model.coordinate.postValue(cameraPosition.run { longitude.dec() to latitude })
-                model.zoom.postValue(cameraPosition.zoom)
+                model.setCoordinate(cameraPosition.run { longitude to latitude })
             }
 
             override fun onRegionIsChanging() {
@@ -64,6 +63,5 @@ class TangramFragment : Fragment(), MapReadyCallback {
                 }, null
             )
         }
-
     } ?: Unit
 }

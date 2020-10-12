@@ -25,7 +25,7 @@ class CrsDialogFragment : DialogFragment() {
             setView(viewGroup)
             setTitle("foo")
             setPositiveButton("GOTO") { _, _ ->
-                mapModel.target.setValue(
+                mapModel.setTarget(
                     viewGroup.run {
                         longitude.text.toString().toDouble() to latitude.text.toString().toDouble()
                     }

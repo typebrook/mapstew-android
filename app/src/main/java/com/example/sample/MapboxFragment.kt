@@ -43,8 +43,7 @@ class MapboxFragment : Fragment(), OnMapReadyCallback {
         }
 
         addOnCameraMoveListener {
-            model.coordinate.postValue(cameraPosition.target.run { longitude.dec() to latitude })
-            model.zoom.postValue(cameraPosition.zoom.toFloat())
+            model.setCoordinate(cameraPosition.target.run { longitude to latitude })
         }
 
         model.target.observe(viewLifecycleOwner) { xy ->
