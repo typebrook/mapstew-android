@@ -35,9 +35,27 @@ class MapboxFragment : Fragment(), OnMapReadyCallback {
             .zoom(12.0)
             .build()
 
+        model.coordinate.value?.let {
+            cameraPosition = CameraPosition.Builder()
+                .target(LatLng(it.second, it.first))
+                .zoom(12.0)
+                .build()
+        }
+
         addOnCameraMoveListener {
             model.coordinate.postValue(cameraPosition.target.run { longitude.dec() to latitude })
             model.zoom.postValue(cameraPosition.zoom.toFloat())
+        }
+
+        model.target.observe(viewLifecycleOwner) { xy ->
+            xy ?: return@observe
+
+            val target = LatLng(xy.second, xy.first)
+            animateCamera {
+                CameraPosition.Builder()
+                    .target(target)
+                    .build()
+            }
         }
     }
 }

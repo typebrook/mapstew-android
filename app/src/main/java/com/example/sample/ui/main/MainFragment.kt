@@ -27,10 +27,17 @@ class MainFragment : Fragment() {
 //            add<TangramFragment>(R.id.map_container, null)
         }
 
+        return inflater.inflate(R.layout.main_fragment, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+
         mapModel.coordinate.observe(viewLifecycleOwner) {
             coordinates.text = xy2DMSString(it).run { "$first $second"}
         }
 
-        return inflater.inflate(R.layout.main_fragment, container, false)
+        coordinates.setOnClickListener {
+            CrsDialogFragment().show(childFragmentManager, null)
+        }
     }
 }

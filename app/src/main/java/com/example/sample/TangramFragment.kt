@@ -26,13 +26,17 @@ class TangramFragment : Fragment(), MapReadyCallback {
 
     override fun onMapReady(mapController: MapController?) = mapController?.run {
         loadSceneFileAsync("basic.yaml", null)
-        flyToCameraPosition(
-            CameraPosition().apply {
-                longitude = 121.0
-                latitude = 24.5
-                zoom = 11.0F
-            }, null
-        )
+
+        model.coordinate.value?.let {
+            flyToCameraPosition(
+                CameraPosition().apply {
+                    longitude = it.first
+                    latitude = it.second
+                    zoom = 12.0F
+                }, null
+            )
+        }
+
         setMapChangeListener(object : MapChangeListener {
             override fun onViewComplete() {}
             override fun onRegionWillChange(animated: Boolean) {}
@@ -40,12 +44,26 @@ class TangramFragment : Fragment(), MapReadyCallback {
                 model.coordinate.postValue(cameraPosition.run { longitude.dec() to latitude })
                 model.zoom.postValue(cameraPosition.zoom)
             }
+
             override fun onRegionIsChanging() {
                 updateModel()
             }
+
             override fun onRegionDidChange(animated: Boolean) {
                 updateModel()
             }
         })
+
+        model.target.observe(viewLifecycleOwner) { xy ->
+            xy ?: return@observe
+
+            flyToCameraPosition(
+                CameraPosition().apply {
+                    longitude = xy.first
+                    latitude = xy.second
+                }, null
+            )
+        }
+
     } ?: Unit
 }
