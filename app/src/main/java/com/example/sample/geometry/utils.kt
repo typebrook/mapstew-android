@@ -2,6 +2,8 @@ package com.example.sample.geometry
 
 import java.math.RoundingMode
 
+// region CoordPrinter
+
 // transform raw coordinates to readable integer string
 // example: (123456, 7654321) -> (123-456, 7654-321)
 val xy2IntString: CoordPrinter = { (x, y) ->
@@ -89,3 +91,7 @@ fun Double.with(format: String): String = format.format(this)
 fun Double.scaleDownTo(decimal: Int) = toBigDecimal().setScale(decimal, RoundingMode.DOWN).toFloat()
 const val ROUND_PADDING_SECOND = 0.0000138 // help to round second scaled to 1, =~ 0.05 / (60*60)
 const val ROUND_PADDING_MINUTE = 0.0000083 // help to round minute scaled to 3, =~ 0.0005 / 60
+
+// endregion
+
+fun XYPair.isLongLatPair() = (first <= 180 && first >= -180 && second <= 90 && second >= -90)

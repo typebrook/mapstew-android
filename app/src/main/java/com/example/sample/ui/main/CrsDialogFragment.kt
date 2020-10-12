@@ -25,11 +25,11 @@ class CrsDialogFragment : DialogFragment() {
             setView(viewGroup)
             setTitle("foo")
             setPositiveButton("GOTO") { _, _ ->
-                mapModel.setTarget(
-                    viewGroup.run {
-                        longitude.text.toString().toDouble() to latitude.text.toString().toDouble()
-                    }
-                )
+                viewGroup?.run xy@{
+                    val x = longitude.text.toString().toDoubleOrNull() ?: return@xy null
+                    val y = latitude.text.toString().toDoubleOrNull() ?: return@xy null
+                    x to y
+                }?.let(mapModel::setTarget)
             }
             create()
         }
