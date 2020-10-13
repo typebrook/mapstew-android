@@ -1,29 +1,19 @@
 package com.example.sample.ui.main
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.sample.geometry.XYPair
 import com.example.sample.geometry.isLongLatPair
-import java.math.RoundingMode
+import com.example.sample.livedata.SafeMutableLiveData
 
 class MapViewModel : ViewModel() {
 
     // coordinate of center of map
-    private val _coordinate = MutableLiveData(121.585674 to 25.023167)
-    val coordinate: LiveData<XYPair> get() = _coordinate
-    fun setCoordinate(xy: XYPair) {
-        if (!xy.isLongLatPair()) return
-        _coordinate.value = xy.first.scaleTo6() to xy.second.scaleTo6()
+    val coordinate = object : SafeMutableLiveData<XYPair>(121.585674 to 25.023167) {
+        override val predicate = { xy: XYPair -> xy.isLongLatPair() }
     }
 
     // coordinate of target, camera will move to here
-    private val _target = MutableLiveData<XYPair>(null)
-    val target: LiveData<XYPair> get() = _target
-    fun setTarget(xy: XYPair) {
-        if (!xy.isLongLatPair()) return
-        _target.value = xy.first.scaleTo6() to xy.second.scaleTo6()
+    val target = object : SafeMutableLiveData<XYPair>(coordinate.value) {
+        override val predicate = { xy: XYPair -> xy.isLongLatPair() }
     }
-
-    private fun Double.scaleTo6() = toBigDecimal().setScale(6, RoundingMode.HALF_UP).toDouble()
 }
