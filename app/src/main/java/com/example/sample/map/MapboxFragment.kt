@@ -1,4 +1,4 @@
-package com.example.sample
+package com.example.sample.map
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -6,6 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.observe
+import com.example.sample.R
 import com.example.sample.ui.main.MapViewModel
 import com.mapbox.mapboxsdk.Mapbox
 import com.mapbox.mapboxsdk.camera.CameraPosition
@@ -29,32 +31,24 @@ class MapboxFragment : Fragment(), OnMapReadyCallback {
     ): View = mapView
 
     override fun onMapReady(mapboxMap: MapboxMap) = with(mapboxMap) {
+
         setStyle(defaultStyle)
         cameraPosition = CameraPosition.Builder()
-            .target(LatLng(25.023167, 121.585674))
             .zoom(12.0)
             .build()
 
-        model.coordinate.value?.let {
-            cameraPosition = CameraPosition.Builder()
-                .target(LatLng(it.second, it.first))
-                .zoom(12.0)
-                .build()
-        }
-
         addOnCameraMoveListener {
-            model.setCoordinate(cameraPosition.target.run { longitude to latitude })
+            model.coordinate.value = cameraPosition.target.run { longitude to latitude }
         }
 
         model.target.observe(viewLifecycleOwner) { xy ->
-            xy ?: return@observe
-
-            val target = LatLng(xy.second, xy.first)
             animateCamera {
                 CameraPosition.Builder()
-                    .target(target)
+                    .target(LatLng(xy.second, xy.first))
                     .build()
             }
         }
+
+        Unit
     }
 }

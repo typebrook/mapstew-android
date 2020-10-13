@@ -1,4 +1,4 @@
-package com.example.sample
+package com.example.sample.map
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -6,10 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.observe
 import com.example.sample.ui.main.MapViewModel
-import com.mapzen.tangram.CameraPosition
-import com.mapzen.tangram.MapChangeListener
-import com.mapzen.tangram.MapController
+import com.mapzen.tangram.*
 import com.mapzen.tangram.MapView.MapReadyCallback
 
 class TangramFragment : Fragment(), MapReadyCallback {
@@ -17,7 +16,7 @@ class TangramFragment : Fragment(), MapReadyCallback {
     private val model by activityViewModels<MapViewModel>()
 
     private val mapView by lazy {
-        com.mapzen.tangram.MapView(requireContext()).apply { getMapAsync(this@TangramFragment) }
+        MapView(requireContext()).apply { getMapAsync(this@TangramFragment) }
     }
 
     override fun onCreateView(
@@ -25,23 +24,15 @@ class TangramFragment : Fragment(), MapReadyCallback {
     ): View = mapView
 
     override fun onMapReady(mapController: MapController?) = mapController?.run {
-        loadSceneFileAsync("basic.yaml", null)
 
-        model.coordinate.value?.let {
-            flyToCameraPosition(
-                CameraPosition().apply {
-                    longitude = it.first
-                    latitude = it.second
-                    zoom = 12.0F
-                }, null
-            )
-        }
+        loadSceneFileAsync("basic.yaml", null)
+        updateCameraPosition(CameraUpdateFactory.setZoom(12F))
 
         setMapChangeListener(object : MapChangeListener {
             override fun onViewComplete() {}
             override fun onRegionWillChange(animated: Boolean) {}
             fun updateModel() {
-                model.setCoordinate(cameraPosition.run { longitude to latitude })
+                model.coordinate.value = cameraPosition.run { longitude to latitude }
             }
 
             override fun onRegionIsChanging() {
@@ -54,14 +45,15 @@ class TangramFragment : Fragment(), MapReadyCallback {
         })
 
         model.target.observe(viewLifecycleOwner) { xy ->
-            xy ?: return@observe
-
             flyToCameraPosition(
                 CameraPosition().apply {
                     longitude = xy.first
                     latitude = xy.second
-                }, null
+                    zoom = this@run.cameraPosition.zoom
+                }, 400, null
             )
         }
+
+        Unit
     } ?: Unit
 }

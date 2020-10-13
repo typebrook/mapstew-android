@@ -8,10 +8,11 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.add
 import androidx.fragment.app.commit
-import com.example.sample.MapboxFragment
-import com.example.sample.TangramFragment
+import androidx.lifecycle.observe
 import com.example.sample.R
 import com.example.sample.geometry.xy2DMSString
+import com.example.sample.map.MapboxFragment
+import com.example.sample.map.TangramFragment
 import kotlinx.android.synthetic.main.main_fragment.*
 
 class MainFragment : Fragment() {
@@ -32,8 +33,8 @@ class MainFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-        mapModel.coordinate.observe(viewLifecycleOwner) {
-            coordinates.text = xy2DMSString(it).run { "$first $second"}
+        mapModel.coordinate.observe(viewLifecycleOwner) { xy ->
+            coordinates.text = xy2DMSString(xy).run { "$first $second" }
         }
 
         coordinates.setOnClickListener {

@@ -23,16 +23,15 @@ val xy2DegreeString: CoordPrinter = { (lon, lat) ->
     val lonPrefix = if (lon >= 0) "東經" else "西經"
     val latPrefix = if (lat >= 0) "北緯" else "南緯"
 
-    val lonString = lon
-        .let(Math::abs)
-        .with("%.6f")
-        .run { dropLast(3).padStart(7, '0') + "-" + takeLast(3) }
-    val latString = lat
-        .let(Math::abs)
-        .with("%.6f")
-        .run { dropLast(3).padStart(7, '0') + "-" + takeLast(3) }
+    val d2String = { d: Double ->
+        d.scaleTo(6)
+            .toString()
+            .run { dropLast(3).padStart(7, '0') + "-" + takeLast(3) + " 度" }
+    }
 
-    "$lonPrefix $lonString 度" to "$latPrefix $latString 度"
+    val xString = "$lonPrefix ${lon.let(Math::abs).let(d2String)}"
+    val yString = "$latPrefix ${lat.let(Math::abs).let(d2String)}"
+    xString to yString
 }
 
 typealias dmValue = Pair<Int, Float>
@@ -87,7 +86,7 @@ val xy2DMSString: CoordPrinter = { (lon, lat) ->
     xString to yString
 }
 
-fun Double.with(format: String): String = format.format(this)
+fun Double.scaleTo(decimal: Int) = toBigDecimal().setScale(decimal, RoundingMode.HALF_UP).toFloat()
 fun Double.scaleDownTo(decimal: Int) = toBigDecimal().setScale(decimal, RoundingMode.DOWN).toFloat()
 const val ROUND_PADDING_SECOND = 0.0000138 // help to round second scaled to 1, =~ 0.05 / (60*60)
 const val ROUND_PADDING_MINUTE = 0.0000083 // help to round minute scaled to 3, =~ 0.0005 / 60

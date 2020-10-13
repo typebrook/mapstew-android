@@ -6,6 +6,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import com.example.sample.R
+import com.example.sample.geometry.scaleDownTo
 import kotlinx.android.synthetic.main.dialog_crs.view.*
 
 class CrsDialogFragment : DialogFragment() {
@@ -17,19 +18,19 @@ class CrsDialogFragment : DialogFragment() {
             R.layout.dialog_crs,
             requireActivity().findViewById(R.id.root_crs)
         ).apply {
-            longitude.hint = mapModel.coordinate.value?.first?.toString()
-            latitude.hint = mapModel.coordinate.value?.second?.toString()
+            longitude.hint = mapModel.coordinate.value.first.scaleDownTo(6).toString()
+            latitude.hint = mapModel.coordinate.value.second.scaleDownTo(6).toString()
         }
 
         AlertDialog.Builder(this).run {
             setView(viewGroup)
             setTitle("foo")
             setPositiveButton("GOTO") { _, _ ->
-                viewGroup?.run xy@{
-                    val x = longitude.text.toString().toDoubleOrNull() ?: return@xy null
-                    val y = latitude.text.toString().toDoubleOrNull() ?: return@xy null
-                    x to y
-                }?.let(mapModel::setTarget)
+                val x = viewGroup.longitude.text.toString().toDoubleOrNull()
+                    ?: mapModel.coordinate.value.first
+                val y = viewGroup.latitude.text.toString().toDoubleOrNull()
+                    ?: mapModel.coordinate.value.second
+                mapModel.target.value = x to y
             }
             create()
         }
