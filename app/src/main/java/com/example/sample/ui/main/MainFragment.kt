@@ -10,14 +10,15 @@ import androidx.fragment.app.add
 import androidx.fragment.app.commit
 import androidx.lifecycle.observe
 import com.example.sample.R
+import com.example.sample.databinding.MainFragmentBinding
 import com.example.sample.geometry.xy2DMSString
 import com.example.sample.map.MapboxFragment
 import com.example.sample.map.TangramFragment
-import kotlinx.android.synthetic.main.main_fragment.*
 
 class MainFragment : Fragment() {
 
     private val mapModel by activityViewModels<MapViewModel>()
+    private val binding by lazy { MainFragmentBinding.inflate(layoutInflater) }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -28,10 +29,10 @@ class MainFragment : Fragment() {
 //            add<TangramFragment>(R.id.map_container, null)
         }
 
-        return inflater.inflate(R.layout.main_fragment, container, false)
+        return binding.root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) = with(binding) {
 
         mapModel.coordinate.observe(viewLifecycleOwner) { xy ->
             coordinates.text = xy2DMSString(xy).run { "$first $second" }
