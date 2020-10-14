@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
@@ -103,6 +104,9 @@ class CrsDialogFragment : DialogFragment() {
     interface XYInput {
         val view: View
         val xy: XYPair
+
+        fun EditText.input(): Double = text.toString().toDoubleOrNull()
+            ?: hint.toString().toDouble()
     }
 
     private val degreeInput: XYInput
@@ -116,8 +120,8 @@ class CrsDialogFragment : DialogFragment() {
             }
             override val xy: XYPair
                 get() = with(binding) {
-                    val x = longitude.text.toString().toDoubleOrNull() ?: coord.first
-                    val y = latitude.text.toString().toDoubleOrNull() ?: coord.second
+                    val x = longitude.input()
+                    val y = latitude.input()
                     return x to y
                 }
         }
@@ -138,16 +142,17 @@ class CrsDialogFragment : DialogFragment() {
                 root
             }
             override val xy: XYPair
-                get() {
-                    val x = 0.0
-                    val y = 0.0
+                get() = with(binding) {
+                    val x = dm2Degree(longitudeDeg.input().toInt() to longitudeMin.input())
+                    val y = dm2Degree(latitudeDeg.input().toInt() to latitudeMin.input())
                     return x to y
                 }
         }
 
     private val dmsInput: XYInput
         get() = object : XYInput {
-            override val view: View = InputDmsBinding.inflate(layoutInflater).run {
+            val binding = InputDmsBinding.inflate(layoutInflater)
+            override val view: View = with(binding) {
                 val xy = coord.convert(WGS84, crs)
                 xy.first.let(degree2DMS).run {
                     longitudeDeg.hint = first.toString()
@@ -162,9 +167,21 @@ class CrsDialogFragment : DialogFragment() {
                 root
             }
             override val xy: XYPair
-                get() {
-                    val x = 0.0
-                    val y = 0.0
+                get() = with(binding) {
+                    val x = dms2Degree(
+                        Triple(
+                            longitudeDeg.input().toInt(),
+                            longitudeMin.input().toInt(),
+                            longitudeSec.input()
+                        )
+                    )
+                    val y = dms2Degree(
+                        Triple(
+                            latitudeDeg.input().toInt(),
+                            latitudeMin.input().toInt(),
+                            latitudeSec.input()
+                        )
+                    )
                     return x to y
                 }
         }

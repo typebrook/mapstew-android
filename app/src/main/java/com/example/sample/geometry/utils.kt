@@ -42,6 +42,9 @@ val degree2DM: (Double) -> dmValue = { rawDegree ->
     val mValue = (degree - dValue) * 60
     dValue to mValue.scaleDownTo(3)
 }
+val dm2Degree: (dmValue) -> Double = { value ->
+    value.first + value.second / 60
+}
 
 // transform raw coordinates to Latitude/Longitude string with Degree/Minute format
 // example: (123.456789123, 76.543219876) -> (東經 123度 XX.XXX分, 北緯 76度 XX.XXX分)
@@ -69,6 +72,9 @@ val degree2DMS: (Double) -> dmsValue = { rawDegree ->
     val sValue = (degree - dValue - minute2Degree) * 3600
     Triple(dValue, mValue, sValue.scaleDownTo(1))
 }
+val dms2Degree: (dmsValue) -> Double = { value ->
+    value.first + value.second.toDouble() / 60 + value.third / 3600
+}
 
 // transform raw coordinates to Latitude/Longitude string with Degree/Minute/Second format
 // example: (123.456789123, 76.543219876) -> (東經 123度 XX分 XX.X秒, 北緯 76度 XX分 XX.X秒)
@@ -87,7 +93,9 @@ val xy2DMSString: CoordPrinter = { (lon, lat) ->
 }
 
 fun Double.scaleTo(decimal: Int) = toBigDecimal().setScale(decimal, RoundingMode.HALF_UP).toFloat()
-fun Double.scaleDownTo(decimal: Int) = toBigDecimal().setScale(decimal, RoundingMode.DOWN).toDouble()
+fun Double.scaleDownTo(decimal: Int) =
+    toBigDecimal().setScale(decimal, RoundingMode.DOWN).toDouble()
+
 const val ROUND_PADDING_SECOND = 0.0000138 // help to round second scaled to 1, =~ 0.05 / (60*60)
 const val ROUND_PADDING_MINUTE = 0.0000083 // help to round minute scaled to 3, =~ 0.0005 / 60
 
