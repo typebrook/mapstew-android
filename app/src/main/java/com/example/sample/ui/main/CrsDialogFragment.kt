@@ -2,37 +2,102 @@ package com.example.sample.ui.main
 
 import android.app.Dialog
 import android.os.Bundle
+import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.observe
 import com.example.sample.R
-import com.example.sample.geometry.scaleDownTo
+import com.example.sample.geometry.CoordExpression.Degree
+import com.example.sample.geometry.CoordRefSys.Companion.TWD67
+import com.example.sample.geometry.CoordRefSys.Companion.TWD97
+import com.example.sample.geometry.CoordRefSys.Companion.WGS84
+import com.example.sample.geometry.XYPair
+import com.example.sample.geometry.convert
+import com.example.sample.geometry.scaleTo
 import kotlinx.android.synthetic.main.dialog_crs.view.*
+import kotlinx.android.synthetic.main.input_degree.view.*
 
 class CrsDialogFragment : DialogFragment() {
 
     private val mapModel by activityViewModels<MapViewModel>()
+    private val viewGroup by lazy { layoutInflater.run { inflate(R.layout.dialog_crs, null) } }
+    private lateinit var xyInput: XYInput
+
+    private val crs get() = mapModel.crsState.value.crs
+    private val coord get() = mapModel.coordinate.value
+
+    private val crsOptions = listOf(WGS84, TWD97, TWD67)
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog = requireActivity().run {
-        val viewGroup = layoutInflater.inflate(
-            R.layout.dialog_crs,
-            requireActivity().findViewById(R.id.root_crs)
-        ).apply {
-            longitude.hint = mapModel.coordinate.value.first.scaleDownTo(6).toString()
-            latitude.hint = mapModel.coordinate.value.second.scaleDownTo(6).toString()
-        }
 
-        AlertDialog.Builder(this).run {
+        initViewGroup()
+        with(AlertDialog.Builder(this)) {
             setView(viewGroup)
             setTitle("foo")
             setPositiveButton("GOTO") { _, _ ->
-                val x = viewGroup.longitude.text.toString().toDoubleOrNull()
-                    ?: mapModel.coordinate.value.first
-                val y = viewGroup.latitude.text.toString().toDoubleOrNull()
-                    ?: mapModel.coordinate.value.second
-                mapModel.target.value = x to y
+                mapModel.target.value = xyInput.xy.convert(crs, WGS84)
             }
             create()
         }
     }
+
+    // Initialize custom view for dialog
+    private fun initViewGroup() = with(viewGroup) {
+
+        // Initialize Views for user input
+        with(input_container) {
+            mapModel.crsState.observe(this@CrsDialogFragment) { state ->
+                xyInput = when (state.expression) {
+                    Degree -> degreeInput
+                    else -> degreeInput
+                }
+                removeAllViews()
+                addView(xyInput.view)
+            }
+        }
+
+        // Initialize spinner for coordinate reference system
+        with(crs_options) {
+            adapter = ArrayAdapter(
+                requireContext(),
+                android.R.layout.simple_spinner_dropdown_item,
+                crsOptions.map { it.displayName }
+            )
+            onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onNothingSelected(p0: AdapterView<*>?) {}
+                override fun onItemSelected(p0: AdapterView<*>?, p1: View?, i: Int, p3: Long) {
+                    with(mapModel.crsState) {
+                        value = value.copy(crs = crsOptions[i])
+                    }
+                }
+            }
+        }
+    }
+
+    // region XYInput
+    interface XYInput {
+        val view: View
+        val xy: XYPair
+    }
+
+    private val degreeInput: XYInput
+        get() = object : XYInput {
+            override val view: View = with(layoutInflater) {
+                inflate(R.layout.input_degree, null, false)
+            }.apply {
+                val xy = coord.convert(WGS84, crs)
+                longitude.hint = xy.first.scaleTo(6).toString()
+                latitude.hint = xy.second.scaleTo(6).toString()
+            }
+            override val xy: XYPair
+                get() {
+                    val x = view.longitude.text.toString().toDoubleOrNull() ?: coord.first
+                    val y = view.latitude.text.toString().toDoubleOrNull() ?: coord.second
+                    return x to y
+                }
+        }
+// endregion
 }

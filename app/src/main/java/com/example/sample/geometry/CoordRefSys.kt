@@ -20,7 +20,7 @@ fun XYPair.convert(from: CoordRefSys, to: CoordRefSys) = CoordRefSys.generateCon
 fun XYPair.isValid(crs: CoordRefSys) = isValidInWGS84(convert(crs, CoordRefSys.WGS84))
 
 enum class ParameterType { Code, Proj4 }
-enum class Expression { Int, Degree, DegMin, DMS }
+enum class CoordExpression { SINGLE, XY, Degree, DegMin, DMS }
 
 open class CoordRefSys(
         val displayName: String = "UnNamed",
@@ -42,7 +42,7 @@ open class CoordRefSys(
 
     companion object {
 
-        fun generateConverter(crs1: CoordRefSys, crs2: CoordRefSys): CoordConverter {
+        fun generateConverter(crs1: CoordRefSys, crs2: CoordRefSys = WGS84): CoordConverter {
             if (crs1.parameter == crs2.parameter) return { xyPair -> xyPair }
 
             val trans = CoordinateTransformFactory().createTransform(crs1.crs, crs2.crs)
