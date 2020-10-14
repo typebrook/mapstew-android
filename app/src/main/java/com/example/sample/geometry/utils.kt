@@ -34,7 +34,7 @@ val xy2DegreeString: CoordPrinter = { (lon, lat) ->
     xString to yString
 }
 
-typealias dmValue = Pair<Int, Float>
+typealias dmValue = Pair<Int, Double>
 
 val degree2DM: (Double) -> dmValue = { rawDegree ->
     val degree = rawDegree + ROUND_PADDING_MINUTE
@@ -59,7 +59,7 @@ val xy2DegMinString: CoordPrinter = { (lon, lat) ->
     xString to yString
 }
 
-typealias dmsValue = Triple<Int, Int, Float>
+typealias dmsValue = Triple<Int, Int, Double>
 
 val degree2DMS: (Double) -> dmsValue = { rawDegree ->
     val degree = rawDegree + ROUND_PADDING_SECOND
@@ -87,7 +87,7 @@ val xy2DMSString: CoordPrinter = { (lon, lat) ->
 }
 
 fun Double.scaleTo(decimal: Int) = toBigDecimal().setScale(decimal, RoundingMode.HALF_UP).toFloat()
-fun Double.scaleDownTo(decimal: Int) = toBigDecimal().setScale(decimal, RoundingMode.DOWN).toFloat()
+fun Double.scaleDownTo(decimal: Int) = toBigDecimal().setScale(decimal, RoundingMode.DOWN).toDouble()
 const val ROUND_PADDING_SECOND = 0.0000138 // help to round second scaled to 1, =~ 0.05 / (60*60)
 const val ROUND_PADDING_MINUTE = 0.0000083 // help to round minute scaled to 3, =~ 0.0005 / 60
 

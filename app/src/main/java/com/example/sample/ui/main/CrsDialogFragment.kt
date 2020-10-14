@@ -10,14 +10,13 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.observe
 import com.example.sample.R
-import com.example.sample.geometry.CoordExpression.Degree
+import com.example.sample.geometry.*
+import com.example.sample.geometry.CoordExpression.*
 import com.example.sample.geometry.CoordRefSys.Companion.TWD67
 import com.example.sample.geometry.CoordRefSys.Companion.TWD97
 import com.example.sample.geometry.CoordRefSys.Companion.WGS84
-import com.example.sample.geometry.XYPair
-import com.example.sample.geometry.convert
-import com.example.sample.geometry.scaleTo
 import kotlinx.android.synthetic.main.dialog_crs.view.*
+import kotlinx.android.synthetic.main.input_deg_min.view.*
 import kotlinx.android.synthetic.main.input_degree.view.*
 
 class CrsDialogFragment : DialogFragment() {
@@ -52,6 +51,7 @@ class CrsDialogFragment : DialogFragment() {
             mapModel.crsState.observe(this@CrsDialogFragment) { state ->
                 xyInput = when (state.expression) {
                     Degree -> degreeInput
+                    DegMin -> degMinInput
                     else -> degreeInput
                 }
                 removeAllViews()
@@ -96,6 +96,29 @@ class CrsDialogFragment : DialogFragment() {
                 get() {
                     val x = view.longitude.text.toString().toDoubleOrNull() ?: coord.first
                     val y = view.latitude.text.toString().toDoubleOrNull() ?: coord.second
+                    return x to y
+                }
+        }
+
+    private val degMinInput: XYInput
+        get() = object : XYInput {
+            override val view: View = with(layoutInflater) {
+                inflate(R.layout.input_deg_min, null, false)
+            }.apply {
+                val xy = coord.convert(WGS84, crs)
+                xy.first.let(degree2DM).run {
+                    longitude_deg.hint = first.toString()
+                    longitude_min.hint = second.toString()
+                }
+                xy.second.let(degree2DM).run {
+                    latitude_deg.hint = first.toString()
+                    latitude_min.hint = second.toString()
+                }
+            }
+            override val xy: XYPair
+                get() {
+                    val x = 0.0
+                    val y = 0.0
                     return x to y
                 }
         }
