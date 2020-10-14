@@ -11,7 +11,8 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.observe
 import com.example.sample.R
 import com.example.sample.geometry.*
-import com.example.sample.geometry.CoordExpression.*
+import com.example.sample.geometry.CoordExpression.DegMin
+import com.example.sample.geometry.CoordExpression.Degree
 import com.example.sample.geometry.CoordRefSys.Companion.TWD67
 import com.example.sample.geometry.CoordRefSys.Companion.TWD97
 import com.example.sample.geometry.CoordRefSys.Companion.WGS84
@@ -46,19 +47,6 @@ class CrsDialogFragment : DialogFragment() {
     // Initialize custom view for dialog
     private fun initViewGroup() = with(viewGroup) {
 
-        // Initialize Views for user input
-        with(input_container) {
-            mapModel.crsState.observe(this@CrsDialogFragment) { state ->
-                xyInput = when (state.expression) {
-                    Degree -> degreeInput
-                    DegMin -> degMinInput
-                    else -> degreeInput
-                }
-                removeAllViews()
-                addView(xyInput.view)
-            }
-        }
-
         // Initialize spinner for coordinate reference system
         with(crs_options) {
             adapter = ArrayAdapter(
@@ -73,6 +61,41 @@ class CrsDialogFragment : DialogFragment() {
                         value = value.copy(crs = crsOptions[i])
                     }
                 }
+            }
+        }
+
+        // Initialize spinner for expression
+        with(expr_options) {
+            adapter = ArrayAdapter(
+                requireContext(),
+                android.R.layout.simple_spinner_dropdown_item,
+                selectableExpressions
+            )
+            onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onNothingSelected(p0: AdapterView<*>?) {}
+                override fun onItemSelected(p0: AdapterView<*>?, p1: View?, i: Int, p3: Long) {
+                    with(mapModel.crsState) {
+                        value = value.copy(expression = CoordExpression.values()[i])
+                    }
+                }
+            }
+        }
+
+        // Change views by crsState
+        mapModel.crsState.observe(this@CrsDialogFragment) { state ->
+            xyInput = when (state.expression) {
+                Degree -> degreeInput
+                DegMin -> degMinInput
+                else -> degreeInput
+            }
+            input_container.removeAllViews()
+            input_container.addView(xyInput.view)
+
+            if (state.crs.isLongLat) {
+                expr_options.visibility = View.VISIBLE
+                expr_options.setSelection(state.expression.ordinal)
+            } else {
+                expr_options.visibility = View.GONE
             }
         }
     }

@@ -17,6 +17,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
+    <Spinner
+        android:id="@+id/expr_options"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
     <!--  Magic! If there is no EditText here, other EditTexts inside
           input_container won't trigger soft keyboard when focused -->
     <EditText
