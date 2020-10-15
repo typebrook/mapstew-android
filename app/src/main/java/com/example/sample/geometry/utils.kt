@@ -25,7 +25,7 @@ val xy2DegreeString: CoordPrinter = { (lon, lat) ->
 
     val d2String = { d: Double ->
         d.scaleTo(6)
-            .toString()
+            .withDecimal(6)
             .run { dropLast(3).padStart(7, '0') + "-" + takeLast(3) + " 度" }
     }
 
@@ -34,13 +34,16 @@ val xy2DegreeString: CoordPrinter = { (lon, lat) ->
     xString to yString
 }
 
-typealias dmValue = Pair<Int, Float>
+typealias dmValue = Pair<Int, Double>
 
 val degree2DM: (Double) -> dmValue = { rawDegree ->
     val degree = rawDegree + ROUND_PADDING_MINUTE
     val dValue = degree.toInt()
     val mValue = (degree - dValue) * 60
     dValue to mValue.scaleDownTo(3)
+}
+val dm2Degree: (dmValue) -> Double = { value ->
+    value.first + value.second / 60
 }
 
 // transform raw coordinates to Latitude/Longitude string with Degree/Minute format
@@ -59,7 +62,7 @@ val xy2DegMinString: CoordPrinter = { (lon, lat) ->
     xString to yString
 }
 
-typealias dmsValue = Triple<Int, Int, Float>
+typealias dmsValue = Triple<Int, Int, Double>
 
 val degree2DMS: (Double) -> dmsValue = { rawDegree ->
     val degree = rawDegree + ROUND_PADDING_SECOND
@@ -68,6 +71,9 @@ val degree2DMS: (Double) -> dmsValue = { rawDegree ->
     val minute2Degree = mValue.toFloat() / 60
     val sValue = (degree - dValue - minute2Degree) * 3600
     Triple(dValue, mValue, sValue.scaleDownTo(1))
+}
+val dms2Degree: (dmsValue) -> Double = { value ->
+    value.first + value.second.toDouble() / 60 + value.third / 3600
 }
 
 // transform raw coordinates to Latitude/Longitude string with Degree/Minute/Second format
@@ -86,8 +92,11 @@ val xy2DMSString: CoordPrinter = { (lon, lat) ->
     xString to yString
 }
 
-fun Double.scaleTo(decimal: Int) = toBigDecimal().setScale(decimal, RoundingMode.HALF_UP).toFloat()
-fun Double.scaleDownTo(decimal: Int) = toBigDecimal().setScale(decimal, RoundingMode.DOWN).toFloat()
+fun Double.withDecimal(decimal: Int) = String.format("%.${decimal}f", this)
+fun Double.scaleTo(decimal: Int) = toBigDecimal().setScale(decimal, RoundingMode.HALF_UP).toDouble()
+fun Double.scaleDownTo(decimal: Int) =
+    toBigDecimal().setScale(decimal, RoundingMode.DOWN).toDouble()
+
 const val ROUND_PADDING_SECOND = 0.0000138 // help to round second scaled to 1, =~ 0.05 / (60*60)
 const val ROUND_PADDING_MINUTE = 0.0000083 // help to round minute scaled to 3, =~ 0.0005 / 60
 

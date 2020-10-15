@@ -6,8 +6,14 @@ import androidx.lifecycle.LiveData
 abstract class SafeMutableLiveData<T>(value: T) : LiveData<T>(value) {
 
     override fun getValue(): T = super.getValue() as T
-    public override fun setValue(value: T) = if (predicate(value)) super.setValue(value) else Unit
-    public override fun postValue(value: T) = if (predicate(value)) super.postValue(value) else Unit
-    protected abstract val predicate: (value: T) -> Boolean
+
+    public override fun setValue(value: T) =
+        if (predicate(value)) super.setValue(transformer(value)) else Unit
+
+    public override fun postValue(value: T) =
+        if (predicate(value)) super.postValue(transformer(value)) else Unit
+
+    protected open val predicate: (value: T) -> Boolean = { true }
+    protected open val transformer: (value: T) -> T = { new -> new }
 }
 

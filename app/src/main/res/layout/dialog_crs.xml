@@ -2,30 +2,33 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/root_crs"
-    android:orientation="vertical"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:orientation="vertical"
     android:padding="8dp">
+
+    <FrameLayout
+        android:id="@+id/input_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <Spinner
+        android:id="@+id/crs_spinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <Spinner
+        android:id="@+id/expr_spinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <!--  Magic! If there is no EditText here, other EditTexts inside
+          input_container won't trigger soft keyboard when focused -->
     <EditText
-        android:id="@+id/longitude"
-        android:inputType="numberDecimal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:layout_marginLeft="4dp"
-        android:layout_marginRight="4dp"
-        android:layout_marginBottom="4dp"
         android:autofillHints=""
-        tools:ignore="LabelFor" />
-    <EditText
-        android:id="@+id/latitude"
-        android:inputType="numberDecimal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:layout_marginLeft="4dp"
-        android:layout_marginRight="4dp"
-        android:layout_marginBottom="16dp"
-        android:autofillHints=""
+        android:inputType="none"
+        android:visibility="gone"
         tools:ignore="LabelFor" />
 </LinearLayout>

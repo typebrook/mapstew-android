@@ -35,9 +35,9 @@ enum class Square {
 }
 
 object TaipowerCrs : CoordRefSys(
-        "台灣電力座標",
-        ParameterType.Proj4,
-        "+proj=tmerc +lat_0=0 +lon_0=121 +k=0.9999 +x_0=250000 +y_0=0 +ellps=aust_SA  +towgs84=-750.739,-359.515,-180.510,0.00003863,0.00001721,0.00000197,0.99998180 +units=m +no_defs"
+        displayName = "台灣電力座標",
+        type = ParameterType.Proj4,
+        parameter = "+proj=tmerc +lat_0=0 +lon_0=121 +k=0.9999 +x_0=250000 +y_0=0 +ellps=aust_SA  +towgs84=-750.739,-359.515,-180.510,0.00003863,0.00001721,0.00000197,0.99998180 +units=m +no_defs"
 ) {
 
     fun mask(coord: XYPair): String {
