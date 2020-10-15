@@ -25,7 +25,7 @@ val xy2DegreeString: CoordPrinter = { (lon, lat) ->
 
     val d2String = { d: Double ->
         d.scaleTo(6)
-            .toString()
+            .withDecimal(6)
             .run { dropLast(3).padStart(7, '0') + "-" + takeLast(3) + " 度" }
     }
 
@@ -92,7 +92,8 @@ val xy2DMSString: CoordPrinter = { (lon, lat) ->
     xString to yString
 }
 
-fun Double.scaleTo(decimal: Int) = toBigDecimal().setScale(decimal, RoundingMode.HALF_UP).toFloat()
+fun Double.withDecimal(decimal: Int) = String.format("%.${decimal}f", this)
+fun Double.scaleTo(decimal: Int) = toBigDecimal().setScale(decimal, RoundingMode.HALF_UP).toDouble()
 fun Double.scaleDownTo(decimal: Int) =
     toBigDecimal().setScale(decimal, RoundingMode.DOWN).toDouble()
 
