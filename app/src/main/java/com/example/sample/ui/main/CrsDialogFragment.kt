@@ -23,7 +23,7 @@ class CrsDialogFragment : DialogFragment() {
 
     private val mapModel by activityViewModels<MapViewModel>()
     private val viewGroup by lazy { DialogCrsBinding.inflate(layoutInflater) }
-    private lateinit var xyInput: XYInput
+    private lateinit var coordInput: CoordInput
 
     private val crs get() = mapModel.crsState.value.crs
     private val coord get() = mapModel.coordinate.value
@@ -37,7 +37,7 @@ class CrsDialogFragment : DialogFragment() {
             setView(viewGroup.root)
             setTitle("foo")
             setPositiveButton("GOTO") { _, _ ->
-                mapModel.target.value = xyInput.xy.convert(crs, WGS84)
+                coordInput.wgs84LongLat?.let(mapModel.target::setValue)
             }
             create()
         }
@@ -82,14 +82,14 @@ class CrsDialogFragment : DialogFragment() {
 
         // Change views by crsState
         mapModel.crsState.observe(this@CrsDialogFragment) { state ->
-            xyInput = when (state.expression) {
+            coordInput = when (state.expression) {
                 CoordExpression.Degree -> degreeInput
                 CoordExpression.DegMin -> degMinInput
                 CoordExpression.DMS -> dmsInput
                 else -> degreeInput
             }
             inputContainer.removeAllViews()
-            inputContainer.addView(xyInput.view)
+            inputContainer.addView(coordInput.view)
 
             if (state.crs.isLongLat) {
                 exprOptions.visibility = View.VISIBLE
@@ -101,16 +101,17 @@ class CrsDialogFragment : DialogFragment() {
     }
 
     // region XYInput
-    interface XYInput {
+    interface CoordInput {
         val view: View
-        val xy: XYPair
+        val wgs84LongLat: XYPair?
 
-        fun EditText.input(): Double = text.toString().toDoubleOrNull()
-            ?: hint.toString().toDouble()
+        // Get degree/minute/second value from EditText
+        val EditText.angle: Double
+            get() = text.toString().toDoubleOrNull() ?: hint.toString().toDouble()
     }
 
-    private val degreeInput: XYInput
-        get() = object : XYInput {
+    private val degreeInput: CoordInput
+        get() = object : CoordInput {
             val binding = InputDegreeBinding.inflate(layoutInflater)
             override val view: View = with(binding) {
                 val xy = coord.convert(WGS84, crs)
@@ -118,16 +119,16 @@ class CrsDialogFragment : DialogFragment() {
                 latitude.hint = xy.second.scaleTo(6).toString()
                 root
             }
-            override val xy: XYPair
+            override val wgs84LongLat: XYPair
                 get() = with(binding) {
-                    val x = longitude.input()
-                    val y = latitude.input()
-                    return x to y
+                    val x = longitude.angle
+                    val y = latitude.angle
+                    return (x to y).convert(crs, WGS84)
                 }
         }
 
-    private val degMinInput: XYInput
-        get() = object : XYInput {
+    private val degMinInput: CoordInput
+        get() = object : CoordInput {
             val binding = InputDegMinBinding.inflate(layoutInflater)
             override val view: View = with(binding) {
                 val xy = coord.convert(WGS84, crs)
@@ -141,16 +142,16 @@ class CrsDialogFragment : DialogFragment() {
                 }
                 root
             }
-            override val xy: XYPair
+            override val wgs84LongLat: XYPair
                 get() = with(binding) {
-                    val x = dm2Degree(longitudeDeg.input().toInt() to longitudeMin.input())
-                    val y = dm2Degree(latitudeDeg.input().toInt() to latitudeMin.input())
-                    return x to y
+                    val x = dm2Degree(longitudeDeg.angle.toInt() to longitudeMin.angle)
+                    val y = dm2Degree(latitudeDeg.angle.toInt() to latitudeMin.angle)
+                    return (x to y).convert(crs, WGS84)
                 }
         }
 
-    private val dmsInput: XYInput
-        get() = object : XYInput {
+    private val dmsInput: CoordInput
+        get() = object : CoordInput {
             val binding = InputDmsBinding.inflate(layoutInflater)
             override val view: View = with(binding) {
                 val xy = coord.convert(WGS84, crs)
@@ -166,23 +167,23 @@ class CrsDialogFragment : DialogFragment() {
                 }
                 root
             }
-            override val xy: XYPair
+            override val wgs84LongLat: XYPair
                 get() = with(binding) {
                     val x = dms2Degree(
                         Triple(
-                            longitudeDeg.input().toInt(),
-                            longitudeMin.input().toInt(),
-                            longitudeSec.input()
+                            longitudeDeg.angle.toInt(),
+                            longitudeMin.angle.toInt(),
+                            longitudeSec.angle
                         )
                     )
                     val y = dms2Degree(
                         Triple(
-                            latitudeDeg.input().toInt(),
-                            latitudeMin.input().toInt(),
-                            latitudeSec.input()
+                            latitudeDeg.angle.toInt(),
+                            latitudeMin.angle.toInt(),
+                            latitudeSec.angle
                         )
                     )
-                    return x to y
+                    return (x to y).convert(crs, WGS84)
                 }
         }
 // endregion
