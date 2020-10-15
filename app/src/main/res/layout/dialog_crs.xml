@@ -13,12 +13,12 @@
         android:layout_height="wrap_content" />
 
     <Spinner
-        android:id="@+id/crs_options"
+        android:id="@+id/crs_spinner"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
     <Spinner
-        android:id="@+id/expr_options"
+        android:id="@+id/expr_spinner"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 

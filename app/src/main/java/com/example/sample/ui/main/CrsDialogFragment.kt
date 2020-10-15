@@ -28,7 +28,7 @@ class CrsDialogFragment : DialogFragment() {
     private val crs get() = mapModel.crsState.value.crs
     private val coord get() = mapModel.coordinate.value
 
-    private val crsList = listOf(WGS84, TWD97, TWD67)
+    private val validCrsList = listOf(WGS84, TWD97, TWD67)
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog = requireActivity().run {
 
@@ -47,24 +47,24 @@ class CrsDialogFragment : DialogFragment() {
     private fun initViewGroup() = with(viewGroup) {
 
         // Initialize spinner for coordinate reference system
-        with(crsOptions) {
+        with(crsSpinner) {
             adapter = ArrayAdapter(
                 requireContext(),
                 android.R.layout.simple_spinner_dropdown_item,
-                crsList.map { it.displayName }
+                validCrsList.map { it.displayName }
             )
             onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onNothingSelected(p0: AdapterView<*>?) {}
                 override fun onItemSelected(p0: AdapterView<*>?, p1: View?, i: Int, p3: Long) {
                     with(mapModel.crsState) {
-                        value = value.copy(crs = crsList[i])
+                        value = value.copy(crs = validCrsList[i])
                     }
                 }
             }
         }
 
         // Initialize spinner for expression
-        with(exprOptions) {
+        with(exprSpinner) {
             adapter = ArrayAdapter(
                 requireContext(),
                 android.R.layout.simple_spinner_dropdown_item,
@@ -92,10 +92,10 @@ class CrsDialogFragment : DialogFragment() {
             inputContainer.addView(coordInput.view)
 
             if (state.crs.isLongLat) {
-                exprOptions.visibility = View.VISIBLE
-                exprOptions.setSelection(state.expression.ordinal)
+                exprSpinner.visibility = View.VISIBLE
+                exprSpinner.setSelection(state.expression.ordinal)
             } else {
-                exprOptions.visibility = View.GONE
+                exprSpinner.visibility = View.GONE
             }
         }
     }
