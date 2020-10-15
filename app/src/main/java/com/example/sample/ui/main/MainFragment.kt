@@ -24,6 +24,7 @@ class MainFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
 
+        mapModel.target.value = mapModel.coordinate.value
         requireActivity().supportFragmentManager.commit {
             add<MapboxFragment>(R.id.map_container, null)
 //            add<TangramFragment>(R.id.map_container, null)
