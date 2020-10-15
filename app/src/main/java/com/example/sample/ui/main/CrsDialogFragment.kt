@@ -91,6 +91,7 @@ class CrsDialogFragment : DialogFragment() {
             inputContainer.removeAllViews()
             inputContainer.addView(coordInput.view)
 
+            crsSpinner.setSelection(validCrsList.indexOf(state.crs))
             if (state.crs.isLongLat) {
                 exprSpinner.visibility = View.VISIBLE
                 exprSpinner.setSelection(state.expression.ordinal)
