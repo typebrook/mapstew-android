@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">sample</string>
+    <string-array name="longitude_EW">
+        <item>東經</item>
+        <item>西經</item>
+    </string-array>
+    <string-array name="latitude_NS">
+        <item>北緯</item>
+        <item>南緯</item>
+    </string-array>
+</resources>

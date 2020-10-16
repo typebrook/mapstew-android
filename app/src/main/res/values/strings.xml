@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">sample</string>
-    <string name="uri_style_rudymap">https://raw.githubusercontent.com/typebrook/mapstew/master/styles/topographique.json</string>
-    <string name="res_desc_cross">A simple cross marks map center</string>
+    <string name="uri_style_rudymap" translatable="false">https://raw.githubusercontent.com/typebrook/mapstew/master/styles/topographique.json</string>
+    <string name="res_desc_cross" translatable="false">A simple cross marks map center</string>
     <string-array name="longitude_EW">
         <item>E</item>
         <item>W</item>
