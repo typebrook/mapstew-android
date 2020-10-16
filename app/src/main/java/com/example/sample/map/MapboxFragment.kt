@@ -1,6 +1,7 @@
 package com.example.sample.map
 
 import android.content.Context
+import android.util.Log
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.observe
 import com.example.sample.R
@@ -30,6 +31,15 @@ class MapboxFragment : SupportMapFragment() {
 
         addOnCameraMoveListener {
             model.coordinate.value = cameraPosition.target.run { longitude to latitude }
+
+            // FIXME This is just a simple feature query test
+            model.coordinate.value
+                .run { LatLng(second, first) }
+                .run(mapboxMap.projection::toScreenLocation)
+                .let { queryRenderedFeatures(it) }
+                .forEach {
+                    Log.d("jojojo", it.getStringProperty("name:latin") ?: "null")
+                }
         }
 
         model.target.observe(viewLifecycleOwner) { xy ->
