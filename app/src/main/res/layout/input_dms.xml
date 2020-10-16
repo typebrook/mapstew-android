@@ -13,6 +13,12 @@
         android:layout_marginBottom="4dp"
         android:orientation="horizontal">
 
+        <Spinner
+            android:id="@+id/spinner_ew"
+            android:layout_width="100dp"
+            android:layout_height="match_parent"
+            android:entries="@array/longitude_EW" />
+
         <EditText
             android:id="@+id/longitudeDeg"
             android:layout_width="40dp"
@@ -50,6 +56,12 @@
         android:layout_marginTop="4dp"
         android:layout_marginBottom="16dp"
         android:orientation="horizontal">
+
+        <Spinner
+            android:id="@+id/spinner_ns"
+            android:layout_width="100dp"
+            android:layout_height="match_parent"
+            android:entries="@array/latitude_NS" />
 
         <EditText
             android:id="@+id/latitude_deg"
