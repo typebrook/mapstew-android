@@ -25,9 +25,12 @@ class MainFragment : Fragment() {
     ): View {
 
         mapModel.target.value = mapModel.coordinate.value
-        requireActivity().supportFragmentManager.commit {
-            add<MapboxFragment>(R.id.map_container, null)
-//            add<TangramFragment>(R.id.map_container, null)
+
+        if (savedInstanceState == null) {
+            requireActivity().supportFragmentManager.commit {
+                add<MapboxFragment>(R.id.map_container, null)
+//              add<TangramFragment>(R.id.map_container, null)
+            }
         }
 
         return binding.root
