@@ -24,9 +24,11 @@ class MainFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
 
-        requireActivity().supportFragmentManager.commit {
-            add<MapboxFragment>(R.id.map_container, null)
-//            add<TangramFragment>(R.id.map_container, null)
+        if (savedInstanceState == null) {
+            requireActivity().supportFragmentManager.commit {
+                add<MapboxFragment>(R.id.map_container, null)
+//              add<TangramFragment>(R.id.map_container, null)
+            }
         }
 
         return binding.root
