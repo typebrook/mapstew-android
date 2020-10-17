@@ -11,6 +11,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.observe
+import com.example.sample.R
 import com.example.sample.databinding.DialogCrsBinding
 import com.example.sample.databinding.InputDegMinBinding
 import com.example.sample.databinding.InputDegreeBinding
@@ -37,7 +38,7 @@ class CrsDialogFragment : DialogFragment() {
         initViewGroup()
         with(AlertDialog.Builder(this)) {
             setView(viewGroup.root)
-            setTitle("foo")
+            setTitle(R.string.dialog_coord_input_desc)
             setPositiveButton("GOTO") { _, _ ->
                 coordInput.wgs84LongLat?.let(mapModel.target::setValue)
             }
@@ -70,7 +71,7 @@ class CrsDialogFragment : DialogFragment() {
             adapter = ArrayAdapter(
                 requireContext(),
                 android.R.layout.simple_spinner_dropdown_item,
-                selectableExpressions
+                resources.getStringArray(R.array.coord_expr)
             )
             onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onNothingSelected(p0: AdapterView<*>?) {}
