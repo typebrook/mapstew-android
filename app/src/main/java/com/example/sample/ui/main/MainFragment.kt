@@ -50,5 +50,13 @@ class MainFragment : Fragment() {
         coordinates.setOnClickListener {
             CoordInputDialogFragment().show(childFragmentManager, null)
         }
+
+        zoomInButton.setOnClickListener {
+            mapModel.target.value = mapModel.center.value.run { copy(third = zoom + 1) }
+        }
+
+        zoomOutButton.setOnClickListener {
+            mapModel.target.value = mapModel.center.value.run { copy(third = zoom - 1) }
+        }
     }
 }
