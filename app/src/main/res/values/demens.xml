@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- button -->
+    <dimen name="round_button_radius">96dp</dimen>
+    <dimen name="round_button_padding">6dp</dimen>
+    <dimen name="round_button_inset">6dp</dimen>
+</resources>
