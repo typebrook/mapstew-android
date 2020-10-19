@@ -13,7 +13,6 @@ import com.example.sample.R
 import com.example.sample.databinding.MainFragmentBinding
 import com.example.sample.geometry.*
 import com.example.sample.map.MapboxFragment
-import com.example.sample.map.TangramFragment
 
 class MainFragment : Fragment() {
 
@@ -36,8 +35,8 @@ class MainFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) = with(binding) {
 
-        mapModel.coordinate.observe(viewLifecycleOwner) { wgs84LongLat ->
-            val xy = wgs84LongLat.convert(CoordRefSys.WGS84, mapModel.crsState.value.crs)
+        mapModel.center.observe(viewLifecycleOwner) { camera ->
+            val xy = camera.wgs84LongLat.convert(CoordRefSys.WGS84, mapModel.crsState.value.crs)
             coordinates.text = when (mapModel.crsState.value.expression) {
                 CoordExpression.Degree -> xy2DegreeString(xy)
                 CoordExpression.DegMin -> xy2DegMinString(xy)

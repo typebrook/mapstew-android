@@ -26,7 +26,7 @@ class CrsDialogFragment : DialogFragment() {
     private lateinit var coordInput: CoordInput
 
     private val crs get() = mapModel.crsState.value.crs
-    private val coord get() = mapModel.coordinate.value
+    private val coord get() = mapModel.center.value.wgs84LongLat
 
     private val validCrsList = listOf(WGS84, TWD97, TWD67)
 
@@ -37,7 +37,9 @@ class CrsDialogFragment : DialogFragment() {
             setView(viewGroup.root)
             setTitle("foo")
             setPositiveButton("GOTO") { _, _ ->
-                coordInput.wgs84LongLat?.let(mapModel.target::setValue)
+                coordInput.wgs84LongLat?.run {
+                    mapModel.target.value = Triple(first, second, mapModel.center.value.zoom)
+                }
             }
             create()
         }

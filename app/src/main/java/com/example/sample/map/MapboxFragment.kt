@@ -5,10 +5,12 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.observe
 import com.example.sample.R
 import com.example.sample.ui.main.MapViewModel
+import com.example.sample.ui.main.zoom
 import com.mapbox.mapboxsdk.Mapbox
 import com.mapbox.mapboxsdk.camera.CameraPosition
 import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.maps.MapboxMap
+import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.maps.SupportMapFragment
 
 class MapboxFragment : SupportMapFragment() {
@@ -25,17 +27,20 @@ class MapboxFragment : SupportMapFragment() {
 
         setStyle(defaultStyle)
         cameraPosition = CameraPosition.Builder()
-            .zoom(12.0)
+            .zoom(model.center.value.zoom.toDouble())
             .build()
 
         addOnCameraMoveListener {
-            model.coordinate.value = cameraPosition.target.run { longitude to latitude }
+            model.center.value = cameraPosition.run {
+                Triple(target.longitude, target.latitude, zoom.toFloat())
+            }
         }
 
-        model.target.observe(viewLifecycleOwner) { xy ->
+        model.target.observe(viewLifecycleOwner) { camera ->
             animateCamera {
                 CameraPosition.Builder()
-                    .target(LatLng(xy.second, xy.first))
+                    .target(LatLng(camera.second, camera.first))
+                    .zoom(camera.zoom.toDouble())
                     .build()
             }
         }

@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.observe
 import com.example.sample.ui.main.MapViewModel
+import com.example.sample.ui.main.zoom
 import com.mapzen.tangram.*
 import com.mapzen.tangram.MapView.MapReadyCallback
 
@@ -26,13 +27,13 @@ class TangramFragment : Fragment(), MapReadyCallback {
     override fun onMapReady(mapController: MapController?) = mapController?.run {
 
         loadSceneFileAsync("basic.yaml", null)
-        updateCameraPosition(CameraUpdateFactory.setZoom(12F))
+        updateCameraPosition(CameraUpdateFactory.setZoom(model.center.value.zoom))
 
         setMapChangeListener(object : MapChangeListener {
             override fun onViewComplete() {}
             override fun onRegionWillChange(animated: Boolean) {}
             fun updateModel() {
-                model.coordinate.value = cameraPosition.run { longitude to latitude }
+                model.center.value = cameraPosition.run { Triple(longitude, latitude, zoom) }
             }
 
             override fun onRegionIsChanging() {
@@ -44,12 +45,12 @@ class TangramFragment : Fragment(), MapReadyCallback {
             }
         })
 
-        model.target.observe(viewLifecycleOwner) { xy ->
+        model.target.observe(viewLifecycleOwner) { camera ->
             flyToCameraPosition(
                 CameraPosition().apply {
-                    longitude = xy.first
-                    latitude = xy.second
-                    zoom = this@run.cameraPosition.zoom
+                    longitude = camera.first
+                    latitude = camera.second
+                    zoom = camera.zoom
                 }, 400, null
             )
         }

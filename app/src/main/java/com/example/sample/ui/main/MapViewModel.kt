@@ -7,16 +7,27 @@ import com.example.sample.geometry.XYPair
 import com.example.sample.geometry.isLongLatPair
 import com.example.sample.livedata.SafeMutableLiveData
 
+typealias Camera = Triple<Double, Double, Float>
+
+val Camera.wgs84LongLat: XYPair get() = first to second
+val Camera.zoom: Float get() = third
+
 class MapViewModel : ViewModel() {
 
     // coordinate of center of map
-    val coordinate = object : SafeMutableLiveData<XYPair>(121.585674 to 25.023167) {
-        override val predicate = { xy: XYPair -> xy.isLongLatPair() }
+    val center = object : SafeMutableLiveData<Camera>(
+        Triple(121.585674, 25.023167, 12F)
+    ) {
+        override val predicate = { value: Camera ->
+            with(value) { first to second }.isLongLatPair()
+        }
     }
 
     // coordinate of target, camera will move to here
-    val target = object : SafeMutableLiveData<XYPair>(coordinate.value) {
-        override val predicate = { xy: XYPair -> xy.isLongLatPair() }
+    val target = object : SafeMutableLiveData<Camera>(center.value) {
+        override val predicate = { value: Camera ->
+            with(value) { first to second }.isLongLatPair()
+        }
     }
 
     val crsState = object : SafeMutableLiveData<CrsState>(CrsState()) {
