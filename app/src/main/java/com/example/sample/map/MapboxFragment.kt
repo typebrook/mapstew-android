@@ -16,7 +16,7 @@ import com.mapbox.mapboxsdk.maps.SupportMapFragment
 class MapboxFragment : SupportMapFragment() {
 
     private val model by activityViewModels<MapViewModel>()
-    private val defaultStyle by lazy { requireContext().getString(R.string.uri_style_rudymap) }
+    private val defaultStyle by lazy { getString(R.string.uri_style_rudymap) }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
