@@ -106,7 +106,7 @@ class CoordInputDialogFragment : DialogFragment() {
         }
     }
 
-    // region XYInput
+    // region CoordInput
     interface CoordInput {
         val view: View
         val wgs84LongLat: XYPair?
