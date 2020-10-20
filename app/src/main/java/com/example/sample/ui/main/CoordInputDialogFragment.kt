@@ -18,6 +18,7 @@ import com.example.sample.databinding.InputDegMinBinding
 import com.example.sample.databinding.InputDegreeBinding
 import com.example.sample.databinding.InputDmsBinding
 import com.example.sample.geometry.*
+import com.example.sample.geometry.CoordRefSys.Companion.EPSG_3857
 import com.example.sample.geometry.CoordRefSys.Companion.TWD67
 import com.example.sample.geometry.CoordRefSys.Companion.TWD97
 import com.example.sample.geometry.CoordRefSys.Companion.WGS84
@@ -32,7 +33,7 @@ class CoordInputDialogFragment : DialogFragment() {
     private val crs get() = mapModel.crsState.value.crs
     private val xy get() = mapModel.coordinate.value.convert(WGS84, crs)
 
-    private val validCrsList = listOf(WGS84, TWD97, TWD67)
+    private val validCrsList = listOf(WGS84, TWD97, TWD67, EPSG_3857)
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog = requireActivity().run {
 

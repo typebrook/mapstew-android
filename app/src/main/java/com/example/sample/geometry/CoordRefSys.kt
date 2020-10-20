@@ -80,6 +80,11 @@ open class CoordRefSys(
             type = ParameterType.Proj4,
             parameter = "+proj=tmerc +lat_0=0 +lon_0=121 +k=0.9999 +x_0=250000 +y_0=0 +ellps=aust_SA  +towgs84=-750.739,-359.515,-180.510,0.00003863,0.00001721,0.00000197,0.99998180 +units=m +no_defs"
         )
+        val EPSG_3857 = CoordRefSys(
+            displayName = "EPSG:3857",
+            type = ParameterType.Code,
+            parameter = "EPSG:3857"
+        )
         val TWD67_latLng = CoordRefSys(
             displayName = "TWD67(經緯度)",
             type = ParameterType.Proj4,
