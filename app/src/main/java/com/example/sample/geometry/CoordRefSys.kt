@@ -54,7 +54,7 @@ open class CoordRefSys(
     }
 
     override fun equals(other: Any?): Boolean =
-        (other is CoordRefSys && parameter == other.parameter)
+        (other is CoordRefSys && hashCode() == other.hashCode())
 
     override fun hashCode(): Int {
         var result = displayName.hashCode()

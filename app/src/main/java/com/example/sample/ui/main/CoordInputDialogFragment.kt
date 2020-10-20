@@ -30,7 +30,7 @@ class CoordInputDialogFragment : DialogFragment() {
     private val crs get() = mapModel.crsState.value.crs
     private val coord get() = mapModel.center.value.wgs84LongLat.convert(WGS84, crs)
 
-    private val validCrsList = listOf(WGS84, TWD97, TWD67, EPSG_3857)
+    private val validCrsList = listOf(WGS84, TWD97, TWD67, TaipowerCrs, EPSG_3857)
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog = requireActivity().run {
 
@@ -90,7 +90,8 @@ class CoordInputDialogFragment : DialogFragment() {
                 CoordExpression.Degree -> degreeInput
                 CoordExpression.DegMin -> degMinInput
                 CoordExpression.DMS -> dmsInput
-                else -> xyInput
+                CoordExpression.XY -> xyInput
+                CoordExpression.SINGLE -> singleInput
             }
             inputContainer.removeAllViews()
             inputContainer.addView(coordInput.view)
@@ -136,6 +137,26 @@ class CoordInputDialogFragment : DialogFragment() {
             override val wgs84LongLat: XYPair
                 get() = with(binding) {
                     return (x.vector to y.vector).convert(crs, WGS84)
+                }
+        }
+
+    private val singleInput: CoordInput
+        get() = object : CoordInput {
+            val binding = InputSingleBinding.inflate(layoutInflater)
+            val currentCRS = crs
+            override val view: View = with(binding) {
+                if (currentCRS is MaskedCRS) {
+                    singleCoord.hint = currentCRS.mask(coord)
+                }
+                root
+            }
+            override val wgs84LongLat: XYPair
+                get() = with(binding) {
+                    if (currentCRS is MaskedCRS) {
+                        singleCoord.text.toString().let(currentCRS::reverseMask)
+                    } else {
+                        coord
+                    }
                 }
         }
 

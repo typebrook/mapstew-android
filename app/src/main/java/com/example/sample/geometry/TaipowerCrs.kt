@@ -1,10 +1,18 @@
 package com.example.sample.geometry
 
 /**
- * Created by pham on 2018/2/11.
  * Taipower Coordinate System is a local CRS based on TWD67_TM2
  * For more details, see http://www.sunriver.com.tw/grid_taipower.htm
  */
+
+abstract class MaskedCRS(
+    displayName: String,
+    type: ParameterType = ParameterType.Code,
+    parameter: String
+) : CoordRefSys(displayName, type, parameter) {
+    abstract fun mask(coord: XYPair): String
+    abstract fun reverseMask(mask: String): XYPair
+}
 
 enum class Section(val xy: Pair<Int, Int>) {
     A(170000 to 2750000),
@@ -34,13 +42,13 @@ enum class Square {
     A, B, C, D, E, F, G, H
 }
 
-object TaipowerCrs : CoordRefSys(
-        displayName = "台灣電力座標",
-        type = ParameterType.Proj4,
-        parameter = "+proj=tmerc +lat_0=0 +lon_0=121 +k=0.9999 +x_0=250000 +y_0=0 +ellps=aust_SA  +towgs84=-750.739,-359.515,-180.510,0.00003863,0.00001721,0.00000197,0.99998180 +units=m +no_defs"
+object TaipowerCrs : MaskedCRS(
+    displayName = "台灣電力座標",
+    type = ParameterType.Proj4,
+    parameter = "+proj=tmerc +lat_0=0 +lon_0=121 +k=0.9999 +x_0=250000 +y_0=0 +ellps=aust_SA  +towgs84=-750.739,-359.515,-180.510,0.00003863,0.00001721,0.00000197,0.99998180 +units=m +no_defs"
 ) {
 
-    fun mask(coord: XYPair): String {
+    override fun mask(coord: XYPair): String {
         var (x, y) = coord.first.toInt() to coord.second.toInt()
 
         val section = Section.values().firstOrNull {
@@ -68,16 +76,17 @@ object TaipowerCrs : CoordRefSys(
     }
 
     @Throws
-    fun reverseMask(coord: String): XYPair {
+    override fun reverseMask(coord: String): XYPair {
         val sectionXY = Section.values().firstOrNull { it.name == coord[0].toString() }?.xy
-                ?: throw UnknownError()
+            ?: throw UnknownError()
         val imageXY = coord.substring(1, 3).toInt() * 800 to coord.substring(3, 5).toInt() * 500
         val squareXY = coord.substring(5, 7).run {
             val xIndex = Square.values().first { it.name == this[0].toString() }.ordinal
             val yIndex = Square.values().first { it.name == this[1].toString() }.ordinal
             xIndex * 100 to yIndex * 100
         }
-        val visionXY = coord.substring(7, 8).toInt() * 10 + 5 to coord.substring(8, 9).toInt() * 10 + 5
+        val visionXY =
+            coord.substring(7, 8).toInt() * 10 + 5 to coord.substring(8, 9).toInt() * 10 + 5
 
         return (sectionXY.first + imageXY.first + squareXY.first + visionXY.first).toDouble() to
                 (sectionXY.second + imageXY.second + squareXY.second + visionXY.second).toDouble()

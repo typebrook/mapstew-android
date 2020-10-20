@@ -39,12 +39,14 @@ class MainFragment : Fragment() {
 
         mapModel.center.observe(viewLifecycleOwner) { camera ->
             val xy = camera.wgs84LongLat.convert(CoordRefSys.WGS84, mapModel.crsState.value.crs)
-            coordinates.text = when (mapModel.crsState.value.expression) {
-                CoordExpression.Degree -> xy2DegreeString(xy)
-                CoordExpression.DegMin -> xy2DegMinString(xy)
-                CoordExpression.DMS -> xy2DMSString(xy)
-                else -> xy2IntString(xy)
-            }.run { "$first $second" }
+            val crsState = mapModel.crsState.value
+            coordinates.text = when (crsState.expression) {
+                CoordExpression.Degree -> xy2DegreeString(xy).run { "$first $second" }
+                CoordExpression.DegMin -> xy2DegMinString(xy).run { "$first $second" }
+                CoordExpression.DMS -> xy2DMSString(xy).run { "$first $second" }
+                CoordExpression.XY -> xy2IntString(xy).run { "$first $second" }
+                CoordExpression.SINGLE -> if (crsState.crs is MaskedCRS) crsState.crs.mask(xy) else String()
+            }
         }
 
         coordinates.setOnClickListener {
