@@ -18,4 +18,6 @@
     <string name="degree">度</string>
     <string name="minute">分</string>
     <string name="second">秒</string>
+    <string name="coordinate_reference_system">座標系統：</string>
+    <string name="expression">表示方式：</string>
 </resources>

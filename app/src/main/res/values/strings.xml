@@ -1,7 +1,11 @@
 <resources>
     <string name="app_name">sample</string>
+
     <string name="uri_style_rudymap" translatable="false">https://raw.githubusercontent.com/typebrook/mapstew/master/styles/topographique.json</string>
     <string name="res_desc_cross" translatable="false">A simple cross marks map center</string>
+    <string name="map_btn_zoom_in" translatable="false">"Zoom in"</string>
+    <string name="map_btn_zoom_out" translatable="false">"Zoom out"</string>
+
     <string name="dialog_coord_input_desc">Coordinate of map center</string>
     <string-array name="coord_expr">
         <item>Degree</item>
@@ -19,4 +23,6 @@
     <string name="degree">°</string>
     <string name="minute">\'</string>
     <string name="second">\'\'</string>
+    <string name="coordinate_reference_system">Coord System:</string>
+    <string name="expression">Expression:</string>
 </resources>

@@ -98,10 +98,10 @@ class CoordInputDialogFragment : DialogFragment() {
 
             crsSpinner.setSelection(validCrsList.indexOf(state.crs))
             if (state.crs.isLongLat) {
-                exprSpinner.visibility = View.VISIBLE
+                exprGroup.visibility = View.VISIBLE
                 exprSpinner.setSelection(state.expression.ordinal)
             } else {
-                exprSpinner.visibility = View.GONE
+                exprGroup.visibility = View.GONE
             }
         }
     }
