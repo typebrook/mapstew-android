@@ -49,7 +49,7 @@ class MainFragment : Fragment() {
         }
 
         coordinates.setOnClickListener {
-            CrsDialogFragment().show(childFragmentManager, null)
+            CoordInputDialogFragment().show(childFragmentManager, null)
         }
     }
 }

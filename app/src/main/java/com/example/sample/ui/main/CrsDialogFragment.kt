@@ -2,6 +2,7 @@ package com.example.sample.ui.main
 
 import android.app.Dialog
 import android.os.Bundle
+import android.text.InputFilter
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -22,7 +23,7 @@ import com.example.sample.geometry.CoordRefSys.Companion.TWD97
 import com.example.sample.geometry.CoordRefSys.Companion.WGS84
 import kotlin.math.absoluteValue
 
-class CrsDialogFragment : DialogFragment() {
+class CoordInputDialogFragment : DialogFragment() {
 
     private val mapModel by activityViewModels<MapViewModel>()
     private val viewGroup by lazy { DialogCrsBinding.inflate(layoutInflater) }
@@ -84,7 +85,7 @@ class CrsDialogFragment : DialogFragment() {
         }
 
         // Change views by crsState
-        mapModel.crsState.observe(this@CrsDialogFragment) { state ->
+        mapModel.crsState.observe(this@CoordInputDialogFragment) { state ->
             coordInput = when (state.expression) {
                 CoordExpression.Degree -> degreeInput
                 CoordExpression.DegMin -> degMinInput
