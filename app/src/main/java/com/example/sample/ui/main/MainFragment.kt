@@ -23,6 +23,8 @@ class MainFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
 
+        mapModel.target.value = mapModel.center.value
+
         if (savedInstanceState == null) {
             requireActivity().supportFragmentManager.commit {
                 add<MapboxFragment>(R.id.map_container, null)
@@ -46,7 +48,7 @@ class MainFragment : Fragment() {
         }
 
         coordinates.setOnClickListener {
-            CrsDialogFragment().show(childFragmentManager, null)
+            CoordInputDialogFragment().show(childFragmentManager, null)
         }
     }
 }

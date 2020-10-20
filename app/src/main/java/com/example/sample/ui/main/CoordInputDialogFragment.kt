@@ -6,20 +6,24 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.EditText
+import android.widget.Spinner
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.observe
+import com.example.sample.R
 import com.example.sample.databinding.DialogCrsBinding
 import com.example.sample.databinding.InputDegMinBinding
 import com.example.sample.databinding.InputDegreeBinding
 import com.example.sample.databinding.InputDmsBinding
 import com.example.sample.geometry.*
+import com.example.sample.geometry.CoordRefSys.Companion.EPSG_3857
 import com.example.sample.geometry.CoordRefSys.Companion.TWD67
 import com.example.sample.geometry.CoordRefSys.Companion.TWD97
 import com.example.sample.geometry.CoordRefSys.Companion.WGS84
+import kotlin.math.absoluteValue
 
-class CrsDialogFragment : DialogFragment() {
+class CoordInputDialogFragment : DialogFragment() {
 
     private val mapModel by activityViewModels<MapViewModel>()
     private val viewGroup by lazy { DialogCrsBinding.inflate(layoutInflater) }
@@ -28,14 +32,14 @@ class CrsDialogFragment : DialogFragment() {
     private val crs get() = mapModel.crsState.value.crs
     private val coord get() = mapModel.center.value.wgs84LongLat
 
-    private val validCrsList = listOf(WGS84, TWD97, TWD67)
+    private val validCrsList = listOf(WGS84, TWD97, TWD67, EPSG_3857)
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog = requireActivity().run {
 
         initViewGroup()
         with(AlertDialog.Builder(this)) {
             setView(viewGroup.root)
-            setTitle("foo")
+            setTitle(R.string.dialog_coord_input_desc)
             setPositiveButton("GOTO") { _, _ ->
                 coordInput.wgs84LongLat?.run {
                     mapModel.target.value = Triple(first, second, mapModel.center.value.zoom)
@@ -70,7 +74,7 @@ class CrsDialogFragment : DialogFragment() {
             adapter = ArrayAdapter(
                 requireContext(),
                 android.R.layout.simple_spinner_dropdown_item,
-                selectableExpressions
+                resources.getStringArray(R.array.coord_expr)
             )
             onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onNothingSelected(p0: AdapterView<*>?) {}
@@ -83,7 +87,7 @@ class CrsDialogFragment : DialogFragment() {
         }
 
         // Change views by crsState
-        mapModel.crsState.observe(this@CrsDialogFragment) { state ->
+        mapModel.crsState.observe(this@CoordInputDialogFragment) { state ->
             coordInput = when (state.expression) {
                 CoordExpression.Degree -> degreeInput
                 CoordExpression.DegMin -> degMinInput
@@ -95,15 +99,15 @@ class CrsDialogFragment : DialogFragment() {
 
             crsSpinner.setSelection(validCrsList.indexOf(state.crs))
             if (state.crs.isLongLat) {
-                exprSpinner.visibility = View.VISIBLE
+                exprGroup.visibility = View.VISIBLE
                 exprSpinner.setSelection(state.expression.ordinal)
             } else {
-                exprSpinner.visibility = View.GONE
+                exprGroup.visibility = View.GONE
             }
         }
     }
 
-    // region XYInput
+    // region CoordInput
     interface CoordInput {
         val view: View
         val wgs84LongLat: XYPair?
@@ -111,21 +115,26 @@ class CrsDialogFragment : DialogFragment() {
         // Get degree/minute/second value from EditText
         val EditText.angle: Double
             get() = text.toString().toDoubleOrNull() ?: hint.toString().toDouble()
+
+        // Get degree sign from Spinner
+        val Spinner.sign: Int
+            get() = if (selectedItemPosition == 0) 1 else -1
     }
 
     private val degreeInput: CoordInput
         get() = object : CoordInput {
             val binding = InputDegreeBinding.inflate(layoutInflater)
             override val view: View = with(binding) {
-                val xy = coord.convert(WGS84, crs)
-                longitude.hint = xy.first.scaleTo(6).toString()
-                latitude.hint = xy.second.scaleTo(6).toString()
+                spinnerEw.setSelection(if (coord.first >= 0) 0 else 1)
+                spinnerNs.setSelection(if (coord.second >= 0) 0 else 1)
+                longitude.hint = coord.first.absoluteValue.scaleTo(6).toString()
+                latitude.hint = coord.second.absoluteValue.scaleTo(6).toString()
                 root
             }
             override val wgs84LongLat: XYPair
                 get() = with(binding) {
-                    val x = longitude.angle
-                    val y = latitude.angle
+                    val x = longitude.angle * spinnerEw.sign
+                    val y = latitude.angle * spinnerNs.sign
                     return (x to y).convert(crs, WGS84)
                 }
         }
@@ -134,12 +143,13 @@ class CrsDialogFragment : DialogFragment() {
         get() = object : CoordInput {
             val binding = InputDegMinBinding.inflate(layoutInflater)
             override val view: View = with(binding) {
-                val xy = coord.convert(WGS84, crs)
-                xy.first.let(degree2DM).run {
+                spinnerEw.setSelection(if (coord.first >= 0) 0 else 1)
+                spinnerNs.setSelection(if (coord.second >= 0) 0 else 1)
+                coord.first.absoluteValue.let(degree2DM).run {
                     longitudeDeg.hint = first.toString()
                     longitudeMin.hint = second.toString()
                 }
-                xy.second.let(degree2DM).run {
+                coord.second.absoluteValue.let(degree2DM).run {
                     latitudeDeg.hint = first.toString()
                     latitudeMin.hint = second.toString()
                 }
@@ -147,8 +157,10 @@ class CrsDialogFragment : DialogFragment() {
             }
             override val wgs84LongLat: XYPair
                 get() = with(binding) {
-                    val x = dm2Degree(longitudeDeg.angle.toInt() to longitudeMin.angle)
-                    val y = dm2Degree(latitudeDeg.angle.toInt() to latitudeMin.angle)
+                    val x =
+                        dm2Degree(longitudeDeg.angle.toInt() to longitudeMin.angle) * spinnerEw.sign
+                    val y =
+                        dm2Degree(latitudeDeg.angle.toInt() to latitudeMin.angle) * spinnerNs.sign
                     return (x to y).convert(crs, WGS84)
                 }
         }
@@ -157,13 +169,14 @@ class CrsDialogFragment : DialogFragment() {
         get() = object : CoordInput {
             val binding = InputDmsBinding.inflate(layoutInflater)
             override val view: View = with(binding) {
-                val xy = coord.convert(WGS84, crs)
-                xy.first.let(degree2DMS).run {
+                spinnerEw.setSelection(if (coord.first >= 0) 0 else 1)
+                spinnerNs.setSelection(if (coord.second >= 0) 0 else 1)
+                coord.first.absoluteValue.let(degree2DMS).run {
                     longitudeDeg.hint = first.toString()
                     longitudeMin.hint = second.toString()
                     longitudeSec.hint = third.toString()
                 }
-                xy.second.let(degree2DMS).run {
+                coord.second.absoluteValue.let(degree2DMS).run {
                     latitudeDeg.hint = first.toString()
                     latitudeMin.hint = second.toString()
                     latitudeSec.hint = third.toString()
@@ -178,14 +191,14 @@ class CrsDialogFragment : DialogFragment() {
                             longitudeMin.angle.toInt(),
                             longitudeSec.angle
                         )
-                    )
+                    ) * spinnerEw.sign
                     val y = dms2Degree(
                         Triple(
                             latitudeDeg.angle.toInt(),
                             latitudeMin.angle.toInt(),
                             latitudeSec.angle
                         )
-                    )
+                    ) * spinnerNs.sign
                     return (x to y).convert(crs, WGS84)
                 }
         }
