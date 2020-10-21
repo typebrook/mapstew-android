@@ -7,8 +7,8 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.observe
-import com.example.sample.ui.main.MapViewModel
-import com.example.sample.ui.main.zoom
+import com.example.sample.main.MapViewModel
+import com.example.sample.main.zoom
 import com.mapzen.tangram.*
 import com.mapzen.tangram.MapView.MapReadyCallback
 

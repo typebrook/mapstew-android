@@ -4,8 +4,8 @@ import android.content.Context
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.observe
 import com.example.sample.R
-import com.example.sample.ui.main.MapViewModel
-import com.example.sample.ui.main.zoom
+import com.example.sample.main.MapViewModel
+import com.example.sample.main.zoom
 import com.mapbox.mapboxsdk.Mapbox
 import com.mapbox.mapboxsdk.camera.CameraPosition
 import com.mapbox.mapboxsdk.geometry.LatLng
