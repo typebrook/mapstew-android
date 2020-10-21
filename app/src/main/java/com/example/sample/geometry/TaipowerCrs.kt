@@ -84,7 +84,7 @@ object TaipowerCrs : MaskedCRS(
     override fun reverseMask(rawMask: String): XYPair = try {
         val mask = rawMask
             .filter { it.isLetterOrDigit() }
-            .substring(0, 10)
+            .substring(0, 9)
             .map { if (it.isLetter()) it.toUpperCase() else it }
             .joinToString("")
         val sectionXY = Section.values().firstOrNull { it.name == mask[0].toString() }?.xy
