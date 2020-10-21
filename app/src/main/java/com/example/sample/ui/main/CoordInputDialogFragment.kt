@@ -12,15 +12,13 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.observe
 import com.example.sample.R
-import com.example.sample.databinding.DialogCrsBinding
-import com.example.sample.databinding.InputDegMinBinding
-import com.example.sample.databinding.InputDegreeBinding
-import com.example.sample.databinding.InputDmsBinding
+import com.example.sample.databinding.*
 import com.example.sample.geometry.*
 import com.example.sample.geometry.CoordRefSys.Companion.EPSG_3857
 import com.example.sample.geometry.CoordRefSys.Companion.TWD67
 import com.example.sample.geometry.CoordRefSys.Companion.TWD97
 import com.example.sample.geometry.CoordRefSys.Companion.WGS84
+import java.lang.Character.isDigit
 import kotlin.math.absoluteValue
 
 class CoordInputDialogFragment : DialogFragment() {
@@ -30,9 +28,9 @@ class CoordInputDialogFragment : DialogFragment() {
     private lateinit var coordInput: CoordInput
 
     private val crs get() = mapModel.crsState.value.crs
-    private val coord get() = mapModel.center.value.wgs84LongLat
+    private val coord get() = mapModel.center.value.wgs84LongLat.convert(WGS84, crs)
 
-    private val validCrsList = listOf(WGS84, TWD97, TWD67, EPSG_3857)
+    private val validCrsList = listOf(WGS84, TWD97, TWD67, TaipowerCrs, EPSG_3857)
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog = requireActivity().run {
 
@@ -92,7 +90,8 @@ class CoordInputDialogFragment : DialogFragment() {
                 CoordExpression.Degree -> degreeInput
                 CoordExpression.DegMin -> degMinInput
                 CoordExpression.DMS -> dmsInput
-                else -> degreeInput
+                CoordExpression.XY -> xyInput
+                CoordExpression.SINGLE -> singleInput
             }
             inputContainer.removeAllViews()
             inputContainer.addView(coordInput.view)
@@ -112,6 +111,11 @@ class CoordInputDialogFragment : DialogFragment() {
         val view: View
         val wgs84LongLat: XYPair?
 
+        // Get vector value from EditText
+        val EditText.vector: Double
+            get() = text.toString().filter(::isDigit).toDoubleOrNull()
+                ?: hint.toString().filter(::isDigit).toDouble()
+
         // Get degree/minute/second value from EditText
         val EditText.angle: Double
             get() = text.toString().toDoubleOrNull() ?: hint.toString().toDouble()
@@ -120,6 +124,41 @@ class CoordInputDialogFragment : DialogFragment() {
         val Spinner.sign: Int
             get() = if (selectedItemPosition == 0) 1 else -1
     }
+
+    private val xyInput: CoordInput
+        get() = object : CoordInput {
+            val binding = InputXyBinding.inflate(layoutInflater)
+            override val view: View = with(binding) {
+                val xyString = xy2IntString(coord)
+                x.hint = xyString.first
+                y.hint = xyString.second
+                root
+            }
+            override val wgs84LongLat: XYPair
+                get() = with(binding) {
+                    return (x.vector to y.vector).convert(crs, WGS84)
+                }
+        }
+
+    private val singleInput: CoordInput
+        get() = object : CoordInput {
+            val binding = InputSingleBinding.inflate(layoutInflater)
+            val currentCRS = crs
+            override val view: View = with(binding) {
+                if (currentCRS is MaskedCRS) {
+                    singleCoord.hint = currentCRS.mask(coord)
+                }
+                root
+            }
+            override val wgs84LongLat: XYPair
+                get() = with(binding) {
+                    if (currentCRS is MaskedCRS) {
+                        singleCoord.text.toString().let(currentCRS::reverseMask)
+                    } else {
+                        coord
+                    }
+                }
+        }
 
     private val degreeInput: CoordInput
         get() = object : CoordInput {
