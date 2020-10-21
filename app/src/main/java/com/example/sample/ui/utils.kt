@@ -28,3 +28,16 @@ class AngleFilter(
         }
     }
 }
+
+class LetterDigitFilter : InputFilter {
+    override fun filter(
+        source: CharSequence?, start: Int, end: Int,
+        dest: Spanned?, dstart: Int, dend: Int
+    ): CharSequence? {
+        source ?: return null
+
+        if (source.filterNot { it.isLetter() or it.isDigit() }.isNotEmpty()) return String()
+
+        return source.map { if (it.isLetter()) it.toUpperCase() else it }.joinToString("")
+    }
+}

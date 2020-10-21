@@ -19,6 +19,7 @@ import com.example.sample.geometry.CoordRefSys.Companion.TWD67
 import com.example.sample.geometry.CoordRefSys.Companion.TWD97
 import com.example.sample.geometry.CoordRefSys.Companion.WGS84
 import com.example.sample.ui.AngleFilter
+import com.example.sample.ui.LetterDigitFilter
 import java.lang.Character.isDigit
 import kotlin.math.absoluteValue
 
@@ -153,6 +154,7 @@ class CoordInputDialogFragment : DialogFragment() {
                 if (currentCRS is MaskedCRS) {
                     singleCoord.hint = currentCRS.mask(coord)
                 }
+                singleCoord.filters = arrayOf(LetterDigitFilter())
                 root
             }
             override val wgs84LongLat: XYPair
