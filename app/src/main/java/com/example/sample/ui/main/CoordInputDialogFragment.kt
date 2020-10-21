@@ -111,6 +111,10 @@ class CoordInputDialogFragment : DialogFragment() {
         val view: View
         val wgs84LongLat: XYPair?
 
+        // Get raw value from EditText
+        val EditText.raw: String
+            get() = if (text.isNotBlank()) text.toString() else hint.toString()
+
         // Get vector value from EditText
         val EditText.vector: Double
             get() = text.toString().filter(::isDigit).toDoubleOrNull()
@@ -153,9 +157,13 @@ class CoordInputDialogFragment : DialogFragment() {
             override val wgs84LongLat: XYPair
                 get() = with(binding) {
                     if (currentCRS is MaskedCRS) {
-                        singleCoord.text.toString().let(currentCRS::reverseMask)
+                        try {
+                            singleCoord.raw.let(currentCRS::reverseMask).convert(crs, WGS84)
+                        } catch (e: MaskedCRS.Companion.CannotHandleException) {
+                            coord.convert(crs, WGS84)
+                        }
                     } else {
-                        coord
+                        coord.convert(crs, WGS84)
                     }
                 }
         }

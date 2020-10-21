@@ -1,13 +1,16 @@
 package com.example.sample.geometry
 
 import org.osgeo.proj4j.*
-import kotlin.jvm.Throws
 
 /**
  * Features which provide coordinate converters for different system
  */
 
 typealias XYPair = Pair<Double, Double>
+
+val XYPair.x get() = first
+val XYPair.y get() = second
+
 typealias XYString = Pair<String, String>
 typealias CoordConverter = (XYPair) -> (XYPair)
 typealias CoordPrinter = (XYPair) -> XYString
@@ -20,6 +23,7 @@ fun XYPair.convert(from: CoordRefSys, to: CoordRefSys) = from.converterFor(to)(t
 fun XYPair.isValid(crs: CoordRefSys) = isValidInWGS84(convert(crs, CoordRefSys.WGS84))
 
 enum class CoordExpression { Degree, DegMin, DMS, SINGLE, XY }
+
 val selectableExpressions = CoordExpression.values().toList().subList(0, 3)
 
 open class CoordRefSys(

@@ -14,6 +14,6 @@
         android:layout_margin="16dp"
         android:autofillHints=""
         android:gravity="center_horizontal"
-        android:inputType="numberDecimal"
+        android:inputType="textCapSentences"
         tools:ignore="LabelFor" />
 </FrameLayout>
