@@ -1,6 +1,5 @@
 package com.example.sample.main
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.sample.geometry.*
 import com.example.sample.livedata.SafeMutableLiveData
@@ -30,7 +29,7 @@ class MapViewModel : ViewModel() {
 
     val crsState = object : SafeMutableLiveData<CrsState>(CrsState()) {
         override val transformer = { newState: CrsState ->
-            val foo = when {
+            when {
                 newState.crs.isLongLat && !value.crs.isLongLat -> newState.copy(expression = CoordExpression.DMS)
                 !newState.crs.isLongLat -> {
                     val expression =
@@ -39,9 +38,6 @@ class MapViewModel : ViewModel() {
                 }
                 else -> newState
             }
-            Log.d("jojojo 1", "${newState.crs.displayName} ${newState.expression.name}")
-            Log.d("jojojo 2", "${foo.crs.displayName} ${foo.expression.name}")
-            foo
         }
     }
 
