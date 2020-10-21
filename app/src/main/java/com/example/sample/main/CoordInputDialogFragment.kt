@@ -18,6 +18,7 @@ import com.example.sample.geometry.CoordRefSys.Companion.EPSG_3857
 import com.example.sample.geometry.CoordRefSys.Companion.TWD67
 import com.example.sample.geometry.CoordRefSys.Companion.TWD97
 import com.example.sample.geometry.CoordRefSys.Companion.WGS84
+import com.example.sample.ui.AngleFilter
 import java.lang.Character.isDigit
 import kotlin.math.absoluteValue
 
@@ -175,7 +176,9 @@ class CoordInputDialogFragment : DialogFragment() {
                 spinnerEw.setSelection(if (coord.first >= 0) 0 else 1)
                 spinnerNs.setSelection(if (coord.second >= 0) 0 else 1)
                 longitude.hint = coord.first.absoluteValue.scaleTo(6).toString()
+                longitude.filters = arrayOf(AngleFilter(180, true))
                 latitude.hint = coord.second.absoluteValue.scaleTo(6).toString()
+                latitude.filters = arrayOf(AngleFilter(90, true))
                 root
             }
             override val wgs84LongLat: XYPair
@@ -194,11 +197,15 @@ class CoordInputDialogFragment : DialogFragment() {
                 spinnerNs.setSelection(if (coord.second >= 0) 0 else 1)
                 coord.first.absoluteValue.let(degree2DM).run {
                     longitudeDeg.hint = first.toString()
+                    longitudeDeg.filters = arrayOf(AngleFilter(180, true))
                     longitudeMin.hint = second.toString()
+                    longitudeMin.filters = arrayOf(AngleFilter(60, false))
                 }
                 coord.second.absoluteValue.let(degree2DM).run {
                     latitudeDeg.hint = first.toString()
+                    latitudeDeg.filters = arrayOf(AngleFilter(90, true))
                     latitudeMin.hint = second.toString()
+                    latitudeMin.filters = arrayOf(AngleFilter(60, false))
                 }
                 root
             }
@@ -220,13 +227,19 @@ class CoordInputDialogFragment : DialogFragment() {
                 spinnerNs.setSelection(if (coord.second >= 0) 0 else 1)
                 coord.first.absoluteValue.let(degree2DMS).run {
                     longitudeDeg.hint = first.toString()
+                    longitudeDeg.filters = arrayOf(AngleFilter(180, true))
                     longitudeMin.hint = second.toString()
+                    longitudeMin.filters = arrayOf(AngleFilter(60, false))
                     longitudeSec.hint = third.toString()
+                    longitudeSec.filters = arrayOf(AngleFilter(60, false, 4))
                 }
                 coord.second.absoluteValue.let(degree2DMS).run {
                     latitudeDeg.hint = first.toString()
+                    latitudeDeg.filters = arrayOf(AngleFilter(90, true))
                     latitudeMin.hint = second.toString()
+                    latitudeMin.filters = arrayOf(AngleFilter(60, false))
                     latitudeSec.hint = third.toString()
+                    latitudeSec.filters = arrayOf(AngleFilter(60, false, 4))
                 }
                 root
             }
