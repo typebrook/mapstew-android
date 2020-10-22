@@ -32,7 +32,7 @@ class CoordInputDialogFragment : DialogFragment() {
     private val crs get() = mapModel.crsState.value.crsWrapper
     private val coord get() = mapModel.center.value.wgs84LongLat.convert(WGS84, crs)
 
-    private val validCrsList = listOf(WGS84, TWD97, TWD67, TaipowerCrs, EPSG_3857)
+    private val validCrsList = listOf(WGS84, TWD97, TWD67, TaipowerCRS, EPSG_3857)
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog = requireActivity().run {
 
