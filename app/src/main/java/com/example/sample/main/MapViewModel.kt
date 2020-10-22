@@ -30,10 +30,10 @@ class MapViewModel : ViewModel() {
     val crsState = object : SafeMutableLiveData<CrsState>(CrsState()) {
         override val transformer = { newState: CrsState ->
             when {
-                newState.crs.isLongLat && !value.crs.isLongLat -> newState.copy(expression = CoordExpression.DMS)
-                !newState.crs.isLongLat -> {
+                newState.crsWrapper.isLongLat && !value.crsWrapper.isLongLat -> newState.copy(expression = CoordExpression.DMS)
+                !newState.crsWrapper.isLongLat -> {
                     val expression =
-                        if (newState.crs is MaskedCRS) CoordExpression.SINGLE else CoordExpression.XY
+                        if (newState.crsWrapper is MaskedCRS) CoordExpression.SINGLE else CoordExpression.XY
                     newState.copy(expression = expression)
                 }
                 else -> newState
@@ -42,7 +42,7 @@ class MapViewModel : ViewModel() {
     }
 
     data class CrsState(
-        val crs: CoordRefSys = CoordRefSys.WGS84,
+        val crsWrapper: CRSWrapper = CRSWrapper.WGS84,
         val expression: CoordExpression = CoordExpression.DMS
     )
 }

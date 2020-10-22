@@ -9,7 +9,7 @@ abstract class MaskedCRS(
     displayName: String,
     type: ParameterType = ParameterType.Code,
     parameter: String
-) : CoordRefSys(displayName, type, parameter) {
+) : CRSWrapper(displayName, type, parameter) {
     abstract fun mask(coord: XYPair): String
     abstract fun reverseMask(rawMask: String): XYPair
 

@@ -14,10 +14,10 @@ import androidx.lifecycle.observe
 import com.example.sample.R
 import com.example.sample.databinding.*
 import com.example.sample.geometry.*
-import com.example.sample.geometry.CoordRefSys.Companion.EPSG_3857
-import com.example.sample.geometry.CoordRefSys.Companion.TWD67
-import com.example.sample.geometry.CoordRefSys.Companion.TWD97
-import com.example.sample.geometry.CoordRefSys.Companion.WGS84
+import com.example.sample.geometry.CRSWrapper.Companion.EPSG_3857
+import com.example.sample.geometry.CRSWrapper.Companion.TWD67
+import com.example.sample.geometry.CRSWrapper.Companion.TWD97
+import com.example.sample.geometry.CRSWrapper.Companion.WGS84
 import com.example.sample.ui.AngleFilter
 import com.example.sample.ui.LetterDigitFilter
 import java.lang.Character.isDigit
@@ -29,7 +29,7 @@ class CoordInputDialogFragment : DialogFragment() {
     private val viewGroup by lazy { DialogCrsBinding.inflate(layoutInflater) }
     private lateinit var coordInput: CoordInput
 
-    private val crs get() = mapModel.crsState.value.crs
+    private val crs get() = mapModel.crsState.value.crsWrapper
     private val coord get() = mapModel.center.value.wgs84LongLat.convert(WGS84, crs)
 
     private val validCrsList = listOf(WGS84, TWD97, TWD67, TaipowerCrs, EPSG_3857)
@@ -63,7 +63,7 @@ class CoordInputDialogFragment : DialogFragment() {
                 override fun onNothingSelected(p0: AdapterView<*>?) {}
                 override fun onItemSelected(p0: AdapterView<*>?, p1: View?, i: Int, p3: Long) {
                     with(mapModel.crsState) {
-                        value = value.copy(crs = validCrsList[i])
+                        value = value.copy(crsWrapper = validCrsList[i])
                     }
                 }
             }
@@ -98,8 +98,8 @@ class CoordInputDialogFragment : DialogFragment() {
             inputContainer.removeAllViews()
             inputContainer.addView(coordInput.view)
 
-            crsSpinner.setSelection(validCrsList.indexOf(state.crs))
-            if (state.crs.isLongLat) {
+            crsSpinner.setSelection(validCrsList.indexOf(state.crsWrapper))
+            if (state.crsWrapper.isLongLat) {
                 exprGroup.visibility = View.VISIBLE
                 exprSpinner.setSelection(state.expression.ordinal)
             } else {
