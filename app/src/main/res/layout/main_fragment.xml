@@ -10,6 +10,17 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <TextView
+        android:id="@+id/features_details"
+        android:background="@drawable/shape_rounded_corner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="12dp"
+        android:padding="6dp"
+        android:textColor="@android:color/black"
+        android:textSize="12sp" />
+
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

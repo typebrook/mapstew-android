@@ -36,6 +36,18 @@ class MapboxFragment : SupportMapFragment() {
             }
         }
 
+        addOnCameraIdleListener {
+            // FIXME This is just a simple feature query for debug
+            model.center.value
+                .run { LatLng(second, first) }
+                .run(mapboxMap.projection::toScreenLocation)
+                .let { queryRenderedFeatures(it) }
+                .mapNotNull { it.id() + it.properties()?.toString() }
+                .let { if (it.isEmpty()) null else it }
+                ?.joinToString("\n\n")
+                .let(model.details::setValue)
+        }
+
         model.target.observe(viewLifecycleOwner) { camera ->
             animateCamera {
                 CameraPosition.Builder()

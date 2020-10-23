@@ -49,6 +49,11 @@ class MainFragment : Fragment() {
             }
         }
 
+        mapModel.details.observe(viewLifecycleOwner) { details ->
+            featuresDetails.text = details ?: String()
+            featuresDetails.visibility = if (details == null) View.GONE else View.VISIBLE
+        }
+
         coordinates.setOnClickListener {
             CoordInputDialogFragment().show(childFragmentManager, null)
         }
