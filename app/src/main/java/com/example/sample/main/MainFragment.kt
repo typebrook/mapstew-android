@@ -38,14 +38,19 @@ class MainFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) = with(binding) {
 
         mapModel.center.observe(viewLifecycleOwner) { camera ->
-            val xy = camera.wgs84LongLat.convert(CRSWrapper.WGS84, mapModel.crsState.value.crsWrapper)
+            val xy = camera.wgs84LongLat
+                .convert(CRSWrapper.WGS84, mapModel.crsState.value.crsWrapper)
             val crsState = mapModel.crsState.value
             coordinates.text = when (crsState.expression) {
                 CoordExpression.Degree -> xy2DegreeString(xy).run { "$first $second" }
                 CoordExpression.DegMin -> xy2DegMinString(xy).run { "$first $second" }
                 CoordExpression.DMS -> xy2DMSString(xy).run { "$first $second" }
                 CoordExpression.XY -> xy2IntString(xy).run { "$first $second" }
-                CoordExpression.SINGLE -> if (crsState.crsWrapper is MaskedCRS) crsState.crsWrapper.mask(xy) else String()
+                CoordExpression.SINGLE -> if (crsState.crsWrapper is MaskedCRS) {
+                    crsState.crsWrapper.mask(xy)
+                } else {
+                    String()
+                }
             }
         }
 

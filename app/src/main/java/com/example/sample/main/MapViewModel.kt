@@ -11,7 +11,7 @@ val Camera.zoom: Float get() = third
 
 class MapViewModel : ViewModel() {
 
-    // coordinate of center of map
+    // Camera of center of map
     val center = object : SafeMutableLiveData<Camera>(
         Triple(121.585674, 25.023167, 12F)
     ) {
@@ -20,7 +20,7 @@ class MapViewModel : ViewModel() {
         }
     }
 
-    // coordinate of target, camera will move to here
+    // Camera of target, camera will move to here
     val target = object : SafeMutableLiveData<Camera>(center.value) {
         override val predicate = { value: Camera ->
             with(value) { first to second }.isLongLatPair()
@@ -30,7 +30,9 @@ class MapViewModel : ViewModel() {
     val crsState = object : SafeMutableLiveData<CrsState>(CrsState()) {
         override val transformer = { newState: CrsState ->
             when {
-                newState.crsWrapper.isLongLat && !value.crsWrapper.isLongLat -> newState.copy(expression = CoordExpression.DMS)
+                newState.crsWrapper.isLongLat && !value.crsWrapper.isLongLat -> {
+                    newState.copy(expression = CoordExpression.DMS)
+                }
                 !newState.crsWrapper.isLongLat -> {
                     val expression =
                         if (newState.crsWrapper is MaskedCRS) CoordExpression.SINGLE else CoordExpression.XY
