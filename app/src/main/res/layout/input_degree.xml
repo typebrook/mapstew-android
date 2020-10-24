@@ -16,7 +16,7 @@
 
         <Spinner
             android:id="@+id/spinner_ew"
-            android:layout_width="100dp"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:entries="@array/longitude_EW" />
 
@@ -49,7 +49,7 @@
 
         <Spinner
             android:id="@+id/spinner_ns"
-            android:layout_width="100dp"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:entries="@array/latitude_NS" />
 
