@@ -42,7 +42,7 @@ class MapboxFragment : SupportMapFragment() {
             model.center.value
                 .run { LatLng(second, first) }
                 .run(mapboxMap.projection::toScreenLocation)
-                .run { RectF(x-20, y+20, x+20, y-20) }
+                .run { RectF(x - 20, y + 20, x + 20, y - 20) }
                 .let { queryRenderedFeatures(it) }
                 .mapNotNull { it.id() + it.properties()?.toString() }
                 .let { if (it.isEmpty()) null else it }
