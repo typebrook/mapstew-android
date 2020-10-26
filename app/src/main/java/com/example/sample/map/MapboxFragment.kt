@@ -1,5 +1,6 @@
 package com.example.sample.map
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.RectF
 import androidx.fragment.app.activityViewModels
@@ -10,6 +11,9 @@ import com.example.sample.main.zoom
 import com.mapbox.mapboxsdk.Mapbox
 import com.mapbox.mapboxsdk.camera.CameraPosition
 import com.mapbox.mapboxsdk.geometry.LatLng
+import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
+import com.mapbox.mapboxsdk.location.LocationComponentOptions
+import com.mapbox.mapboxsdk.location.modes.CameraMode
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.maps.SupportMapFragment
@@ -26,7 +30,11 @@ class MapboxFragment : SupportMapFragment() {
 
     override fun onMapReady(mapboxMap: MapboxMap) = with(mapboxMap) {
 
-        setStyle(defaultStyle)
+        setStyle(defaultStyle) { style ->
+            model.locateUser.observe(viewLifecycleOwner) locate@{ enable ->
+                if (enable) enableLocationComponent(style)
+            }
+        }
         cameraPosition = CameraPosition.Builder()
             .zoom(model.center.value.zoom.toDouble())
             .build()
@@ -60,5 +68,22 @@ class MapboxFragment : SupportMapFragment() {
         }
 
         Unit
+    }
+
+    // FIXME handle permission properly
+    @SuppressLint("MissingPermission")
+    fun MapboxMap.enableLocationComponent(style: Style) {
+        val locationComponentOptions = LocationComponentOptions.builder(requireContext())
+            .accuracyAlpha(0.5F)
+            .build()
+        val locationComponentActivationOptions = LocationComponentActivationOptions
+            .builder(requireContext(), style)
+            .locationComponentOptions(locationComponentOptions)
+            .build()
+        with(locationComponent) {
+            activateLocationComponent(locationComponentActivationOptions)
+            cameraMode = CameraMode.TRACKING
+            isLocationComponentEnabled = true
+        }
     }
 }

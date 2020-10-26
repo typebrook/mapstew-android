@@ -46,6 +46,8 @@ class MapViewModel : ViewModel() {
     // Details of features rendered on map
     val details = SafeMutableLiveData<String?>(null)
 
+    val locateUser = SafeMutableLiveData(false)
+
     data class CrsState(
         val crsWrapper: CRSWrapper = CRSWrapper.WGS84,
         val expression: CoordExpression = CoordExpression.DMS
