@@ -26,6 +26,9 @@ class MapboxFragment : SupportMapFragment() {
     private val model by activityViewModels<MapViewModel>()
     private val defaultStyle by lazy { getString(R.string.uri_style_rudymap) }
 
+    // FIXME only used for debug
+    private var showHint = true
+
     override fun onAttach(context: Context) {
         super.onAttach(context)
         Mapbox.getInstance(requireContext(), null)
@@ -53,7 +56,10 @@ class MapboxFragment : SupportMapFragment() {
             }
         }
 
+        addOnMapClickListener { showHint = !showHint; true }
+
         addOnCameraIdleListener {
+            if (!showHint) return@addOnCameraIdleListener
             // FIXME This is just a simple feature query for debug
             model.center.value
                 .run { LatLng(second, first) }
