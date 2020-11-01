@@ -95,23 +95,33 @@ class MapboxFragment : SupportMapFragment() {
         }
     }
 
+    // TODO show sub-layers under each item
     private fun Style.showLayerSelectionDialog() = with(AlertDialog.Builder(context)) {
         setTitle("Layers")
-
-        val layers = layers.sortedBy { it.id }
-        val idList = layers.map { it.id }.toTypedArray()
-        val checkedList = layers.map {
-            it.visibility.value == Property.VISIBLE
-        }.toBooleanArray()
-        setMultiChoiceItems(idList, checkedList) { _, which, isChecked ->
-            val layerId = idList[which]
-            getLayer(layerId)?.setProperties(
-                PropertyFactory.visibility(
-                    if (isChecked) Property.VISIBLE else Property.NONE
-                )
-            )
-        }
         setPositiveButton("OK", null)
+
+        // List of id prefix, like 'road', 'water'
+        val layerGroupList = layers.sortedBy { it.id }
+            .map { it.id.substringBefore('_') }
+            .distinct()
+            .toTypedArray()
+        val checkedList = layerGroupList.map { idPrefix ->
+            layers.first { it.id.startsWith(idPrefix) }?.visibility?.value == Property.VISIBLE
+        }.toBooleanArray()
+
+        // Here we only let user select groups of layers (each item in a group has same id prefix)
+        setMultiChoiceItems(layerGroupList, checkedList) { _, which, isChecked ->
+            val prefix = layerGroupList[which]
+
+            // Enable/Disable a layer group
+            layers.filter { it.id.startsWith(prefix) }.forEach { layer ->
+                layer.setProperties(
+                    PropertyFactory.visibility(
+                        if (isChecked) Property.VISIBLE else Property.NONE
+                    )
+                )
+            }
+        }
         create().show()
     }
 }
