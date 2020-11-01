@@ -1,6 +1,7 @@
 package com.example.sample.map
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.Context
 import android.graphics.RectF
 import androidx.fragment.app.activityViewModels
@@ -17,6 +18,8 @@ import com.mapbox.mapboxsdk.location.modes.CameraMode
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.maps.SupportMapFragment
+import com.mapbox.mapboxsdk.style.layers.Property
+import com.mapbox.mapboxsdk.style.layers.PropertyFactory
 
 class MapboxFragment : SupportMapFragment() {
 
@@ -33,6 +36,11 @@ class MapboxFragment : SupportMapFragment() {
         setStyle(defaultStyle) { style ->
             model.locateUser.observe(viewLifecycleOwner) locate@{ enable ->
                 if (enable) enableLocationComponent(style)
+            }
+
+            addOnMapLongClickListener {
+                style.showLayerSelectionDialog()
+                true
             }
         }
         cameraPosition = CameraPosition.Builder()
@@ -85,5 +93,35 @@ class MapboxFragment : SupportMapFragment() {
             cameraMode = CameraMode.TRACKING
             isLocationComponentEnabled = true
         }
+    }
+
+    // TODO show sub-layers under each item
+    private fun Style.showLayerSelectionDialog() = with(AlertDialog.Builder(context)) {
+        setTitle("Layers")
+        setPositiveButton("OK", null)
+
+        // List of id prefix, like 'road', 'water'
+        val layerGroupList = layers.sortedBy { it.id }
+            .map { it.id.substringBefore('_') }
+            .distinct()
+            .toTypedArray()
+        val checkedList = layerGroupList.map { idPrefix ->
+            layers.first { it.id.startsWith(idPrefix) }?.visibility?.value == Property.VISIBLE
+        }.toBooleanArray()
+
+        // Here we only let user select groups of layers (each item in a group has same id prefix)
+        setMultiChoiceItems(layerGroupList, checkedList) { _, which, isChecked ->
+            val prefix = layerGroupList[which]
+
+            // Enable/Disable a layer group
+            layers.filter { it.id.startsWith(prefix) }.forEach { layer ->
+                layer.setProperties(
+                    PropertyFactory.visibility(
+                        if (isChecked) Property.VISIBLE else Property.NONE
+                    )
+                )
+            }
+        }
+        create().show()
     }
 }
