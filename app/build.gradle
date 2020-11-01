@@ -57,6 +57,9 @@ dependencies {
 
     // OSGeo
     implementation group: 'org.osgeo', name: 'proj4j', version: '0.1.0'
+
+    // Permission
+    implementation 'com.yanzhenjie:permission:2.0.3'
 }
 
 androidExtensions {

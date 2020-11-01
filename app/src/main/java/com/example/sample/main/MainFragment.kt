@@ -13,6 +13,8 @@ import com.example.sample.R
 import com.example.sample.databinding.MainFragmentBinding
 import com.example.sample.geometry.*
 import com.example.sample.map.MapboxFragment
+import com.yanzhenjie.permission.AndPermission
+import com.yanzhenjie.permission.runtime.Permission
 
 class MainFragment : Fragment() {
 
@@ -69,6 +71,14 @@ class MainFragment : Fragment() {
 
         zoomOutButton.setOnClickListener {
             mapModel.target.value = mapModel.center.value.run { copy(third = zoom - 1) }
+        }
+
+        locatingButton.setOnClickListener {
+            AndPermission.with(requireContext())
+                .runtime()
+                .permission(Permission.ACCESS_FINE_LOCATION)
+                .onGranted { mapModel.locateUser.value = true }
+                .start()
         }
     }
 }
