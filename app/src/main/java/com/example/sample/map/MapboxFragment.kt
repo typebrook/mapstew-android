@@ -105,6 +105,13 @@ class MapboxFragment : SupportMapFragment() {
     private fun Style.showLayerSelectionDialog() = with(AlertDialog.Builder(context)) {
         setTitle("Layers")
         setPositiveButton("OK", null)
+        setNeutralButton("Toggle") {_, _ ->
+            layers.forEach { layer ->
+                val visibility = if (layer.visibility.value == Property.VISIBLE) Property.NONE else Property.VISIBLE
+                layer.setProperties( PropertyFactory.visibility(visibility )
+                )
+            }
+        }
 
         // List of id prefix, like 'road', 'water'
         val layerGroupList = layers.sortedBy { it.id }
