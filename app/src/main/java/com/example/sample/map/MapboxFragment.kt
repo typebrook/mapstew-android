@@ -1,6 +1,7 @@
 package com.example.sample.map
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.Context
 import android.graphics.RectF
 import androidx.fragment.app.activityViewModels
@@ -17,6 +18,8 @@ import com.mapbox.mapboxsdk.location.modes.CameraMode
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.maps.SupportMapFragment
+import com.mapbox.mapboxsdk.style.layers.Property
+import com.mapbox.mapboxsdk.style.layers.PropertyFactory
 
 class MapboxFragment : SupportMapFragment() {
 
@@ -33,6 +36,11 @@ class MapboxFragment : SupportMapFragment() {
         setStyle(defaultStyle) { style ->
             model.locateUser.observe(viewLifecycleOwner) locate@{ enable ->
                 if (enable) enableLocationComponent(style)
+            }
+
+            addOnMapLongClickListener {
+                style.showLayerSelectionDialog()
+                true
             }
         }
         cameraPosition = CameraPosition.Builder()
@@ -85,5 +93,25 @@ class MapboxFragment : SupportMapFragment() {
             cameraMode = CameraMode.TRACKING
             isLocationComponentEnabled = true
         }
+    }
+
+    private fun Style.showLayerSelectionDialog() = with(AlertDialog.Builder(context)) {
+        setTitle("Layers")
+
+        val layers = layers.sortedBy { it.id }
+        val idList = layers.map { it.id }.toTypedArray()
+        val checkedList = layers.map {
+            it.visibility.value == Property.VISIBLE
+        }.toBooleanArray()
+        setMultiChoiceItems(idList, checkedList) { _, which, isChecked ->
+            val layerId = idList[which]
+            getLayer(layerId)?.setProperties(
+                PropertyFactory.visibility(
+                    if (isChecked) Property.VISIBLE else Property.NONE
+                )
+            )
+        }
+        setPositiveButton("OK", null)
+        create().show()
     }
 }
