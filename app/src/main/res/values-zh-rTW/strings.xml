@@ -22,4 +22,5 @@
     <string name="dialog_xyingput_y">Y座標：</string>
     <string name="coordinate_reference_system">座標系統：</string>
     <string name="expression">表示方式：</string>
+    <string name="displayGrid">顯示格線：</string>
 </resources>

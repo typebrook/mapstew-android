@@ -86,6 +86,13 @@ class CoordInputDialogFragment : DialogFragment() {
             }
         }
 
+        with(displayGrid) {
+            isChecked = mapModel.displayGrid.value
+            displayGrid.setOnCheckedChangeListener { _, isChecked ->
+                mapModel.displayGrid.value = isChecked
+            }
+        }
+
         // Change views by crsState
         mapModel.crsState.observe(this@CoordInputDialogFragment) { state ->
             coordInput = when (state.expression) {
