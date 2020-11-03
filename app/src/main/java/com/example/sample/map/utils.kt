@@ -84,7 +84,11 @@ object LineProvider : GeometryTileProvider {
 }
 
 object AngleGridSource : CustomGeometrySource("angle-grid", LineProvider)
-object AngleGridLayer : LineLayer("angle-grid", AngleGridSource.id)
+object AngleGridLayer : LineLayer("angle-grid", AngleGridSource.id) {
+    init {
+        setProperties(lineWidth(0.6F))
+    }
+}
 object AngleGridSymbolLayer :
     SymbolLayer("angle-grid-symbol", AngleGridSource.id) {
     init {
