@@ -45,6 +45,24 @@ class MapboxFragment : SupportMapFragment() {
                 style.showLayerSelectionDialog()
                 true
             }
+
+            model.displayGrid.observe(viewLifecycleOwner) { display ->
+                if (!display && style.getSource(AngleGridLayer.id) == null) return@observe
+
+                if (display && style.getSource(AngleGridLayer.id) == null) {
+                    with(style) {
+                        addLayer(AngleGridLayer)
+                        addLayer(AngleGridSymbolLayer)
+                        addSource(AngleGridSource)
+                    }
+                } else  {
+                    with(style) {
+                        removeLayer(AngleGridLayer)
+                        removeLayer(AngleGridSymbolLayer)
+                        removeSource(AngleGridSource)
+                    }
+                }
+            }
         }
         cameraPosition = CameraPosition.Builder()
             .zoom(model.center.value.zoom.toDouble())

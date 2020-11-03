@@ -52,4 +52,5 @@ class MapViewModel : ViewModel() {
         val crsWrapper: CRSWrapper = CRSWrapper.WGS84,
         val expression: CoordExpression = CoordExpression.DMS
     )
+    val displayGrid = SafeMutableLiveData(false)
 }
