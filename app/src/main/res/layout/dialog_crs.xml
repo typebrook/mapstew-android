@@ -14,7 +14,7 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="horizontal">
 
         <View
@@ -26,8 +26,8 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="end"
-            android:gravity="center_vertical"
             android:layout_weight="2.5"
+            android:gravity="center_vertical"
             android:text="@string/coordinate_reference_system"
             android:textSize="16sp" />
 
@@ -53,8 +53,8 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="end"
-            android:gravity="center_vertical"
             android:layout_weight="2.5"
+            android:gravity="center_vertical"
             android:text="@string/expression"
             android:textSize="16sp" />
 
@@ -63,6 +63,33 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="3" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:orientation="horizontal">
+
+        <View
+            android:layout_width="10dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1.5" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:layout_weight="3"
+            android:gravity="center_vertical"
+            android:text="@string/displayGrid"
+            android:textSize="16sp" />
+
+        <CheckBox
+            android:id="@+id/displayGrid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="2.5" />
     </LinearLayout>
 
     <!--  Magic! If there is no EditText here, other EditTexts inside
