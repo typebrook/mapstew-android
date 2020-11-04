@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="dialog_coord_input_desc">地圖中央座標</string>
+    <string name="dialog_coord_input_desc">地圖準心座標</string>
     <string name="app_name">sample</string>
     <string-array name="coord_expr">
         <item>度</item>
