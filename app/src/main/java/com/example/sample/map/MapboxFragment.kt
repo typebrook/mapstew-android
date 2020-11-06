@@ -55,7 +55,7 @@ class MapboxFragment : SupportMapFragment() {
                         addLayer(AngleGridSymbolLayer)
                         addSource(AngleGridSource)
                     }
-                } else  {
+                } else {
                     with(style) {
                         removeLayer(AngleGridLayer)
                         removeLayer(AngleGridSymbolLayer)
@@ -123,10 +123,12 @@ class MapboxFragment : SupportMapFragment() {
     private fun Style.showLayerSelectionDialog() = with(AlertDialog.Builder(context)) {
         setTitle("Layers")
         setPositiveButton("OK", null)
-        setNeutralButton("Toggle") {_, _ ->
+        setNeutralButton("Toggle") { _, _ ->
             layers.forEach { layer ->
-                val visibility = if (layer.visibility.value == Property.VISIBLE) Property.NONE else Property.VISIBLE
-                layer.setProperties( PropertyFactory.visibility(visibility )
+                val visibility =
+                    if (layer.visibility.value == Property.VISIBLE) Property.NONE else Property.VISIBLE
+                layer.setProperties(
+                    PropertyFactory.visibility(visibility)
                 )
             }
         }
