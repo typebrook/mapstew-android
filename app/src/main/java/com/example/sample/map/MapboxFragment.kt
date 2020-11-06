@@ -121,10 +121,15 @@ class MapboxFragment : SupportMapFragment() {
 
     // TODO show sub-layers under each item
     private fun Style.showLayerSelectionDialog() = with(AlertDialog.Builder(context)) {
+
+        val layersFromStyle = layers.filterNot {
+            it.id == AngleGridLayer.id || it.id == AngleGridSymbolLayer.id
+        }
+
         setTitle("Layers")
         setPositiveButton("OK", null)
         setNeutralButton("Toggle") { _, _ ->
-            layers.forEach { layer ->
+            layersFromStyle.forEach { layer ->
                 val visibility =
                     if (layer.visibility.value == Property.VISIBLE) Property.NONE else Property.VISIBLE
                 layer.setProperties(
@@ -134,12 +139,12 @@ class MapboxFragment : SupportMapFragment() {
         }
 
         // List of id prefix, like 'road', 'water'
-        val layerGroupList = layers.sortedBy { it.id }
+        val layerGroupList = layersFromStyle.sortedBy { it.id }
             .map { it.id.substringBefore('_') }
             .distinct()
             .toTypedArray()
         val checkedList = layerGroupList.map { idPrefix ->
-            layers.first { it.id.startsWith(idPrefix) }?.visibility?.value == Property.VISIBLE
+            layersFromStyle.first { it.id.startsWith(idPrefix) }?.visibility?.value == Property.VISIBLE
         }.toBooleanArray()
 
         // Here we only let user select groups of layers (each item in a group has same id prefix)
@@ -147,7 +152,7 @@ class MapboxFragment : SupportMapFragment() {
             val prefix = layerGroupList[which]
 
             // Enable/Disable a layer group
-            layers.filter { it.id.startsWith(prefix) }.forEach { layer ->
+            layersFromStyle.filter { it.id.startsWith(prefix) }.forEach { layer ->
                 layer.setProperties(
                     PropertyFactory.visibility(
                         if (isChecked) Property.VISIBLE else Property.NONE
