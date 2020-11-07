@@ -73,6 +73,7 @@ object LineProvider : GeometryTileProvider {
                     .split(' ')
                     .filterNot { it.startsWith("00") }
                     .last()
+                    .replace(".0", "")
                 addStringProperty("name", text)
             }.let(features::add)
             x += gridSpacing
