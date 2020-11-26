@@ -27,7 +27,7 @@ class MapboxFragment : SupportMapFragment() {
     private val defaultStyle by lazy { getString(R.string.uri_style_rudymap) }
 
     // FIXME only used for debug
-    private var showHint = true
+    private var showHint = false
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -74,7 +74,11 @@ class MapboxFragment : SupportMapFragment() {
             }
         }
 
-        addOnMapClickListener { showHint = !showHint; true }
+        addOnMapClickListener {
+            showHint = !showHint
+            model.details.value = null
+            true
+        }
 
         addOnCameraIdleListener {
             if (!showHint) return@addOnCameraIdleListener
