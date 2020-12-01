@@ -26,6 +26,11 @@ android {
     buildFeatures {
         viewBinding true
     }
+    // Retrofit2 needs this!
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
+    }
 }
 
 dependencies {
@@ -38,6 +43,11 @@ dependencies {
     def nav_version = "2.3.0"
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
     implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
+
+    // AndroidX WorkManger
+    def work_version = "2.4.0"
+    implementation "androidx.work:work-runtime:$work_version"
+    implementation "androidx.work:work-runtime-ktx:$work_version"
 
     // Kotlin and Android KTX
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
@@ -60,6 +70,9 @@ dependencies {
 
     // Permission
     implementation 'com.yanzhenjie:permission:2.0.3'
+
+    // Retrofit
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
 }
 
 androidExtensions {
