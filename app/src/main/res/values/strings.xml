@@ -8,6 +8,10 @@
     <string name="map_btn_locating" translatable="false">"Locating user"</string>
 
     <string name="dialog_coord_input_desc">Coordinate of map center</string>
+    <string-array name="menu_items">
+        <item>Offline Maps</item>
+        <item>Intro</item>
+    </string-array>
     <string-array name="coord_expr">
         <item>Degree</item>
         <item>DegMin</item>

@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.add
@@ -13,8 +15,10 @@ import com.example.sample.R
 import com.example.sample.databinding.MainFragmentBinding
 import com.example.sample.geometry.*
 import com.example.sample.map.MapboxFragment
+import com.example.sample.network.DownloadWorker
 import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
+
 
 class MainFragment : Fragment() {
 
@@ -79,6 +83,18 @@ class MainFragment : Fragment() {
                 .permission(Permission.ACCESS_FINE_LOCATION)
                 .onGranted { mapModel.locateUser.value = true }
                 .start()
+        }
+
+        menuButton.setOnClickListener {
+            with(AlertDialog.Builder(requireContext())) {
+                setItems(R.array.menu_items) { _, which ->
+                    when (which) {
+                        0 -> DownloadWorker.enqueue(requireContext())
+                        1 -> Toast.makeText(requireContext(), "NOTHING", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                create()
+            }.show()
         }
     }
 }

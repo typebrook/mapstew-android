@@ -2,6 +2,10 @@
 <resources>
     <string name="dialog_coord_input_desc">地圖準心座標</string>
     <string name="app_name">sample</string>
+    <string-array name="menu_items">
+        <item>離線地圖</item>
+        <item>介紹</item>
+    </string-array>
     <string-array name="coord_expr">
         <item>度</item>
         <item>度分</item>
