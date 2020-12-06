@@ -11,6 +11,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.add
 import androidx.fragment.app.commit
 import androidx.lifecycle.observe
+import androidx.navigation.fragment.findNavController
 import com.example.sample.R
 import com.example.sample.databinding.MainFragmentBinding
 import com.example.sample.geometry.*
@@ -91,6 +92,9 @@ class MainFragment : Fragment() {
                     when (which) {
                         0 -> DownloadWorker.enqueue(requireContext())
                         1 -> Toast.makeText(requireContext(), "NOTHING", Toast.LENGTH_SHORT).show()
+                        2 -> findNavController().navigate(
+                            MainFragmentDirections.actionMainFragmentToSettingsFragment()
+                        )
                     }
                 }
                 create()
