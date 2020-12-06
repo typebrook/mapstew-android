@@ -11,6 +11,7 @@
     <string-array name="menu_items">
         <item>Offline Maps</item>
         <item>Intro</item>
+        <item>Settings</item>
     </string-array>
     <string-array name="coord_expr">
         <item>Degree</item>

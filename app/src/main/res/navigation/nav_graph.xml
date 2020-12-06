@@ -9,5 +9,13 @@
         android:id="@+id/mainFragment"
         android:name="com.example.sample.main.MainFragment"
         android:label="main_fragment"
-        tools:layout="@layout/main_fragment" />
+        tools:layout="@layout/main_fragment" >
+        <action
+            android:id="@+id/action_mainFragment_to_settingsFragment"
+            app:destination="@id/settingsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="settings.SettingsFragment"
+        android:label="MySettingsFragment" />
 </navigation>
