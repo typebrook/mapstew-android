@@ -1,24 +1,21 @@
 package com.example.sample.network
 
 import android.app.Notification
-import android.content.ContentValues
 import android.content.Context
-import android.net.Uri
 import android.os.Build
-import android.os.Environment
-import android.provider.MediaStore
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.work.*
 import com.example.sample.notification.createChannel
 import okhttp3.ResponseBody
 import retrofit2.Retrofit
-import retrofit2.awaitResponse
+import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.concurrent.ExecutionException
 
+
+const val KEY_PATH = "path"
 
 // TODO i18n for non logger text
 private const val NOTIFICATION_CHANNEL_ID = "Download"
@@ -27,6 +24,8 @@ private const val NOTIFICATION_ID = 8888
 // ref: https://developer.android.com/topic/libraries/architecture/workmanager/advanced/long-running
 class DownloadWorker(private val context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params) {
+
+    private val path = inputData.getString(KEY_PATH)
 
     init {
         // Create a Notification channel if necessary
@@ -37,27 +36,30 @@ class DownloadWorker(private val context: Context, params: WorkerParameters) :
 
     override suspend fun doWork(): Result {
 
-        val progress = "Starting Download"
-        val foregroundInfo = ForegroundInfo(NOTIFICATION_ID, createNotification(progress))
+        path ?: return Result.failure()
+
+        val foregroundInfo =
+            ForegroundInfo(NOTIFICATION_ID, createNotification(progress = "Starting Download"))
         setForeground(foregroundInfo)
 
         val retrofit = Retrofit.Builder()
             .baseUrl("https://github.com/")
             .build()
         val service: GithubService = retrofit.create(GithubService::class.java)
-        val call = service.downloadFileWithFixedUrl()
         Log.d(javaClass.name, "Fetching remote file")
-        val response = call.awaitResponse()
+        val response = service.downloadFileWithFixedUrl(path)
         val body = response.body()
-        if (response.isSuccessful && body != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+
+        return if (response.isSuccessful && body != null) {
             Log.d(javaClass.name, "Server contacted and has file")
-            val writtenToDisk: Boolean = writeResponseBodyToStorage(body, "foo.pbf")
+            val fileName = path.substringAfter("/")
+            val writtenToDisk: Boolean = writeResponseBodyToStorage(body, fileName)
             Log.d(javaClass.name, "File saved? $writtenToDisk")
+            Result.success()
         } else {
             Log.d(javaClass.name, "Server contact failed")
+            Result.failure()
         }
-
-        return Result.success()
     }
 
     private fun createNotification(progress: String): Notification =
@@ -81,46 +83,39 @@ class DownloadWorker(private val context: Context, params: WorkerParameters) :
             build()
         }
 
-    @RequiresApi(Build.VERSION_CODES.Q)
     private fun writeResponseBodyToStorage(body: ResponseBody, fileName: String): Boolean = try {
 
-        val uri: Uri = with(ContentValues()) {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-            put(MediaStore.MediaColumns.MIME_TYPE, "application/octet-stream")
-            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
-            context.contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, this)
-        } ?: throw IOException()
+        val file: File = context.getDatabasePath(fileName)
+        Log.d(javaClass.name, "Write to ${file.absolutePath}")
 
-        context.contentResolver.openFileDescriptor(uri, "w")?.use {
-            body.byteStream().use { input ->
-                FileOutputStream(it.fileDescriptor).use { output ->
-                    val data = ByteArray(8192)
-                    val fileSize = body.contentLength()
-                    var read: Int
-                    var progress = 0F
+        body.byteStream().use { input ->
+            FileOutputStream(file).use { output ->
+                val data = ByteArray(8192)
+                val fileSize = body.contentLength()
+                var read: Int
+                var progress = 0F
 
-                    while (input.read(data).also { read = it } != -1) {
-                        output.write(data, 0, read)
+                while (input.read(data).also { read = it } != -1) {
+                    output.write(data, 0, read)
 
-                        progress += read
-                        val progressString = (progress / fileSize * 100).toInt().toString() + "%"
-                        val foregroundInfo =
-                            ForegroundInfo(NOTIFICATION_ID, createNotification(progressString))
-                        try {
-                            setForegroundAsync(foregroundInfo).get()
-                            Log.d(javaClass.name, "Write stream body to storage: $progressString")
-                        } catch (exception: ExecutionException) {
-                            Log.d(
-                                javaClass.name,
-                                "The following error message should caused by the cancellation of CoroutineWorker",
-                                exception
-                            )
-                            throw IOException()
-                        }
+                    progress += read
+                    val progressString = (progress / fileSize * 100).toInt().toString() + "%"
+                    val foregroundInfo =
+                        ForegroundInfo(NOTIFICATION_ID, createNotification(progressString))
+                    try {
+                        setForegroundAsync(foregroundInfo).get()
+                        Log.d(javaClass.name, "Write stream body to storage: $progressString")
+                    } catch (exception: ExecutionException) {
+                        Log.d(
+                            javaClass.name,
+                            "The following error message should caused by the cancellation of CoroutineWorker",
+                            exception
+                        )
+                        throw IOException()
                     }
                 }
             }
-        } ?: throw IOException()
+        }
         true
     } catch (e: IOException) {
         Log.d(javaClass.name, "Fail to write response body to $fileName")
@@ -129,14 +124,20 @@ class DownloadWorker(private val context: Context, params: WorkerParameters) :
 
     companion object {
 
-        fun enqueue(context: Context) = with(WorkManager.getInstance(context)) {
+        fun enqueue(context: Context, path: String) {
+            val workManager = WorkManager.getInstance(context)
             val constraints = Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build()
             val workRequest = OneTimeWorkRequestBuilder<DownloadWorker>()
                 .setConstraints(constraints)
+                .setInputData(workDataOf(KEY_PATH to path))
                 .build()
-            enqueueUniqueWork(NOTIFICATION_CHANNEL_ID, ExistingWorkPolicy.KEEP, workRequest)
+            workManager.enqueueUniqueWork(
+                NOTIFICATION_CHANNEL_ID,
+                ExistingWorkPolicy.KEEP,
+                workRequest
+            )
         }
     }
 }

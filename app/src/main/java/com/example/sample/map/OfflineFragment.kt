@@ -16,11 +16,11 @@ import com.example.sample.network.DownloadWorker
 
 class OfflineFragment : DialogFragment() {
 
-    data class OfflineMap(val name: String)
+    data class OfflineMap(val displayName: String, val path: String)
 
     val maps = listOf(
-        OfflineMap("foo"),
-        OfflineMap("bar")
+        OfflineMap("Contours", "typebrook/contours/releases/download/2020/contours.mbtiles"),
+        OfflineMap("Rudymap", "typebrook/mapstew/releases/download/daily-taiwan-pbf/taiwan-daily.osm.pbf")
     )
 
     private val adapter = object : BaseAdapter() {
@@ -32,10 +32,10 @@ class OfflineFragment : DialogFragment() {
                 requireContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
             val binding = OfflineMapItemBinding.inflate(layoutInflater)
 
-            binding.name.text = map.name
+            binding.name.text = map.displayName
             with(binding.button) {
                 text = "Download"
-                setOnClickListener { DownloadWorker.enqueue(requireContext()) }
+                setOnClickListener { DownloadWorker.enqueue(requireContext(), map.path) }
 
             }
             return binding.root
