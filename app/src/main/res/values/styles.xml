@@ -17,4 +17,9 @@
         <item name="android:elevation" tools:targetApi="21">4dp</item>
     </style>
 
+    <!-- ++++++++++++++++++++++++++++++++ Simple buttons +++++++++++++++++++++++++++++++++++++ -->
+    <style name="Button.Primary" parent="Widget.AppCompat.Button">
+        <item name="backgroundTint">@color/colorPrimary</item>
+    </style>
+
 </resources>

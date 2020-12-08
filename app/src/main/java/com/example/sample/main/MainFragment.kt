@@ -16,7 +16,7 @@ import com.example.sample.R
 import com.example.sample.databinding.MainFragmentBinding
 import com.example.sample.geometry.*
 import com.example.sample.map.MapboxFragment
-import com.example.sample.network.DownloadWorker
+import com.example.sample.map.OfflineFragment
 import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
 
@@ -90,7 +90,7 @@ class MainFragment : Fragment() {
             with(AlertDialog.Builder(requireContext())) {
                 setItems(R.array.menu_items) { _, which ->
                     when (which) {
-                        0 -> DownloadWorker.enqueue(requireContext())
+                        0 -> OfflineFragment().show(childFragmentManager, null)
                         1 -> Toast.makeText(requireContext(), "NOTHING", Toast.LENGTH_SHORT).show()
                         2 -> findNavController().navigate(
                             MainFragmentDirections.actionMainFragmentToSettingsFragment()
