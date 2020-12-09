@@ -19,13 +19,15 @@ sealed class MBTilesSourceException : Exception() {
     class UnsupportedFormatException : MBTilesSourceException()
 }
 
-class MBTilesSource(filePath: String, sourceId: String? = null) {
+class MBTilesSource(file: File, sourceId: String? = null) {
 
-    val id = sourceId ?: filePath.substringAfterLast("/").substringBefore(".")
+    val id = sourceId ?: file.path.substringAfterLast("/").substringBefore(".")
     val url get() = "http://localhost:${MBTilesServer.port}/$id/{z}/{x}/{y}.$format"
     private val db: SQLiteDatabase = try {
-        SQLiteDatabase.openOrCreateDatabase(filePath, null)
+        if (!file.exists()) throw MBTilesSourceException.CouldNotReadFileException()
+        SQLiteDatabase.openOrCreateDatabase(file, null)
     } catch (e: RuntimeException) {
+        file.delete()
         throw MBTilesSourceException.CouldNotReadFileException()
     }
     val instance: Source by lazy {
@@ -58,9 +60,10 @@ class MBTilesSource(filePath: String, sourceId: String? = null) {
                 in validRasterFormats -> false
                 else -> throw MBTilesSourceException.UnsupportedFormatException()
             }
-
-        } catch (error: MBTilesSourceException) {
-            print(error.localizedMessage)
+        } catch (e: Exception) {
+            file.delete()
+            print(e.localizedMessage)
+            throw MBTilesSourceException.CouldNotReadFileException()
         }
     }
 
