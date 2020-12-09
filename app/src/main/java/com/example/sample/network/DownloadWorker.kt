@@ -52,7 +52,7 @@ class DownloadWorker(private val context: Context, params: WorkerParameters) :
 
         return if (response.isSuccessful && body != null) {
             Log.d(javaClass.name, "Server contacted and has file")
-            val fileName = path.substringAfter("/")
+            val fileName = path.substringAfterLast("/")
             val writtenToDisk: Boolean = writeResponseBodyToStorage(body, fileName)
             Log.d(javaClass.name, "File saved? $writtenToDisk")
             Result.success()
