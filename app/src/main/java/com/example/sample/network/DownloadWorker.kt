@@ -12,20 +12,21 @@ import retrofit2.Retrofit
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.lang.Exception
 import java.util.concurrent.ExecutionException
 
-
+const val NOTIFICATION_CHANNEL_ID = "DOWNLOAD"
 const val KEY_PATH = "path"
 
 // TODO i18n for non logger text
-private const val NOTIFICATION_CHANNEL_ID = "Download"
 private const val NOTIFICATION_ID = 8888
 
 // ref: https://developer.android.com/topic/libraries/architecture/workmanager/advanced/long-running
 class DownloadWorker(private val context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params) {
 
-    private val path = inputData.getString(KEY_PATH)
+    private val path: String = inputData.getString(KEY_PATH) ?: throw NoPathSpecifiedException
+    private val fileName get() = path.substringAfterLast("/")
 
     init {
         // Create a Notification channel if necessary
@@ -35,8 +36,6 @@ class DownloadWorker(private val context: Context, params: WorkerParameters) :
     }
 
     override suspend fun doWork(): Result {
-
-        path ?: return Result.failure()
 
         val foregroundInfo =
             ForegroundInfo(NOTIFICATION_ID, createNotification(progress = "Starting Download"))
@@ -52,12 +51,15 @@ class DownloadWorker(private val context: Context, params: WorkerParameters) :
 
         return if (response.isSuccessful && body != null) {
             Log.d(javaClass.name, "Server contacted and has file")
-            val fileName = path.substringAfterLast("/")
             val writtenToDisk: Boolean = writeResponseBodyToStorage(body, fileName)
             Log.d(javaClass.name, "File saved? $writtenToDisk")
+            // TODO check MD5SUM
             Result.success()
         } else {
             Log.d(javaClass.name, "Server contact failed")
+            with(File(path)) {
+                if (exists()) delete()
+            }
             Result.failure()
         }
     }
@@ -134,10 +136,12 @@ class DownloadWorker(private val context: Context, params: WorkerParameters) :
                 .setInputData(workDataOf(KEY_PATH to path))
                 .build()
             workManager.enqueueUniqueWork(
-                NOTIFICATION_CHANNEL_ID,
+                path,
                 ExistingWorkPolicy.KEEP,
                 workRequest
             )
         }
+
+        object NoPathSpecifiedException : Exception()
     }
 }
