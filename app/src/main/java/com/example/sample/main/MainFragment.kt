@@ -17,6 +17,7 @@ import com.example.sample.databinding.MainFragmentBinding
 import com.example.sample.geometry.*
 import com.example.sample.map.MapboxFragment
 import com.example.sample.map.OfflineFragment
+import com.example.sample.offline.getLocalMBTiles
 import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
 
@@ -30,6 +31,7 @@ class MainFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
 
+        mapModel.mbTilesList.value = requireContext().getLocalMBTiles()
         mapModel.target.value = mapModel.center.value
 
         if (savedInstanceState == null) {

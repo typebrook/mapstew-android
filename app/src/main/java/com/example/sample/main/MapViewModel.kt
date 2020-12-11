@@ -43,6 +43,9 @@ class MapViewModel : ViewModel() {
         }
     }
 
+    // List of MBTiles inside internal storage
+    val mbTilesList = SafeMutableLiveData<List<String>>(emptyList())
+
     // Details of features rendered on map
     val details = SafeMutableLiveData<String?>(null)
 

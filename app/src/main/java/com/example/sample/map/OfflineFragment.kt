@@ -9,19 +9,22 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import androidx.appcompat.app.AlertDialog
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.activityViewModels
+import androidx.work.WorkInfo
 import com.example.sample.R
 import com.example.sample.databinding.OfflineMapItemBinding
+import com.example.sample.main.MapViewModel
 import com.example.sample.network.DownloadWorker
-import com.google.android.material.button.MaterialButton
+import com.example.sample.network.DownloadWorker.Companion.DATA_KEY_PROGRESS
 
 
+// TODO i18n for texts
 class OfflineFragment : DialogFragment() {
 
-    inner class OfflineMap(val displayName: String, val path: String) {
-        val isValid = requireContext().getDatabasePath(path.substringAfterLast("/")).exists()
-    }
+    val mapModel by activityViewModels<MapViewModel>()
+
+    inner class OfflineMap(val displayName: String, val path: String)
 
     val maps by lazy {
         listOf(
@@ -30,8 +33,8 @@ class OfflineFragment : DialogFragment() {
                 path = "typebrook/contours/releases/download/2020/contours.mbtiles"
             ),
             OfflineMap(
-                displayName = "Rudymap",
-                path = "typebrook/mapstew/releases/download/daily-taiwan-pbf/taiwan-daily.osm.pbf"
+                displayName = "Mapstew",
+                path = "typebrook/mapstew/releases/download/cache-2020.12.11/mapstew.mbtiles"
             )
         )
     }
@@ -48,13 +51,44 @@ class OfflineFragment : DialogFragment() {
                 binding.name.text = map.displayName
 
                 with(binding.button) {
-                    text = if (map.isValid) getString(R.string.in_use) else "Download"
-                    setOnClickListener { DownloadWorker.enqueue(requireContext(), map.path) }
-                    if (map.isValid) {
+                    val localMBTiles = map.path.substringAfterLast("/")
+
+                    setOnClickListener {
                         isClickable = false
-                        setBackgroundColor(resources.getColor(android.R.color.darker_gray))
+
+                        val liveData = DownloadWorker.enqueue(requireContext(), map.path)
+                        liveData.observe(this@OfflineFragment) { info ->
+                            when (info.state) {
+                                WorkInfo.State.SUCCEEDED ->
+                                    with(mapModel.mbTilesList) { value = value + localMBTiles }
+                                WorkInfo.State.FAILED, WorkInfo.State.CANCELLED -> {
+                                    text = "Download"
+                                    isCheckable = true
+                                }
+                                else -> {
+                                    val progress = info.progress.getString(DATA_KEY_PROGRESS)
+                                    text = "%s%s%s".format(
+                                        "下載中",
+                                        if (progress != null) "\n" else "",
+                                        progress ?: ""
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    mapModel.mbTilesList.observe(this@OfflineFragment) { list ->
+                        if (localMBTiles in list) {
+                            text = getString(R.string.in_use)
+                            isClickable = false
+                            setBackgroundColor(resources.getColor(android.R.color.darker_gray))
+                        } else {
+                            text = "Download"
+                            isCheckable = true
+                        }
                     }
                 }
+
                 return binding.root
             }
 
