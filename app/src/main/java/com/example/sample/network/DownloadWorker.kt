@@ -42,10 +42,7 @@ class DownloadWorker(private val context: Context, params: WorkerParameters) :
             ForegroundInfo(notificationId, createNotification(progress = "Starting Download"))
         setForeground(foregroundInfo)
 
-        val retrofit = Retrofit.Builder()
-            .baseUrl("https://github.com/")
-            .build()
-        val service: GithubService = retrofit.create(GithubService::class.java)
+        val service = GithubService.basicService()
         Log.d(javaClass.name, "Fetching remote file")
         val response = service.downloadFileWithFixedUrl(path)
 
