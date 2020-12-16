@@ -2,7 +2,6 @@ package com.example.sample.offline
 
 import android.util.Log
 import java.io.BufferedReader
-import java.io.ByteArrayOutputStream
 import java.io.FileNotFoundException
 import java.io.PrintStream
 import java.net.ServerSocket
@@ -69,12 +68,18 @@ object MBTilesServer : Runnable {
                 }
             } while (line.isNotEmpty())
 
-            // the source which this request target to
-            val source = sources[route?.substringBefore("/")] ?: return
-
             // Prepare the content to send.
-            if (null == route) {
+            if (route == null) {
                 writeServerError(output)
+                return
+            }
+
+            // the source which this request target to
+            val sourceId = route.substringBefore("/")
+            val source = sources[sourceId]
+
+            if (source == null) {
+                writeServerError(output, "No such this source: $sourceId")
                 return
             }
 
@@ -93,6 +98,7 @@ object MBTilesServer : Runnable {
                 write(bytes)
                 flush()
             }
+            Log.d(javaClass.simpleName, "send $route")
         } finally {
             reader.close()
             output.close()
@@ -108,12 +114,14 @@ object MBTilesServer : Runnable {
         null
     }
 
-    private fun writeServerError(output: PrintStream) {
+    private fun writeServerError(output: PrintStream, message: String? = null) {
         output.println("HTTP/1.0 500 Internal Server Error")
+        if (message != null) output.println(message)
         output.flush()
+        Log.d(javaClass.simpleName, "Internal Server Error")
     }
 
-    private fun detectMimeType(format: String): String? = when (format) {
+    private fun detectMimeType(format: String): String = when (format) {
         "jpg" -> "image/jpeg"
         "png" -> "image/png"
         "mvt" -> "application/x-protobuf"
