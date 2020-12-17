@@ -44,7 +44,9 @@ class MapViewModel : ViewModel() {
     }
 
     // List of MBTiles inside internal storage
-    val mbTilesList = SafeMutableLiveData<List<String>>(emptyList())
+    val mbTilesList = object : SafeMutableLiveData<List<String>>(emptyList()) {
+        override val transformer = { newState: List<String> -> newState.distinct() }
+    }
 
     // Details of features rendered on map
     val details = SafeMutableLiveData<String?>(null)
@@ -55,5 +57,6 @@ class MapViewModel : ViewModel() {
         val crsWrapper: CRSWrapper = CRSWrapper.WGS84,
         val expression: CoordExpression = CoordExpression.DMS
     )
+
     val displayGrid = SafeMutableLiveData(false)
 }

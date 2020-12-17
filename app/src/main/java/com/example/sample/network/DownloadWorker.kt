@@ -105,7 +105,7 @@ class DownloadWorker(private val context: Context, params: WorkerParameters) :
                         ForegroundInfo(notificationId, createNotification(progressString))
                     setForegroundAsync(foregroundInfo).get()
                     setProgressAsync(workDataOf(DATA_KEY_PROGRESS to progressString))
-                    Log.d(javaClass.name, "Write stream body to storage: $progressString")
+                    Log.d(javaClass.name, "Write stream body to storage: $progressString $progress/$fileSize")
                 }
             }
         }
@@ -126,12 +126,13 @@ class DownloadWorker(private val context: Context, params: WorkerParameters) :
 
         const val DATA_KEY_PROGRESS = "PROGRESS"
 
-        fun enqueue(context: Context, path: String): LiveData<WorkInfo> {
+        fun enqueue(context: Context, path: String, tag: String): LiveData<WorkInfo> {
             val workManager = WorkManager.getInstance(context)
             val constraints = Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build()
             val workRequest = OneTimeWorkRequestBuilder<DownloadWorker>()
+                .addTag(tag)
                 .setConstraints(constraints)
                 .setInputData(workDataOf(KEY_PATH to path))
                 .build()

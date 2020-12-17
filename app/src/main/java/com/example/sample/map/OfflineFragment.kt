@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,17 +13,20 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import com.example.sample.R
 import com.example.sample.databinding.OfflineMapItemBinding
 import com.example.sample.main.MapViewModel
 import com.example.sample.network.DownloadWorker
 import com.example.sample.network.DownloadWorker.Companion.DATA_KEY_PROGRESS
+import com.example.sample.offline.getLocalMBTiles
 
 
 // TODO i18n for texts
 class OfflineFragment : DialogFragment() {
 
     val mapModel by activityViewModels<MapViewModel>()
+    private val workManager by lazy { WorkManager.getInstance(requireContext()) }
 
     inner class OfflineMap(val displayName: String, val path: String)
 
@@ -53,28 +57,41 @@ class OfflineFragment : DialogFragment() {
                 with(binding.button) {
                     val localMBTiles = map.path.substringAfterLast("/")
 
-                    setOnClickListener {
-                        isClickable = false
+                    workManager.getWorkInfosByTagLiveData(localMBTiles)
+                        .observe(this@OfflineFragment) { infoList ->
+                            val info = infoList.firstOrNull() ?: return@observe
 
-                        val liveData = DownloadWorker.enqueue(requireContext(), map.path)
-                        liveData.observe(this@OfflineFragment) { info ->
                             when (info.state) {
-                                WorkInfo.State.SUCCEEDED ->
-                                    with(mapModel.mbTilesList) { value = value + localMBTiles }
+                                WorkInfo.State.SUCCEEDED -> {
+                                    with(mapModel.mbTilesList) {
+                                        if (localMBTiles !in value &&
+                                            localMBTiles in requireContext().getLocalMBTiles()
+                                        ) {
+                                            value = requireContext().getLocalMBTiles()
+                                        }
+                                    }
+                                }
                                 WorkInfo.State.FAILED, WorkInfo.State.CANCELLED -> {
                                     text = "Download"
                                     isCheckable = true
                                 }
-                                else -> {
-                                    val progress = info.progress.getString(DATA_KEY_PROGRESS)
+                                WorkInfo.State.RUNNING -> {
+                                    val progress = infoList[0].progress.getString(DATA_KEY_PROGRESS)
                                     text = "%s%s%s".format(
                                         "下載中",
                                         if (progress != null) "\n" else "",
                                         progress ?: ""
                                     )
                                 }
+                                else -> {
+                                    text = "Calculating"
+                                }
                             }
                         }
+
+                    setOnClickListener {
+                        isClickable = false
+                        DownloadWorker.enqueue(requireContext(), map.path, localMBTiles)
                     }
 
                     mapModel.mbTilesList.observe(this@OfflineFragment) { list ->
@@ -103,6 +120,7 @@ class OfflineFragment : DialogFragment() {
             setAdapter(adapter) { _, _ -> }
             create()
         }.apply {
+            mapModel.mbTilesList.value = requireContext().getLocalMBTiles()
             // Override dismiss dialog, do nothing instead
             listView.onItemClickListener = null
         }
