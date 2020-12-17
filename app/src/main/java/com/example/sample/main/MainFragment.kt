@@ -10,7 +10,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.add
 import androidx.fragment.app.commit
-import androidx.lifecycle.observe
 import androidx.navigation.fragment.findNavController
 import com.example.sample.R
 import com.example.sample.databinding.MainFragmentBinding

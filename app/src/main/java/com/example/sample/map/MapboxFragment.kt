@@ -4,11 +4,19 @@ import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
 import android.graphics.RectF
+import android.util.Log
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.observe
+import androidx.lifecycle.lifecycleScope
 import com.example.sample.R
+import com.example.sample.livedata.SafeMutableLiveData
 import com.example.sample.main.MapViewModel
 import com.example.sample.main.zoom
+import com.example.sample.network.GithubService
+import com.example.sample.offline.MBTilesServer
+import com.example.sample.offline.MBTilesSource
+import com.example.sample.offline.MBTilesSourceException
+import com.google.gson.JsonArray
+import com.google.gson.JsonParser
 import com.mapbox.mapboxsdk.Mapbox
 import com.mapbox.mapboxsdk.camera.CameraPosition
 import com.mapbox.mapboxsdk.geometry.LatLng
@@ -20,50 +28,100 @@ import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.maps.SupportMapFragment
 import com.mapbox.mapboxsdk.style.layers.Property
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
+import java.io.FileReader
 
 class MapboxFragment : SupportMapFragment() {
 
     private val model by activityViewModels<MapViewModel>()
-    private val defaultStyle by lazy { getString(R.string.uri_style_rudymap) }
+    private val styleFile by lazy {
+        File(requireContext().filesDir.absolutePath + File.separator + "rudymap.json")
+    }
+    private val styleBuilder by lazy {
+        val uri = if (styleFile.exists())
+            "file://${styleFile.path}" else
+            getString(R.string.uri_style_rudymap)
+        SafeMutableLiveData(Style.Builder().fromUri(uri))
+    }
 
     // FIXME only used for debug
     private var showHint = false
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
+
         Mapbox.getInstance(requireContext(), null)
+        Mapbox.setConnected(true)
+
+        // fetch latest style file
+        lifecycleScope.launchWhenCreated {
+            // TODO A proper way to check if upstream style file is updated
+            if (styleFile.exists()) return@launchWhenCreated
+
+            val response = withContext(Dispatchers.IO) {
+                GithubService.mapstewService().getMapboxStyle()
+            }
+            if (!response.isSuccessful) return@launchWhenCreated
+
+            withContext(Dispatchers.IO) {
+                response.body()?.byteStream()?.use { input ->
+                    FileOutputStream(styleFile).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+            }
+            styleBuilder.value = Style.Builder().fromUri("file://${styleFile.path}")
+        }
+
+        model.mbTilesList.observe(this) { list ->
+            list.forEach { mbtiles ->
+                // Create MBTilesSource
+                val file = context.getDatabasePath(mbtiles)
+                val sourceId = mbtiles.substringBefore(".mbtiles")
+                try {
+                    MBTilesSource(file, sourceId).apply { activate() }
+                } catch (e: MBTilesSourceException.CouldNotReadFileException) {
+                    // TODO Deal with error if fail to read MBTiles
+                }
+            }
+
+            if (styleFile.exists()) {
+                try {
+                    val styleJson = JsonParser.parseReader(FileReader(styleFile)).asJsonObject
+
+                    // Override sources with local MBTiles
+                    styleJson.getAsJsonObject("sources")?.run {
+                        MBTilesServer.sources.forEach {
+                            val source = it.value
+                            with(getAsJsonObject(source.id)) {
+                                add("tiles", JsonArray().apply { add(source.url) })
+                                remove("url")
+                            }
+                        }
+                    }
+                    // Override glyphs and sprite in asset
+                    styleJson.addProperty("glyphs", "asset://fonts/KlokanTech%20{fontstack}/{range}.pbf")
+                    // TODO A proper way to check if upstream sprite is updated
+                    styleJson.addProperty("sprite", "asset://rudymap")
+
+                    styleBuilder.value = Style.Builder().fromJson(styleJson.toString())
+
+                } catch (e: Exception) {
+                    // TODO handle exception
+                }
+            }
+        }
     }
 
     override fun onMapReady(mapboxMap: MapboxMap) = with(mapboxMap) {
 
-        setStyle(defaultStyle) { style ->
-            model.locateUser.observe(viewLifecycleOwner) locate@{ enable ->
-                if (enable) enableLocationComponent(style)
-            }
-
-            addOnMapLongClickListener {
-                style.showLayerSelectionDialog()
-                true
-            }
-
-            model.displayGrid.observe(viewLifecycleOwner) { display ->
-                if (!display && style.getSource(AngleGridLayer.id) == null) return@observe
-
-                if (display && style.getSource(AngleGridLayer.id) == null) {
-                    with(style) {
-                        addLayer(AngleGridLayer)
-                        addLayer(AngleGridSymbolLayer)
-                        addSource(AngleGridSource)
-                    }
-                } else {
-                    with(style) {
-                        removeLayer(AngleGridLayer)
-                        removeLayer(AngleGridSymbolLayer)
-                        removeSource(AngleGridSource)
-                    }
-                }
-            }
+        styleBuilder.observe(this@MapboxFragment) { builder ->
+            setStyle(builder) { style -> onStyleLoaded(this, style) }
         }
+
         cameraPosition = CameraPosition.Builder()
             .zoom(model.center.value.zoom.toDouble())
             .build()
@@ -102,8 +160,35 @@ class MapboxFragment : SupportMapFragment() {
                     .build()
             }
         }
+    }
 
-        Unit
+    private fun onStyleLoaded(mapboxMap: MapboxMap, style: Style) {
+        model.locateUser.observe(this@MapboxFragment) locate@{ enable ->
+            if (enable) mapboxMap.enableLocationComponent(style)
+        }
+
+        mapboxMap.addOnMapLongClickListener {
+            style.showLayerSelectionDialog()
+            true
+        }
+
+        model.displayGrid.observe(viewLifecycleOwner) { display ->
+            if (!display && style.getSource(AngleGridLayer.id) == null) return@observe
+
+            if (display && style.getSource(AngleGridLayer.id) == null) {
+                with(style) {
+                    addLayer(AngleGridLayer)
+                    addLayer(AngleGridSymbolLayer)
+                    addSource(AngleGridSource)
+                }
+            } else {
+                with(style) {
+                    removeLayer(AngleGridLayer)
+                    removeLayer(AngleGridSymbolLayer)
+                    removeSource(AngleGridSource)
+                }
+            }
+        }
     }
 
     // FIXME handle permission properly
