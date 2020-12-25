@@ -3,13 +3,12 @@ package com.example.sample.network
 import android.app.Notification
 import android.content.Context
 import android.os.Build
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LiveData
 import androidx.work.*
 import com.example.sample.notification.createChannel
 import okhttp3.ResponseBody
-import retrofit2.Retrofit
+import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -43,18 +42,18 @@ class DownloadWorker(private val context: Context, params: WorkerParameters) :
         setForeground(foregroundInfo)
 
         val service = GithubService.basicService()
-        Log.d(javaClass.name, "Fetching remote file")
+        Timber.d("Fetching remote file")
         val response = service.downloadFileWithFixedUrl(path)
 
         if (!response.isSuccessful) {
-            Log.d(javaClass.name, "Server contact failed")
+            Timber.d("Server contact failed")
             Result.failure()
         }
         val body = response.body() ?: return Result.failure()
 
-        Log.d(javaClass.name, "Server contacted and has file")
+        Timber.d("Server contacted and has file")
         val writtenToDisk: Boolean = writeResponseBodyToStorage(body, unfinishedFileName)
-        Log.d(javaClass.name, "File saved? $writtenToDisk")
+        Timber.d("File saved? $writtenToDisk")
 
         return if (writtenToDisk) {
             context.getDatabasePath(unfinishedFileName).renameTo(context.getDatabasePath(fileName))
@@ -87,7 +86,7 @@ class DownloadWorker(private val context: Context, params: WorkerParameters) :
     private fun writeResponseBodyToStorage(body: ResponseBody, fileName: String): Boolean = try {
 
         val file: File = context.getDatabasePath(fileName)
-        Log.d(javaClass.name, "Write to ${file.absolutePath}")
+        Timber.d("Write to ${file.absolutePath}")
 
         body.byteStream().use { input ->
             FileOutputStream(file).use { output ->
@@ -105,20 +104,16 @@ class DownloadWorker(private val context: Context, params: WorkerParameters) :
                         ForegroundInfo(notificationId, createNotification(progressString))
                     setForegroundAsync(foregroundInfo).get()
                     setProgressAsync(workDataOf(DATA_KEY_PROGRESS to progressString))
-                    Log.d(javaClass.name, "Write stream body to storage: $progressString $progress/$fileSize")
+                    Timber.d("Write stream body to storage: $progressString $progress/$fileSize")
                 }
             }
         }
         true
     } catch (e: IOException) {
-        Log.d(javaClass.name, "Fail to write response body to $fileName")
+        Timber.d("Fail to write response body to $fileName")
         false
     } catch (exception: ExecutionException) {
-        Log.d(
-            javaClass.name,
-            "The following error message should caused by the cancellation of CoroutineWorker",
-            exception
-        )
+        Timber.d("The following error message should caused by the cancellation of CoroutineWorker: ${exception.localizedMessage}")
         false
     }
 

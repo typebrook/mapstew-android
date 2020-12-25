@@ -1,6 +1,6 @@
 package com.example.sample.offline
 
-import android.util.Log
+import timber.log.Timber
 import java.io.BufferedReader
 import java.io.FileNotFoundException
 import java.io.PrintStream
@@ -33,18 +33,15 @@ object MBTilesServer : Runnable {
         try {
             while (isRunning) {
                 serverSocket.accept().use { socket ->
-                    Log.d(javaClass.simpleName, "Handling request")
+                    Timber.d("Handling request")
                     handle(socket)
-                    Log.d(javaClass.simpleName, "Request handled")
+                    Timber.d("Request handled")
                 }
             }
         } catch (e: Exception) {
-            Log.d(
-                javaClass.simpleName,
-                e.localizedMessage ?: "Exception while running MBTilesServer"
-            )
+            Timber.d(e.localizedMessage ?: "Exception while running MBTilesServer")
         } finally {
-            Log.d(javaClass.simpleName, "request handled")
+            Timber.d("request handled")
         }
     }
 
@@ -98,7 +95,7 @@ object MBTilesServer : Runnable {
                 write(bytes)
                 flush()
             }
-            Log.d(javaClass.simpleName, "send $route")
+            Timber.d("send $route")
         } finally {
             reader.close()
             output.close()
@@ -118,7 +115,7 @@ object MBTilesServer : Runnable {
         output.println("HTTP/1.0 500 Internal Server Error")
         if (message != null) output.println(message)
         output.flush()
-        Log.d(javaClass.simpleName, "Internal Server Error")
+        Timber.d("Internal Server Error")
     }
 
     private fun detectMimeType(format: String): String = when (format) {

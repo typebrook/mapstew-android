@@ -63,6 +63,9 @@ dependencies {
     androidTestImplementation 'androidx.test:runner:1.3.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 
+    // A better logger
+    implementation 'com.jakewharton.timber:timber:4.7.1'
+
     // Mapbox
     implementation 'com.mapbox.mapboxsdk:mapbox-android-sdk:9.2.1'
 

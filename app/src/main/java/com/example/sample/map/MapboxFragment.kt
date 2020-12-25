@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
 import android.graphics.RectF
-import android.util.Log
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import com.example.sample.R
@@ -30,6 +29,7 @@ import com.mapbox.mapboxsdk.style.layers.Property
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
 import java.io.FileReader
@@ -88,12 +88,11 @@ class MapboxFragment : SupportMapFragment() {
                 }
             }
 
-            if (styleFile.exists()) {
-                try {
-                    val styleJson = JsonParser.parseReader(FileReader(styleFile)).asJsonObject
+            try {
+                with(JsonParser.parseReader(FileReader(styleFile)).asJsonObject) {
 
                     // Override sources with local MBTiles
-                    styleJson.getAsJsonObject("sources")?.run {
+                    getAsJsonObject("sources")?.run {
                         MBTilesServer.sources.forEach {
                             val source = it.value
                             with(getAsJsonObject(source.id)) {
@@ -102,16 +101,16 @@ class MapboxFragment : SupportMapFragment() {
                             }
                         }
                     }
-                    // Override glyphs and sprite in asset
-                    styleJson.addProperty("glyphs", "asset://fonts/KlokanTech%20{fontstack}/{range}.pbf")
+                    // Override glyphs and sprite with asset
+                    addProperty("glyphs", "asset://fonts/KlokanTech%20{fontstack}/{range}.pbf")
                     // TODO A proper way to check if upstream sprite is updated
-                    styleJson.addProperty("sprite", "asset://rudymap")
+                    addProperty("sprite", "asset://rudymap")
 
-                    styleBuilder.value = Style.Builder().fromJson(styleJson.toString())
-
-                } catch (e: Exception) {
-                    // TODO handle exception
+                    styleBuilder.value = Style.Builder().fromJson(toString())
                 }
+            } catch (e: Exception) {
+                // Exception may happens when FileNotFound, JsonParseFail, IllegalState
+                Timber.d("Fail to update style with local MBTiles: ${e.localizedMessage ?: "No message"}")
             }
         }
     }
@@ -212,7 +211,7 @@ class MapboxFragment : SupportMapFragment() {
     private fun Style.showLayerSelectionDialog() = with(AlertDialog.Builder(context)) {
 
         val layersFromStyle = layers.filterNot {
-            it.id == AngleGridLayer.id || it.id == AngleGridSymbolLayer.id
+            it is AngleGridLayer || it is AngleGridSymbolLayer
         }
 
         setTitle("Layers")
