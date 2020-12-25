@@ -45,6 +45,7 @@ class MapViewModel : ViewModel() {
 
     // List of MBTiles inside internal storage
     val mbTilesList = object : SafeMutableLiveData<List<String>>(emptyList()) {
+        override val predicate = { new: List<String> -> new != value }
         override val transformer = { newState: List<String> -> newState.distinct() }
     }
 
