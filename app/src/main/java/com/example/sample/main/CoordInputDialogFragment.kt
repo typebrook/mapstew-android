@@ -8,7 +8,6 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.Spinner
-import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import com.example.sample.R
@@ -20,6 +19,7 @@ import com.example.sample.geometry.CRSWrapper.Companion.TWD97
 import com.example.sample.geometry.CRSWrapper.Companion.WGS84
 import com.example.sample.ui.AngleFilter
 import com.example.sample.ui.LetterDigitFilter
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.lang.Character.isDigit
 import kotlin.math.absoluteValue
 
@@ -37,7 +37,7 @@ class CoordInputDialogFragment : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog = requireActivity().run {
 
         initViewGroup()
-        with(AlertDialog.Builder(this)) {
+        with(MaterialAlertDialogBuilder(this, R.style.AlertDialogTheme)) {
             setView(viewGroup.root)
             setTitle(R.string.dialog_coord_input_desc)
             setPositiveButton("GOTO") { _, _ ->

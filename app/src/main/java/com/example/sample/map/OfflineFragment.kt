@@ -8,7 +8,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
-import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import androidx.work.WorkInfo
@@ -19,6 +18,7 @@ import com.example.sample.main.MapViewModel
 import com.example.sample.network.DownloadWorker
 import com.example.sample.network.DownloadWorker.Companion.DATA_KEY_PROGRESS
 import com.example.sample.offline.getLocalMBTiles
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 
 // TODO i18n for texts
@@ -115,7 +115,7 @@ class OfflineFragment : DialogFragment() {
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
-        with(AlertDialog.Builder(requireContext())) {
+        with(MaterialAlertDialogBuilder(requireContext(), R.style.AlertDialogTheme)) {
             setAdapter(adapter) { _, _ -> }
             create()
         }.apply {
