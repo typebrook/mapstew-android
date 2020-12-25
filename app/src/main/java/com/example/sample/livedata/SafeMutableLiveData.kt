@@ -13,7 +13,7 @@ open class SafeMutableLiveData<T>(value: T) : LiveData<T>(value) {
     public override fun postValue(value: T) =
         if (predicate(value)) super.postValue(transformer(value)) else Unit
 
-    protected open val predicate: (value: T) -> Boolean = { true }
-    protected open val transformer: (value: T) -> T = { new -> new }
+    protected open val predicate: (T) -> Boolean = { newValue -> newValue != value }
+    protected open val transformer: (T) -> T = { new -> new }
 }
 

@@ -10,13 +10,13 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.add
 import androidx.fragment.app.commit
-import androidx.lifecycle.observe
 import androidx.navigation.fragment.findNavController
 import com.example.sample.R
 import com.example.sample.databinding.MainFragmentBinding
 import com.example.sample.geometry.*
 import com.example.sample.map.MapboxFragment
-import com.example.sample.network.DownloadWorker
+import com.example.sample.map.OfflineFragment
+import com.example.sample.offline.getLocalMBTiles
 import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
 
@@ -30,6 +30,7 @@ class MainFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
 
+        mapModel.mbTilesList.value = requireContext().getLocalMBTiles()
         mapModel.target.value = mapModel.center.value
 
         if (savedInstanceState == null) {
@@ -90,7 +91,7 @@ class MainFragment : Fragment() {
             with(AlertDialog.Builder(requireContext())) {
                 setItems(R.array.menu_items) { _, which ->
                     when (which) {
-                        0 -> DownloadWorker.enqueue(requireContext())
+                        0 -> OfflineFragment().show(childFragmentManager, null)
                         1 -> Toast.makeText(requireContext(), "NOTHING", Toast.LENGTH_SHORT).show()
                         2 -> findNavController().navigate(
                             MainFragmentDirections.actionMainFragmentToSettingsFragment()
