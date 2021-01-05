@@ -29,18 +29,20 @@ class OfflineFragment : DialogFragment() {
 
     inner class OfflineMap(val displayName: String, val path: String)
 
-    val maps by lazy {
-        listOf(
-            OfflineMap(
-                displayName = "Contours",
-                path = "typebrook/contours/releases/download/2020/contours.mbtiles"
-            ),
-            OfflineMap(
-                displayName = "Mapstew",
-                path = "typebrook/mapstew/releases/download/cache-2020.12.11/mapstew.mbtiles"
-            )
+    val maps = listOf(
+        OfflineMap(
+            displayName = "Contours",
+            path = "typebrook/contours/releases/download/2020/contours.mbtiles"
+        ),
+        OfflineMap(
+            displayName = "Mapstew",
+            path = "typebrook/mapstew/releases/download/cache-2020.12.11/mapstew.mbtiles"
+        ),
+        OfflineMap(
+            displayName = "Hillshade",
+            path = "osmhacktw/terrain-rgb/releases/download/2020/terrain-rgb.mbtiles"
         )
-    }
+    )
 
     private val adapter by lazy {
         object : BaseAdapter() {
