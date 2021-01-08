@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/mainFragment"
-        android:name="com.example.sample.main.MainFragment"
+        android:name="io.typebrook.mapstew.main.MainFragment"
         android:label="main_fragment"
         tools:layout="@layout/main_fragment" >
         <action

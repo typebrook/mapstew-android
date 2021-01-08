@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">sample</string>
+    <string name="app_name">mapstew</string>
 
     <string name="uri_style_rudymap" translatable="false">https://raw.githubusercontent.com/typebrook/mapstew/master/styles/rudymap.json</string>
     <string name="res_desc_cross" translatable="false">A simple cross marks map center</string>
