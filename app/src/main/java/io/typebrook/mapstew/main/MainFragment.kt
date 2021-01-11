@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.add
 import androidx.fragment.app.commit
+import androidx.lifecycle.MediatorLiveData
 import androidx.navigation.fragment.findNavController
 import io.typebrook.mapstew.R
 import io.typebrook.mapstew.databinding.MainFragmentBinding
@@ -46,8 +47,12 @@ class MainFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) = with(binding) {
 
-        mapModel.center.observe(viewLifecycleOwner) { camera ->
-            val xy = camera.wgs84LongLat
+        // Update text of coordinate by center of map and current coordinate referency system
+        MediatorLiveData<Int>().apply {
+            addSource(mapModel.center) { value = value ?: 0 + 1 }
+            addSource(mapModel.crsState) { value = value ?: 0 + 1 }
+        }.observe(viewLifecycleOwner) {
+            val xy = mapModel.center.value.wgs84LongLat
                 .convert(CRSWrapper.WGS84, mapModel.crsState.value.crsWrapper)
             val crsState = mapModel.crsState.value
             coordinates.text = when (crsState.expression) {
