@@ -24,7 +24,11 @@ fun XYPair.isValid(crs: CRSWrapper) = isValidInWGS84(convert(crs, CRSWrapper.WGS
 
 enum class CoordExpression { Degree, DegMin, DMS, SINGLE, XY }
 
-val selectableExpressions = CoordExpression.values().toList().subList(0, 3)
+val selectableExpressions = listOf(
+    CoordExpression.Degree,
+    CoordExpression.DegMin,
+    CoordExpression.DMS
+)
 
 open class CRSWrapper(
     val displayName: String = "UnNamed",
