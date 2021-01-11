@@ -2,6 +2,7 @@ package com.example.sample.main
 
 import android.app.Dialog
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -10,7 +11,6 @@ import android.widget.Spinner
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.observe
 import com.example.sample.R
 import com.example.sample.databinding.*
 import com.example.sample.geometry.*
@@ -80,7 +80,7 @@ class CoordInputDialogFragment : DialogFragment() {
                 override fun onNothingSelected(p0: AdapterView<*>?) {}
                 override fun onItemSelected(p0: AdapterView<*>?, p1: View?, i: Int, p3: Long) {
                     with(mapModel.crsState) {
-                        value = value.copy(expression = CoordExpression.values()[i])
+                        value = value.copy(expression = selectableExpressions[i])
                     }
                 }
             }
@@ -96,11 +96,11 @@ class CoordInputDialogFragment : DialogFragment() {
         // Change views by crsState
         mapModel.crsState.observe(this@CoordInputDialogFragment) { state ->
             coordInput = when (state.expression) {
-                CoordExpression.Degree -> degreeInput
-                CoordExpression.DegMin -> degMinInput
-                CoordExpression.DMS -> dmsInput
-                CoordExpression.XY -> xyInput
-                CoordExpression.SINGLE -> singleInput
+                CoordExpression.Degree -> degreeInput(layoutInflater)
+                CoordExpression.DegMin -> degMinInput(layoutInflater)
+                CoordExpression.DMS -> dmsInput(layoutInflater)
+                CoordExpression.XY -> xyInput(layoutInflater)
+                CoordExpression.SINGLE -> singleInput(layoutInflater)
             }
             inputContainer.removeAllViews()
             inputContainer.addView(coordInput.view)
@@ -138,138 +138,133 @@ class CoordInputDialogFragment : DialogFragment() {
             get() = if (selectedItemPosition == 0) 1 else -1
     }
 
-    private val xyInput: CoordInput
-        get() = object : CoordInput {
-            val binding = InputXyBinding.inflate(layoutInflater)
-            override val view: View = with(binding) {
-                val xyString = xy2IntString(coord)
-                x.hint = xyString.first
-                y.hint = xyString.second
-                root
-            }
-            override val wgs84LongLat: XYPair
-                get() = with(binding) {
-                    return (x.vector to y.vector).convert(crs, WGS84)
-                }
+    private fun xyInput(layoutInflater: LayoutInflater) = object : CoordInput {
+        val binding = InputXyBinding.inflate(layoutInflater)
+        override val view: View = with(binding) {
+            val xyString = xy2IntString(coord)
+            x.hint = xyString.first
+            y.hint = xyString.second
+            root
         }
-
-    private val singleInput: CoordInput
-        get() = object : CoordInput {
-            val binding = InputSingleBinding.inflate(layoutInflater)
-            val currentCRS = crs
-            override val view: View = with(binding) {
-                if (currentCRS is MaskedCRS) {
-                    singleCoord.hint = currentCRS.mask(coord)
-                }
-                singleCoord.filters = arrayOf(LetterDigitFilter())
-                root
+        override val wgs84LongLat: XYPair
+            get() = with(binding) {
+                return (x.vector to y.vector).convert(crs, WGS84)
             }
-            override val wgs84LongLat: XYPair
-                get() = with(binding) {
-                    if (currentCRS is MaskedCRS) {
-                        try {
-                            singleCoord.raw.let(currentCRS::reverseMask).convert(crs, WGS84)
-                        } catch (e: MaskedCRS.Companion.CannotHandleException) {
-                            coord.convert(crs, WGS84)
-                        }
-                    } else {
+    }
+
+    private fun singleInput(layoutInflater: LayoutInflater) = object : CoordInput {
+        val binding = InputSingleBinding.inflate(layoutInflater)
+        val currentCRS = crs
+        override val view: View = with(binding) {
+            if (currentCRS is MaskedCRS) {
+                singleCoord.hint = currentCRS.mask(coord)
+            }
+            singleCoord.filters = arrayOf(LetterDigitFilter())
+            root
+        }
+        override val wgs84LongLat: XYPair
+            get() = with(binding) {
+                if (currentCRS is MaskedCRS) {
+                    try {
+                        singleCoord.raw.let(currentCRS::reverseMask).convert(crs, WGS84)
+                    } catch (e: MaskedCRS.Companion.CannotHandleException) {
                         coord.convert(crs, WGS84)
                     }
+                } else {
+                    coord.convert(crs, WGS84)
                 }
-        }
-
-    private val degreeInput: CoordInput
-        get() = object : CoordInput {
-            val binding = InputDegreeBinding.inflate(layoutInflater)
-            override val view: View = with(binding) {
-                spinnerEw.setSelection(if (coord.first >= 0) 0 else 1)
-                spinnerNs.setSelection(if (coord.second >= 0) 0 else 1)
-                longitude.hint = coord.first.absoluteValue.scaleTo(6).toString()
-                longitude.filters = arrayOf(AngleFilter(180, true))
-                latitude.hint = coord.second.absoluteValue.scaleTo(6).toString()
-                latitude.filters = arrayOf(AngleFilter(90, true))
-                root
             }
-            override val wgs84LongLat: XYPair
-                get() = with(binding) {
-                    val x = longitude.angle * spinnerEw.sign
-                    val y = latitude.angle * spinnerNs.sign
-                    return (x to y).convert(crs, WGS84)
-                }
-        }
+    }
 
-    private val degMinInput: CoordInput
-        get() = object : CoordInput {
-            val binding = InputDegMinBinding.inflate(layoutInflater)
-            override val view: View = with(binding) {
-                spinnerEw.setSelection(if (coord.first >= 0) 0 else 1)
-                spinnerNs.setSelection(if (coord.second >= 0) 0 else 1)
-                coord.first.absoluteValue.let(degree2DM).run {
-                    longitudeDeg.hint = first.toString()
-                    longitudeDeg.filters = arrayOf(AngleFilter(180, true))
-                    longitudeMin.hint = second.toString()
-                    longitudeMin.filters = arrayOf(AngleFilter(60, false))
-                }
-                coord.second.absoluteValue.let(degree2DM).run {
-                    latitudeDeg.hint = first.toString()
-                    latitudeDeg.filters = arrayOf(AngleFilter(90, true))
-                    latitudeMin.hint = second.toString()
-                    latitudeMin.filters = arrayOf(AngleFilter(60, false))
-                }
-                root
-            }
-            override val wgs84LongLat: XYPair
-                get() = with(binding) {
-                    val x =
-                        dm2Degree(longitudeDeg.angle.toInt() to longitudeMin.angle) * spinnerEw.sign
-                    val y =
-                        dm2Degree(latitudeDeg.angle.toInt() to latitudeMin.angle) * spinnerNs.sign
-                    return (x to y).convert(crs, WGS84)
-                }
+    private fun degreeInput(layoutInflater: LayoutInflater) = object : CoordInput {
+        val binding = InputDegreeBinding.inflate(layoutInflater)
+        override val view: View = with(binding) {
+            spinnerEw.setSelection(if (coord.first >= 0) 0 else 1)
+            spinnerNs.setSelection(if (coord.second >= 0) 0 else 1)
+            longitude.hint = coord.first.absoluteValue.scaleTo(6).toString()
+            longitude.filters = arrayOf(AngleFilter(180, true))
+            latitude.hint = coord.second.absoluteValue.scaleTo(6).toString()
+            latitude.filters = arrayOf(AngleFilter(90, true))
+            root
         }
+        override val wgs84LongLat: XYPair
+            get() = with(binding) {
+                val x = longitude.angle * spinnerEw.sign
+                val y = latitude.angle * spinnerNs.sign
+                return (x to y).convert(crs, WGS84)
+            }
+    }
 
-    private val dmsInput: CoordInput
-        get() = object : CoordInput {
-            val binding = InputDmsBinding.inflate(layoutInflater)
-            override val view: View = with(binding) {
-                spinnerEw.setSelection(if (coord.first >= 0) 0 else 1)
-                spinnerNs.setSelection(if (coord.second >= 0) 0 else 1)
-                coord.first.absoluteValue.let(degree2DMS).run {
-                    longitudeDeg.hint = first.toString()
-                    longitudeDeg.filters = arrayOf(AngleFilter(180, true))
-                    longitudeMin.hint = second.toString()
-                    longitudeMin.filters = arrayOf(AngleFilter(60, false))
-                    longitudeSec.hint = third.toString()
-                    longitudeSec.filters = arrayOf(AngleFilter(60, false, 4))
-                }
-                coord.second.absoluteValue.let(degree2DMS).run {
-                    latitudeDeg.hint = first.toString()
-                    latitudeDeg.filters = arrayOf(AngleFilter(90, true))
-                    latitudeMin.hint = second.toString()
-                    latitudeMin.filters = arrayOf(AngleFilter(60, false))
-                    latitudeSec.hint = third.toString()
-                    latitudeSec.filters = arrayOf(AngleFilter(60, false, 4))
-                }
-                root
+    private fun degMinInput(layoutInflater: LayoutInflater) = object : CoordInput {
+        val binding = InputDegMinBinding.inflate(layoutInflater)
+        override val view: View = with(binding) {
+            spinnerEw.setSelection(if (coord.first >= 0) 0 else 1)
+            spinnerNs.setSelection(if (coord.second >= 0) 0 else 1)
+            coord.first.absoluteValue.let(degree2DM).run {
+                longitudeDeg.hint = first.toString()
+                longitudeDeg.filters = arrayOf(AngleFilter(180, true))
+                longitudeMin.hint = second.toString()
+                longitudeMin.filters = arrayOf(AngleFilter(60, false))
             }
-            override val wgs84LongLat: XYPair
-                get() = with(binding) {
-                    val x = dms2Degree(
-                        Triple(
-                            longitudeDeg.angle.toInt(),
-                            longitudeMin.angle.toInt(),
-                            longitudeSec.angle
-                        )
-                    ) * spinnerEw.sign
-                    val y = dms2Degree(
-                        Triple(
-                            latitudeDeg.angle.toInt(),
-                            latitudeMin.angle.toInt(),
-                            latitudeSec.angle
-                        )
-                    ) * spinnerNs.sign
-                    return (x to y).convert(crs, WGS84)
-                }
+            coord.second.absoluteValue.let(degree2DM).run {
+                latitudeDeg.hint = first.toString()
+                latitudeDeg.filters = arrayOf(AngleFilter(90, true))
+                latitudeMin.hint = second.toString()
+                latitudeMin.filters = arrayOf(AngleFilter(60, false))
+            }
+            root
         }
+        override val wgs84LongLat: XYPair
+            get() = with(binding) {
+                val x =
+                    dm2Degree(longitudeDeg.angle.toInt() to longitudeMin.angle) * spinnerEw.sign
+                val y =
+                    dm2Degree(latitudeDeg.angle.toInt() to latitudeMin.angle) * spinnerNs.sign
+                return (x to y).convert(crs, WGS84)
+            }
+    }
+
+    private fun dmsInput(layoutInflater: LayoutInflater) = object : CoordInput {
+        val binding = InputDmsBinding.inflate(layoutInflater)
+        override val view: View = with(binding) {
+            spinnerEw.setSelection(if (coord.first >= 0) 0 else 1)
+            spinnerNs.setSelection(if (coord.second >= 0) 0 else 1)
+            coord.first.absoluteValue.let(degree2DMS).run {
+                longitudeDeg.hint = first.toString()
+                longitudeDeg.filters = arrayOf(AngleFilter(180, true))
+                longitudeMin.hint = second.toString()
+                longitudeMin.filters = arrayOf(AngleFilter(60, false))
+                longitudeSec.hint = third.toString()
+                longitudeSec.filters = arrayOf(AngleFilter(60, false, 4))
+            }
+            coord.second.absoluteValue.let(degree2DMS).run {
+                latitudeDeg.hint = first.toString()
+                latitudeDeg.filters = arrayOf(AngleFilter(90, true))
+                latitudeMin.hint = second.toString()
+                latitudeMin.filters = arrayOf(AngleFilter(60, false))
+                latitudeSec.hint = third.toString()
+                latitudeSec.filters = arrayOf(AngleFilter(60, false, 4))
+            }
+            root
+        }
+        override val wgs84LongLat: XYPair
+            get() = with(binding) {
+                val x = dms2Degree(
+                    Triple(
+                        longitudeDeg.angle.toInt(),
+                        longitudeMin.angle.toInt(),
+                        longitudeSec.angle
+                    )
+                ) * spinnerEw.sign
+                val y = dms2Degree(
+                    Triple(
+                        latitudeDeg.angle.toInt(),
+                        latitudeMin.angle.toInt(),
+                        latitudeSec.angle
+                    )
+                ) * spinnerNs.sign
+                return (x to y).convert(crs, WGS84)
+            }
+    }
 // endregion
 }

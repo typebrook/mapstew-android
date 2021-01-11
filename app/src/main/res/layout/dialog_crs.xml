@@ -96,7 +96,9 @@
             android:layout_height="wrap_content"
             android:layout_weight="6"
             android:paddingStart="30dp"
-            android:paddingLeft="30dp" />
+            android:paddingLeft="30dp"
+            android:paddingEnd="0dp"
+            android:paddingRight="0dp" />
     </LinearLayout>
 
     <!--  Magic! If there is no EditText here, other EditTexts inside
