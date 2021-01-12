@@ -176,19 +176,19 @@ class MapboxFragment : SupportMapFragment() {
         }
 
         model.displayGrid.observe(viewLifecycleOwner) { display ->
-            if (!display && style.getSource(AngleGridLayer.id) == null) return@observe
+            if (!display && style.getSource(GridLineLayer.id) == null) return@observe
 
-            if (display && style.getSource(AngleGridLayer.id) == null) {
+            if (display && style.getSource(GridLineLayer.id) == null) {
                 with(style) {
-                    addLayer(AngleGridLayer)
-                    addLayer(AngleGridSymbolLayer)
-                    addSource(AngleGridSource)
+                    addLayer(GridLineLayer)
+                    addLayer(GridSymbolLayer)
+                    addSource(GridSource)
                 }
             } else {
                 with(style) {
-                    removeLayer(AngleGridLayer)
-                    removeLayer(AngleGridSymbolLayer)
-                    removeSource(AngleGridSource)
+                    removeLayer(ID_GRID_LINE_LAYER)
+                    removeLayer(ID_GRID_SYMBOL_LAYER)
+                    removeSource(ID_GRID_SOURCE)
                 }
             }
         }
@@ -215,7 +215,7 @@ class MapboxFragment : SupportMapFragment() {
     private fun Style.showLayerSelectionDialog() = with(AlertDialog.Builder(context)) {
 
         val layersFromStyle = layers.filterNot {
-            it is AngleGridLayer || it is AngleGridSymbolLayer
+            it is GridLineLayer || it is GridSymbolLayer
         }
 
         setTitle("Layers")

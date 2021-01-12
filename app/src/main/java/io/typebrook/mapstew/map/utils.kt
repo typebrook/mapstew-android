@@ -13,6 +13,10 @@ import com.mapbox.mapboxsdk.style.sources.GeometryTileProvider
 import kotlin.math.ceil
 import kotlin.math.floor
 
+const val ID_GRID_SOURCE = "grid"
+const val ID_GRID_LINE_LAYER = "grid-line"
+const val ID_GRID_SYMBOL_LAYER = "grid-symbol"
+
 object LineProvider : GeometryTileProvider {
     override fun getFeaturesForBounds(bounds: LatLngBounds?, zoom: Int): FeatureCollection {
         bounds ?: return FeatureCollection.fromFeatures(emptyList())
@@ -82,14 +86,14 @@ object LineProvider : GeometryTileProvider {
     }
 }
 
-object AngleGridSource : CustomGeometrySource("angle-grid", LineProvider)
-object AngleGridLayer : LineLayer("angle-grid", AngleGridSource.id) {
+object GridSource : CustomGeometrySource(ID_GRID_SOURCE, LineProvider)
+object GridLineLayer : LineLayer(ID_GRID_LINE_LAYER, GridSource.id) {
     init {
         setProperties(lineWidth(0.6F))
     }
 }
-object AngleGridSymbolLayer :
-    SymbolLayer("angle-grid-symbol", AngleGridSource.id) {
+object GridSymbolLayer :
+    SymbolLayer(ID_GRID_SYMBOL_LAYER, GridSource.id) {
     init {
         withProperties(
             textField(get("name")),
