@@ -58,7 +58,6 @@ object LineProvider : GeometryTileProvider {
             y -= gridSpacing
         }
 
-        val gridLines: MutableList<MutableList<Point>> = ArrayList()
         var x = floor(bounds.lonWest / gridSpacing) * gridSpacing
         while (x <= ceil(bounds.lonEast / gridSpacing) * gridSpacing) {
             Feature.fromGeometry(
@@ -78,7 +77,6 @@ object LineProvider : GeometryTileProvider {
             }.let(features::add)
             x += gridSpacing
         }
-        features.add(Feature.fromGeometry(MultiLineString.fromLngLats(gridLines)))
 
         return FeatureCollection.fromFeatures(features)
     }
