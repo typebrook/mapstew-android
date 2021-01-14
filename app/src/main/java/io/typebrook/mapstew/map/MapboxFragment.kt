@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
 import android.graphics.RectF
+import android.view.Gravity
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import io.typebrook.mapstew.R
@@ -115,7 +116,10 @@ class MapboxFragment : SupportMapFragment() {
         }
     }
 
+    @SuppressLint("RtlHardcoded")
     override fun onMapReady(mapboxMap: MapboxMap) = with(mapboxMap) {
+
+        uiSettings.compassGravity = Gravity.LEFT
 
         styleBuilder.observe(this@MapboxFragment) { builder ->
             setStyle(builder) { style -> onStyleLoaded(this, style) }
