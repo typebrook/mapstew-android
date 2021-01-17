@@ -121,7 +121,7 @@ class MapboxFragment : SupportMapFragment() {
     @SuppressLint("RtlHardcoded")
     override fun onMapReady(mapboxMap: MapboxMap) = with(mapboxMap) {
 
-        uiSettings.compassGravity = Gravity.LEFT
+        uiSettings.setCompassMargins(0, 360, 24, 0)
 
         styleBuilder.observe(this@MapboxFragment) { builder ->
             setStyle(builder) { style -> onStyleLoaded(this, style) }
