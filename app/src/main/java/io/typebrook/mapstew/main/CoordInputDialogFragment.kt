@@ -157,7 +157,7 @@ class CoordInputDialogFragment : DialogFragment() {
         val currentCRS = crs
         override val view: View = with(binding) {
             if (currentCRS is MaskedCRS) {
-                singleCoord.hint = currentCRS.mask(coord)
+                singleCoord.hint = currentCRS.mask(coord) ?: getString(R.string.out_of_boundary)
             }
             singleCoord.filters = arrayOf(LetterDigitFilter())
             root

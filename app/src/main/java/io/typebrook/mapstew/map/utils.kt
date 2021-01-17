@@ -127,19 +127,21 @@ fun gridLineProvider(crsWrapper: CRSWrapper) = object : GeometryTileProvider {
                     Feature.fromGeometry(
                         Point.fromLngLat(lonLat.x, lonLat.y)
                     ).apply {
-                        val pointString = TaipowerCRS.mask(xy)
-                        val text = when (zoom) {
-                            in 0..5 -> ""
-                            in 6..9 -> pointString.substring(0, 1)
-                            in 10..11 -> pointString.substring(0, 5).toCharArray().let {
-                                it[2] = 'X'
-                                it[4] = 'X'
-                                String(it)
+                        val text = TaipowerCRS.mask(xy)?.run {
+                            when (zoom) {
+                                in 0..5 -> null
+                                in 6..9 -> substring(0, 1)
+                                in 10..11 -> substring(0, 5).toCharArray().let {
+                                    it[2] = 'X'
+                                    it[4] = 'X'
+                                    String(it)
+                                }
+                                in 12..14 -> substring(0, 5)
+                                in 15..17 -> substring(0, 8)
+                                else -> this
                             }
-                            in 12..14 -> pointString.substring(0, 5)
-                            in 15..17 -> pointString.substring(0, 8)
-                            else -> pointString
-                        }
+                        } ?: return@eachX
+
                         addStringProperty("name", text)
                     }.let(features::add)
                 }
