@@ -35,4 +35,5 @@
     <string name="expression">Expression:</string>
     <string name="displayGrid">Display Grid:</string>
     <string name="in_use">In Use</string>
+    <string name="out_of_boundary">Out of Boundary</string>
 </resources>

@@ -6,15 +6,8 @@ import android.content.Context
 import android.graphics.RectF
 import android.view.Gravity
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.lifecycleScope
-import io.typebrook.mapstew.R
-import io.typebrook.mapstew.livedata.SafeMutableLiveData
-import io.typebrook.mapstew.main.MapViewModel
-import io.typebrook.mapstew.main.zoom
-import io.typebrook.mapstew.network.GithubService
-import io.typebrook.mapstew.offline.MBTilesServer
-import io.typebrook.mapstew.offline.MBTilesSource
-import io.typebrook.mapstew.offline.MBTilesSourceException
 import com.google.gson.JsonArray
 import com.google.gson.JsonParser
 import com.mapbox.mapboxsdk.Mapbox
@@ -28,6 +21,15 @@ import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.maps.SupportMapFragment
 import com.mapbox.mapboxsdk.style.layers.Property
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory
+import io.typebrook.mapstew.R
+import io.typebrook.mapstew.geometry.CRSWrapper
+import io.typebrook.mapstew.livedata.SafeMutableLiveData
+import io.typebrook.mapstew.main.MapViewModel
+import io.typebrook.mapstew.main.zoom
+import io.typebrook.mapstew.network.GithubService
+import io.typebrook.mapstew.offline.MBTilesServer
+import io.typebrook.mapstew.offline.MBTilesSource
+import io.typebrook.mapstew.offline.MBTilesSourceException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -174,22 +176,24 @@ class MapboxFragment : SupportMapFragment() {
             style.showLayerSelectionDialog()
             true
         }
+        MediatorLiveData<Pair<Boolean, CRSWrapper>>().apply {
+            addSource(model.displayGrid) {
+                value = model.displayGrid.value to model.crsState.value.crsWrapper
+            }
+            addSource(model.crsState) {
+                value = model.displayGrid.value to model.crsState.value.crsWrapper
+            }
+        }.observe(viewLifecycleOwner) { (display, crsWrapper) ->
+            with(style) {
+                removeLayer(ID_GRID_LINE_LAYER)
+                removeLayer(ID_GRID_SYMBOL_LAYER)
+                removeSource(ID_GRID_SOURCE)
 
-        model.displayGrid.observe(viewLifecycleOwner) { display ->
-            if (!display && style.getSource(AngleGridLayer.id) == null) return@observe
+                if (!display) return@observe
 
-            if (display && style.getSource(AngleGridLayer.id) == null) {
-                with(style) {
-                    addLayer(AngleGridLayer)
-                    addLayer(AngleGridSymbolLayer)
-                    addSource(AngleGridSource)
-                }
-            } else {
-                with(style) {
-                    removeLayer(AngleGridLayer)
-                    removeLayer(AngleGridSymbolLayer)
-                    removeSource(AngleGridSource)
-                }
+                addLayer(GridLineLayer)
+                addLayer(gridSymbolLayer(crsWrapper))
+                addSource(gridSource(crsWrapper))
             }
         }
     }
@@ -215,7 +219,7 @@ class MapboxFragment : SupportMapFragment() {
     private fun Style.showLayerSelectionDialog() = with(AlertDialog.Builder(context)) {
 
         val layersFromStyle = layers.filterNot {
-            it is AngleGridLayer || it is AngleGridSymbolLayer
+            it.id == ID_GRID_LINE_LAYER || it.id == ID_GRID_SYMBOL_LAYER
         }
 
         setTitle("Layers")

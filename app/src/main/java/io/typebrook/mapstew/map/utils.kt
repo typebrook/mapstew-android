@@ -1,7 +1,9 @@
 package io.typebrook.mapstew.map
 
-import io.typebrook.mapstew.geometry.xy2DMSString
-import com.mapbox.geojson.*
+import com.mapbox.geojson.Feature
+import com.mapbox.geojson.FeatureCollection
+import com.mapbox.geojson.LineString
+import com.mapbox.geojson.Point
 import com.mapbox.mapboxsdk.geometry.LatLngBounds
 import com.mapbox.mapboxsdk.style.expressions.Expression.get
 import com.mapbox.mapboxsdk.style.layers.LineLayer
@@ -10,97 +12,285 @@ import com.mapbox.mapboxsdk.style.layers.PropertyFactory.*
 import com.mapbox.mapboxsdk.style.layers.SymbolLayer
 import com.mapbox.mapboxsdk.style.sources.CustomGeometrySource
 import com.mapbox.mapboxsdk.style.sources.GeometryTileProvider
+import io.typebrook.mapstew.geometry.*
 import kotlin.math.ceil
 import kotlin.math.floor
 
-object LineProvider : GeometryTileProvider {
+// region grid
+
+const val ID_GRID_SOURCE = "grid"
+const val ID_GRID_LINE_LAYER = "grid-line"
+const val ID_GRID_SYMBOL_LAYER = "grid-symbol"
+
+fun gridSource(crsWrapper: CRSWrapper) =
+    CustomGeometrySource(ID_GRID_SOURCE, gridLineProvider(crsWrapper))
+
+val GridLineLayer
+    get() = LineLayer(ID_GRID_LINE_LAYER, ID_GRID_SOURCE)
+        .withProperties(lineWidth(0.6F))
+
+fun gridSymbolLayer(crsWrapper: CRSWrapper) =
+    SymbolLayer(ID_GRID_SYMBOL_LAYER, ID_GRID_SOURCE).withProperties(
+        textField(get("name")),
+        textFont(arrayOf("Noto Sans Regular")),
+        textSize(10F),
+        textHaloColor("white"),
+        textHaloWidth(2F),
+        symbolPlacement(
+            if (crsWrapper is TaipowerCRS)
+                Property.SYMBOL_PLACEMENT_POINT else
+                Property.SYMBOL_PLACEMENT_LINE
+        ),
+        symbolSpacing(150F)
+    )
+
+// Generate grid lines by current coordinate reference system
+fun gridLineProvider(crsWrapper: CRSWrapper) = object : GeometryTileProvider {
     override fun getFeaturesForBounds(bounds: LatLngBounds?, zoom: Int): FeatureCollection {
         bounds ?: return FeatureCollection.fromFeatures(emptyList())
 
         val features: MutableList<Feature> = ArrayList()
-        val gridSpacing: Double = when {
-            zoom >= 18 -> 0.0002777778 // 1''
-            zoom >= 17 -> 0.0005555556 // 2''
-            zoom >= 16 -> 0.001388889  // 5''
-            zoom >= 15 -> 0.002777778  // 10''
-            zoom >= 14 -> 0.005555556  // 20''
-            zoom >= 13 -> 0.008333333  // 0.5'
-            zoom >= 12 -> 0.01666667   // 1'
-            zoom >= 11 -> 0.03333333   // 2'
-            zoom >= 10 -> 0.08333333   // 5'
-            zoom >= 9 -> 0.1666667     // 10'
-            zoom >= 8 -> 0.3333333     // 20'
-            zoom >= 7 -> 0.5           // 0.5°
-            zoom >= 6 -> 1.0           // 1°
-            zoom >= 5 -> 2.0           // 2°
-            zoom >= 4 -> 5.0           // 5°
-            zoom >= 3 -> 10.0          // 10°
-            zoom >= 2 -> 20.0          // 20°
-            else -> 40.0               // 40°
-        }
+        val yValues: MutableList<Double> = ArrayList()
+        val xValues: MutableList<Double> = ArrayList()
 
-        var y = ceil(bounds.latNorth / gridSpacing) * gridSpacing
-        while (y >= floor(bounds.latSouth / gridSpacing) * gridSpacing) {
+        val spacingAdapter = when {
+            crsWrapper.isLongLat -> LatLngSpacingAdapter()
+            crsWrapper is TaipowerCRS -> TaipowerSpacingAdapter()
+            else -> MeterSpacingAdapter()
+        }
+        if (!spacingAdapter.isValid(zoom)) return FeatureCollection.fromFeatures(emptyList())
+
+        val startXY = (bounds.lonWest to bounds.latSouth).convert(CRSWrapper.WGS84, crsWrapper)
+        val endXY = (bounds.lonEast to bounds.latNorth).convert(CRSWrapper.WGS84, crsWrapper)
+
+        var y = spacingAdapter.firstY(startXY.y, zoom)
+        while (y != null && y < endXY.second) {
+            yValues.add(y)
             Feature.fromGeometry(
                 LineString.fromLngLats(
                     arrayListOf(
-                        Point.fromLngLat(bounds.lonWest, y),
-                        Point.fromLngLat(bounds.lonEast, y)
+                        (startXY.x to y).convert(crsWrapper, CRSWrapper.WGS84)
+                            .let { Point.fromLngLat(it.x, it.y) },
+                        (endXY.x to y).convert(crsWrapper, CRSWrapper.WGS84)
+                            .let { Point.fromLngLat(it.x, it.y) },
                     )
                 )
             ).apply {
-                val text = xy2DMSString(0.0 to y).second
-                    .split(' ')
-                    .filterNot { it.startsWith("00") }
-                    .last()
+                val text = when {
+                    crsWrapper.isLongLat -> xy2DMSString(0.0 to y!!).second
+                        .split(' ')
+                        .filterNot { it.startsWith("00") }
+                        .last()
+                    crsWrapper is TaipowerCRS -> return@apply
+                    crsWrapper.isMeter -> xy2IntString(0.0 to y!!).second
+                    else -> return@apply
+                }
                 addStringProperty("name", text)
             }.let(features::add)
-            y -= gridSpacing
+            y = spacingAdapter.nextY(y, zoom)
         }
 
-        val gridLines: MutableList<MutableList<Point>> = ArrayList()
-        var x = floor(bounds.lonWest / gridSpacing) * gridSpacing
-        while (x <= ceil(bounds.lonEast / gridSpacing) * gridSpacing) {
+        var x = spacingAdapter.firstX(startXY.x, zoom)
+        while (x != null && x < endXY.x) {
+            xValues.add(x)
             Feature.fromGeometry(
                 LineString.fromLngLats(
                     arrayListOf(
-                        Point.fromLngLat(x, bounds.latSouth),
-                        Point.fromLngLat(x, bounds.latNorth)
+                        (x to startXY.y).convert(crsWrapper, CRSWrapper.WGS84)
+                            .let { Point.fromLngLat(it.x, it.y) },
+                        (x to endXY.y).convert(crsWrapper, CRSWrapper.WGS84)
+                            .let { Point.fromLngLat(it.x, it.y) },
                     )
                 )
             ).apply {
-                val text = xy2DMSString(x to 0.0).first
-                    .split(' ')
-                    .filterNot { it.startsWith("00") }
-                    .last()
-                    .replace(".0", "")
+                val text = when {
+                    crsWrapper.isLongLat -> xy2DMSString(x!! to 0.0).first
+                        .split(' ')
+                        .filterNot { it.startsWith("00") }
+                        .last()
+                    crsWrapper is TaipowerCRS -> ""
+                    else -> xy2IntString(x!! to 0.0).first
+                }
                 addStringProperty("name", text)
             }.let(features::add)
-            x += gridSpacing
+            x = spacingAdapter.nextX(x, zoom)
         }
-        features.add(Feature.fromGeometry(MultiLineString.fromLngLats(gridLines)))
+
+        if (crsWrapper is TaipowerCRS && spacingAdapter is TaipowerSpacingAdapter) {
+            yValues.forEach { crossY ->
+                xValues.forEach eachX@{ crossX ->
+                    val spacingY = spacingAdapter.ySpacing(zoom) ?: return@eachX
+                    val spacingX = spacingAdapter.xSpacing(zoom) ?: return@eachX
+                    val xy = (crossX + spacingX / 2) to (crossY + spacingY / 2)
+                    val lonLat = xy.convert(crsWrapper, CRSWrapper.WGS84)
+
+                    Feature.fromGeometry(
+                        Point.fromLngLat(lonLat.x, lonLat.y)
+                    ).apply {
+                        val text = TaipowerCRS.mask(xy)?.run {
+                            when (zoom) {
+                                in 0..5 -> null
+                                in 6..9 -> substring(0, 1)
+                                in 10..11 -> substring(0, 5).toCharArray().let {
+                                    it[2] = 'X'
+                                    it[4] = 'X'
+                                    String(it)
+                                }
+                                in 12..14 -> substring(0, 5)
+                                in 15..17 -> substring(0, 8)
+                                else -> this
+                            }
+                        } ?: return@eachX
+
+                        addStringProperty("name", text)
+                    }.let(features::add)
+                }
+            }
+        }
 
         return FeatureCollection.fromFeatures(features)
     }
 }
 
-object AngleGridSource : CustomGeometrySource("angle-grid", LineProvider)
-object AngleGridLayer : LineLayer("angle-grid", AngleGridSource.id) {
-    init {
-        setProperties(lineWidth(0.6F))
+// Adapt spacing for each grid line
+sealed class SpacingAdapter {
+    abstract fun isValid(zoom: Int): Boolean
+    abstract fun firstX(x: Double, zoom: Int): Double?
+    abstract fun nextX(x: Double, zoom: Int): Double?
+    abstract fun firstY(y: Double, zoom: Int): Double?
+    abstract fun nextY(y: Double, zoom: Int): Double?
+}
+
+class LatLngSpacingAdapter : SpacingAdapter() {
+    private val smallestSpacing: Double = 0.0002777778
+    private val gridSpacing = mapOf(
+        0 to 90.0,          // 90°
+        1 to 40.0,          // 40°
+        2 to 20.0,          // 20°
+        3 to 10.0,          // 10°
+        4 to 5.0,           // 5°
+        5 to 2.0,           // 2°
+        6 to 1.0,           // 1°
+        7 to 0.5,           // 0.5°
+        8 to 0.3333333,     // 20'
+        9 to 0.1666667,     // 10'
+        10 to 0.08333333,   // 5'
+        11 to 0.03333333,   // 2'
+        12 to 0.01666667,   // 1'
+        13 to 0.008333333,  // 0.5'
+        14 to 0.005555556,  // 20''
+        15 to 0.002777778,  // 10''
+        16 to 0.001388889,  // 5''
+        17 to 0.0005555556, // 2''
+        18 to smallestSpacing  // 1''
+    )
+
+    override fun isValid(zoom: Int): Boolean = true
+
+    override fun firstX(x: Double, zoom: Int): Double {
+        val spacing = gridSpacing[zoom] ?: smallestSpacing
+        return floor(x / spacing) * spacing
+    }
+
+    override fun nextX(x: Double, zoom: Int): Double = x + (gridSpacing[zoom] ?: smallestSpacing)
+
+    override fun firstY(y: Double, zoom: Int): Double {
+        val spacing = gridSpacing[zoom] ?: smallestSpacing
+        return floor(y / spacing) * spacing
+    }
+
+    override fun nextY(y: Double, zoom: Int): Double = if (zoom == 0)
+        y + 45 else
+        y + (gridSpacing[zoom] ?: smallestSpacing)
+}
+
+class MeterSpacingAdapter : SpacingAdapter() {
+    private val smallestSpacing: Int = 20
+    private val gridSpacing = mapOf(
+        7 to 100000,
+        8 to 50000,
+        9 to 20000,
+        10 to 10000,
+        11 to 5000,
+        12 to 2000,
+        13 to 1000,
+        14 to 500,
+        15 to 200,
+        16 to 100,
+        17 to 50,
+        18 to smallestSpacing
+    )
+
+    override fun isValid(zoom: Int): Boolean = zoom >= 7
+
+    override fun firstX(x: Double, zoom: Int): Double {
+        val spacing = gridSpacing[zoom] ?: smallestSpacing
+        return floor(x / spacing) * spacing
+    }
+
+    override fun nextX(x: Double, zoom: Int): Double = x + (gridSpacing[zoom] ?: smallestSpacing)
+
+    override fun firstY(y: Double, zoom: Int): Double {
+        val spacing = gridSpacing[zoom] ?: smallestSpacing
+        return floor(y / spacing) * spacing
+    }
+
+    override fun nextY(y: Double, zoom: Int): Double = if (zoom == 0)
+        y + 45 else
+        y + (gridSpacing[zoom] ?: smallestSpacing)
+}
+
+class TaipowerSpacingAdapter : SpacingAdapter() {
+
+    override fun isValid(zoom: Int): Boolean = zoom >= 6
+
+    private val sectionXRules = Triple(80000, 90000.0, 330000.0)
+    private val sectionYRules = Triple(50000, 2400000.0, 2800000.0)
+    fun xSpacing(zoom: Int): Int? = when (zoom) {
+        in 0..5 -> null
+        in 6..9 -> sectionXRules.first
+        in 10..11 -> 8000
+        in 12..14 -> 800
+        in 15..17 -> 100
+        else -> 10
+    }
+
+    fun ySpacing(zoom: Int): Int? = when (zoom) {
+        in 0..5 -> null
+        in 6..9 -> sectionYRules.first
+        in 10..11 -> 5000
+        in 12..14 -> 500
+        in 15..17 -> 100
+        else -> 10
+    }
+
+    override fun firstX(x: Double, zoom: Int): Double? = if (x < sectionXRules.second)
+        sectionXRules.second else
+        xSpacing(zoom)?.let { spacing ->
+            ceil((x - sectionXRules.second) / spacing) * spacing + sectionXRules.second
+        }.takeIf {
+            x <= sectionXRules.third
+        }
+
+    override fun nextX(x: Double, zoom: Int): Double? = xSpacing(zoom)?.let { spacing ->
+        x + spacing
+    }?.takeIf {
+        it <= sectionXRules.third
+    }
+
+    override fun firstY(y: Double, zoom: Int): Double? = if (y < sectionYRules.second)
+        sectionYRules.second else
+        ySpacing(zoom)?.let { spacing ->
+            ceil((y - sectionYRules.second) / spacing) * spacing + sectionYRules.second
+        }.takeIf {
+            y <= sectionYRules.third
+        }
+
+    override fun nextY(y: Double, zoom: Int): Double? = ySpacing(zoom)?.let { spacing ->
+        y + spacing
+    }?.takeIf {
+        it <= sectionYRules.third
     }
 }
-object AngleGridSymbolLayer :
-    SymbolLayer("angle-grid-symbol", AngleGridSource.id) {
-    init {
-        withProperties(
-            textField(get("name")),
-            textFont(arrayOf("Noto Sans Regular")),
-            textSize(10F),
-            textHaloColor("white"),
-            textHaloWidth(2F),
-            symbolPlacement(Property.SYMBOL_PLACEMENT_LINE),
-            symbolSpacing(150F)
-        )
-    }
-}
+
+// endregion

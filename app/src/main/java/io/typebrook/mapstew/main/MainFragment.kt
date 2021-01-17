@@ -61,7 +61,7 @@ class MainFragment : Fragment() {
                 CoordExpression.DMS -> xy2DMSString(xy).run { "$first $second" }
                 CoordExpression.XY -> xy2IntString(xy).run { "$first $second" }
                 CoordExpression.SINGLE -> if (crsState.crsWrapper is MaskedCRS) {
-                    crsState.crsWrapper.mask(xy)
+                    crsState.crsWrapper.mask(xy) ?: getString(R.string.out_of_boundary)
                 } else {
                     String()
                 }

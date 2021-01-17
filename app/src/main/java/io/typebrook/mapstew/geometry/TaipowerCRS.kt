@@ -1,5 +1,7 @@
 package io.typebrook.mapstew.geometry
 
+import io.typebrook.mapstew.R
+
 /**
  * Taipower Coordinate System is a local CRS based on TWD67_TM2
  * For more details, see http://www.sunriver.com.tw/grid_taipower.htm
@@ -10,7 +12,7 @@ abstract class MaskedCRS(
     type: ParameterType = ParameterType.Code,
     parameter: String
 ) : CRSWrapper(displayName, type, parameter) {
-    abstract fun mask(coord: XYPair): String
+    abstract fun mask(coord: XYPair): String?
     abstract fun reverseMask(rawMask: String): XYPair
 
     companion object {
@@ -52,13 +54,13 @@ object TaipowerCRS : MaskedCRS(
     parameter = "+proj=tmerc +lat_0=0 +lon_0=121 +k=0.9999 +x_0=250000 +y_0=0 +ellps=aust_SA  +towgs84=-750.739,-359.515,-180.510,0.00003863,0.00001721,0.00000197,0.99998180 +units=m +no_defs"
 ) {
 
-    override fun mask(coord: XYPair): String {
+    override fun mask(coord: XYPair): String? {
         var (x, y) = coord.x.toInt() to coord.y.toInt()
 
         val section = Section.values().firstOrNull {
             val (left, bottom) = it.xy
             x in left until left + 80000 && y in bottom until bottom + 50000
-        } ?: return "Out of Boundary"
+        } ?: return null
         x -= section.xy.first
         y -= section.xy.second
 

@@ -48,6 +48,9 @@ open class CRSWrapper(
     val isLongLat: Boolean
         get() = crs.parameterString.startsWith("+proj=longlat")
 
+    val isMeter: Boolean
+        get() = crs.parameterString.contains("+units=m")
+
     fun converterFor(crs2: CRSWrapper): CoordConverter {
         if (this == crs2) return { xyPair -> xyPair }
 
