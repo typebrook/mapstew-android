@@ -30,7 +30,7 @@
     <string name="minute">\'</string>
     <string name="second">\'\'</string>
     <string name="dialog_xyinput_x">X: </string>
-    <string name="dialog_xyingput_y">Y: </string>
+    <string name="dialog_xyinput_y">Y: </string>
     <string name="coordinate_reference_system">Coord System:</string>
     <string name="expression">Expression:</string>
     <string name="displayGrid">Display Grid:</string>
