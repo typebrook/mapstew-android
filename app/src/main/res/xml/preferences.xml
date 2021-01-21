@@ -2,8 +2,10 @@
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <SwitchPreferenceCompat
-        app:key="notifications"
-        app:title="Enable message notifications" />
+        app:defaultValue="false"
+        app:key="@string/pref_feature_details"
+        app:summary="Shows details of features to debug"
+        app:title="Display details" />
 
     <Preference
         app:key="feedback"

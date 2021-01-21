@@ -4,10 +4,10 @@ import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
 import android.graphics.RectF
-import android.view.Gravity
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.lifecycleScope
+import androidx.preference.PreferenceManager
 import com.google.gson.JsonArray
 import com.google.gson.JsonParser
 import com.mapbox.mapboxsdk.Mapbox
@@ -50,8 +50,10 @@ class MapboxFragment : SupportMapFragment() {
         SafeMutableLiveData(Style.Builder().fromUri(uri))
     }
 
-    // FIXME only used for debug
-    private var showHint = false
+    private val showHint: Boolean by lazy {
+        PreferenceManager.getDefaultSharedPreferences(requireContext())
+            .getBoolean(getString(R.string.pref_feature_details), false)
+    }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -138,8 +140,6 @@ class MapboxFragment : SupportMapFragment() {
         }
 
         addOnMapClickListener {
-            showHint = !showHint
-            model.details.value = null
             true
         }
 
