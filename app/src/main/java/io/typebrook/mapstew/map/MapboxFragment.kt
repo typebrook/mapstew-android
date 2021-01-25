@@ -139,10 +139,6 @@ class MapboxFragment : SupportMapFragment() {
             }
         }
 
-        addOnMapClickListener {
-            true
-        }
-
         addOnCameraIdleListener {
             if (!showHint) return@addOnCameraIdleListener
             // FIXME This is just a simple feature query for debug
@@ -172,10 +168,17 @@ class MapboxFragment : SupportMapFragment() {
             if (enable) mapboxMap.enableLocationComponent(style)
         }
 
-        mapboxMap.addOnMapLongClickListener {
-            style.showLayerSelectionDialog()
+        mapboxMap.addOnMapClickListener {
+//            style.showLayerSelectionDialog()
+            model.displayBottomSheet.value = false
             true
         }
+
+        mapboxMap.addOnMapLongClickListener {
+            model.displayBottomSheet.value = true
+            true
+        }
+
         MediatorLiveData<Pair<Boolean, CRSWrapper>>().apply {
             addSource(model.displayGrid) {
                 value = model.displayGrid.value to model.crsState.value.crsWrapper

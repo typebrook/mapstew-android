@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.add
 import androidx.fragment.app.commit
 import androidx.lifecycle.MediatorLiveData
 import androidx.navigation.fragment.findNavController
@@ -20,7 +19,7 @@ import io.typebrook.mapstew.offline.getLocalMBTiles
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
-import io.typebrook.mapstew.map.TangramFragment
+import io.typebrook.mapstew.SimpleBottomSheetFragment
 
 
 class MainFragment : Fragment() {
@@ -37,7 +36,8 @@ class MainFragment : Fragment() {
 
         if (savedInstanceState == null) {
             requireActivity().supportFragmentManager.commit {
-                add<MapboxFragment>(R.id.map_container, null)
+                replace(R.id.map_container, MapboxFragment(), null)
+                replace(R.id.bottom_sheet_container, SimpleBottomSheetFragment(), null)
 //              add<TangramFragment>(R.id.map_container, null)
             }
         }
