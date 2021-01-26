@@ -60,6 +60,15 @@
             android:scaleType="center"
             android:src="@drawable/ic_menu_black_24dp" />
 
+        <ImageButton
+            android:id="@+id/layersButton"
+            style="@style/RoundWhiteButton"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:contentDescription="@string/map_btn_layers"
+            android:scaleType="center"
+            android:src="@drawable/ic_layers_black_18dp" />
+
     </LinearLayout>
 
     <LinearLayout

@@ -107,5 +107,9 @@ class MainFragment : Fragment() {
                 create()
             }.show()
         }
+
+        layersButton.setOnClickListener {
+            mapModel.displayLayers.value = true
+        }
     }
 }

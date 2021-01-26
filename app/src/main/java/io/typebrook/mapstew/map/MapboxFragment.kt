@@ -51,11 +51,6 @@ class MapboxFragment : SupportMapFragment() {
         SafeMutableLiveData(Style.Builder().fromUri(uri))
     }
 
-    private val showHint: Boolean by lazy {
-        PreferenceManager.getDefaultSharedPreferences(requireContext())
-            .getBoolean(getString(R.string.pref_feature_details), false)
-    }
-
     override fun onAttach(context: Context) {
         super.onAttach(context)
 
@@ -142,9 +137,15 @@ class MapboxFragment : SupportMapFragment() {
         }
 
         addOnCameraIdleListener {
-            if (!showHint) return@addOnCameraIdleListener
+            val showHint = PreferenceManager.getDefaultSharedPreferences(requireContext())
+                .getBoolean(getString(R.string.pref_feature_details), false)
+
+            if (!showHint) {
+                model.details.value = null
+                return@addOnCameraIdleListener
+            }
             // FIXME This is just a simple feature query for debug
-            model.center.value
+            val details: String? = model.center.value
                 .run { LatLng(second, first) }
                 .run(mapboxMap.projection::toScreenLocation)
                 .run { RectF(x - 20, y + 20, x + 20, y - 20) }
@@ -152,7 +153,7 @@ class MapboxFragment : SupportMapFragment() {
                 .mapNotNull { it.id() + it.properties()?.toString() }
                 .let { if (it.isEmpty()) null else it }
                 ?.joinToString("\n\n")
-                .let(model.details::setValue)
+            model.details.value = details
         }
 
         model.target.observe(viewLifecycleOwner) { camera ->
@@ -170,8 +171,14 @@ class MapboxFragment : SupportMapFragment() {
             if (enable) mapboxMap.enableLocationComponent(style)
         }
 
+        model.displayLayers.observe(viewLifecycleOwner) { display ->
+            if (display) {
+                style.showLayerSelectionDialog()
+                model.displayLayers.value = false
+            }
+        }
+
         mapboxMap.addOnMapClickListener {
-//            style.showLayerSelectionDialog()
             model.displayBottomSheet.value = false
             true
         }

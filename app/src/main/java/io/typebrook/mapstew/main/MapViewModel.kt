@@ -61,5 +61,7 @@ class MapViewModel : ViewModel() {
 
     val displayGrid = SafeMutableLiveData(false)
 
+    val displayLayers = SafeMutableLiveData(false)
+
     val displayBottomSheet = SafeMutableLiveData(false)
 }
