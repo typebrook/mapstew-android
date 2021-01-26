@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
 import android.graphics.RectF
+import android.view.Gravity
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.lifecycleScope
@@ -123,7 +124,8 @@ class MapboxFragment : SupportMapFragment() {
     @SuppressLint("RtlHardcoded")
     override fun onMapReady(mapboxMap: MapboxMap) = with(mapboxMap) {
 
-        uiSettings.setCompassMargins(0, 360, 24, 0)
+        uiSettings.compassGravity = Gravity.LEFT
+        uiSettings.setCompassMargins(24, 180, 0, 0)
 
         styleBuilder.observe(this@MapboxFragment) { builder ->
             setStyle(builder) { style -> onStyleLoaded(this, style) }

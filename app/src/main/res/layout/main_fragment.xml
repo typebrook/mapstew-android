@@ -15,7 +15,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:layout_margin="12dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="@dimen/margin_app_bar"
+        android:layout_marginEnd="12dp"
         android:background="@drawable/shape_rounded_corner"
         android:padding="6dp"
         android:textColor="@android:color/black"
@@ -46,7 +48,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:layout_marginTop="48dp"
+        android:layout_marginTop="@dimen/margin_app_bar"
         android:orientation="vertical">
 
         <ImageButton
