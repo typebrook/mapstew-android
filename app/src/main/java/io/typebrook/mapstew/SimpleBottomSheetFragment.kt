@@ -49,10 +49,6 @@ class SimpleBottomSheetFragment : Fragment() {
                 BottomSheetBehavior.STATE_EXPANDED else
                 BottomSheetBehavior.STATE_HIDDEN
         }
-
-        model.selectedFeatures.observe(viewLifecycleOwner) { features ->
-            title.text = features.size.toString()
-        }
     }
 }
 
