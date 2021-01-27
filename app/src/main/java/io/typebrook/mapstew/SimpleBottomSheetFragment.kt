@@ -32,10 +32,26 @@ class SimpleBottomSheetFragment : Fragment() {
 
         val bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet)
 
+        bottomSheetBehavior.addBottomSheetCallback(object :
+            BottomSheetBehavior.BottomSheetCallback() {
+            override fun onStateChanged(bottomSheet: View, newState: Int) {
+                shadow.visibility = if (newState == BottomSheetBehavior.STATE_HIDDEN)
+                    View.GONE else
+                    View.VISIBLE
+            }
+
+            override fun onSlide(bottomSheet: View, slideOffset: Float) {
+            }
+        })
+
         model.displayBottomSheet.observe(viewLifecycleOwner) { display ->
             bottomSheetBehavior.state = if (display)
                 BottomSheetBehavior.STATE_EXPANDED else
                 BottomSheetBehavior.STATE_HIDDEN
+        }
+
+        model.selectedFeatures.observe(viewLifecycleOwner) { features ->
+            title.text = features.size.toString()
         }
     }
 }
