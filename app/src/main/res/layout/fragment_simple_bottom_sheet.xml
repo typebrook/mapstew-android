@@ -17,6 +17,7 @@
         android:background="@android:color/white"
         android:clipChildren="true"
         app:behavior_hideable="true"
+        app:behavior_skipCollapsed="true"
         app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
 
         <TextView
