@@ -3,6 +3,7 @@ package io.typebrook.mapstew.main
 import androidx.lifecycle.ViewModel
 import io.typebrook.mapstew.geometry.*
 import io.typebrook.mapstew.livedata.SafeMutableLiveData
+import io.typebrook.mapstew.map.TiledFeature
 
 typealias Camera = Triple<Double, Double, Float>
 
@@ -51,6 +52,7 @@ class MapViewModel : ViewModel() {
 
     // Details of features rendered on map
     val details = SafeMutableLiveData<String?>(null)
+    val selectedFeatures = SafeMutableLiveData<List<TiledFeature>>(emptyList())
 
     val locateUser = SafeMutableLiveData(false)
 

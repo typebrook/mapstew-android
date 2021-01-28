@@ -1,10 +1,12 @@
 package io.typebrook.mapstew
 
 
+import android.R
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -48,6 +50,18 @@ class SimpleBottomSheetFragment : Fragment() {
             bottomSheetBehavior.state = if (display)
                 BottomSheetBehavior.STATE_EXPANDED else
                 BottomSheetBehavior.STATE_HIDDEN
+        }
+
+        model.selectedFeatures.observe(viewLifecycleOwner) { features ->
+            title.text = features.size.toString()
+
+            with(featureSelector) {
+                adapter = ArrayAdapter(
+                    requireContext(),
+                    R.layout.simple_dropdown_item_1line,
+                    features.map { it.name ?: it.osmId }
+                )
+            }
         }
     }
 }

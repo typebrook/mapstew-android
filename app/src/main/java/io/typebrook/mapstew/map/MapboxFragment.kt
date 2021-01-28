@@ -8,7 +8,6 @@ import android.view.Gravity
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.lifecycleScope
-import androidx.preference.PreferenceManager
 import com.google.gson.JsonArray
 import com.google.gson.JsonParser
 import com.mapbox.mapboxsdk.Mapbox
@@ -31,6 +30,7 @@ import io.typebrook.mapstew.network.GithubService
 import io.typebrook.mapstew.offline.MBTilesServer
 import io.typebrook.mapstew.offline.MBTilesSource
 import io.typebrook.mapstew.offline.MBTilesSourceException
+import io.typebrook.mapstew.preference.prefShowHint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -137,23 +137,26 @@ class MapboxFragment : SupportMapFragment() {
         }
 
         addOnCameraIdleListener {
-            val showHint = PreferenceManager.getDefaultSharedPreferences(requireContext())
-                .getBoolean(getString(R.string.pref_feature_details), false)
-
-            if (!showHint) {
-                model.details.value = null
-                return@addOnCameraIdleListener
-            }
-            // FIXME This is just a simple feature query for debug
-            val details: String? = model.center.value
+            val features = model.center.value
                 .run { LatLng(second, first) }
                 .run(mapboxMap.projection::toScreenLocation)
                 .run { RectF(x - 20, y + 20, x + 20, y - 20) }
                 .let { queryRenderedFeatures(it) }
-                .mapNotNull { it.id() + it.properties()?.toString() }
-                .let { if (it.isEmpty()) null else it }
-                ?.joinToString("\n\n")
-            model.details.value = details
+
+            model.selectedFeatures.value = features.mapNotNull {
+                val osmId = it.id() ?: return@mapNotNull null
+                TiledFeature(osmId = osmId, name = it.getStringProperty("name"))
+            }
+
+            if (requireContext().prefShowHint()) {
+                val detailText = features
+                    .mapNotNull { it.id() + it.properties()?.toString() }
+                    .let { if (it.isEmpty()) null else it }
+                    ?.joinToString("\n\n")
+                model.details.value = detailText
+            } else {
+                model.details.value = null
+            }
         }
 
         model.target.observe(viewLifecycleOwner) { camera ->
