@@ -38,4 +38,5 @@
     <string name="in_use">In Use</string>
     <string name="out_of_boundary">Out of Boundary</string>
     <string name="pref_feature_details" translatable="false">debug_features</string>
+    <string name="number_features">%s items</string>
 </resources>

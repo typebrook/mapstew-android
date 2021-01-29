@@ -20,6 +20,8 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
 import io.typebrook.mapstew.SimpleBottomSheetFragment
+import kotlinx.android.synthetic.main.main_fragment.*
+import timber.log.Timber
 
 
 class MainFragment : Fragment() {
@@ -68,9 +70,20 @@ class MainFragment : Fragment() {
             }
         }
 
-        mapModel.details.observe(viewLifecycleOwner) { details ->
-            featuresDetails.text = details ?: String()
-            featuresDetails.visibility = if (details == null) View.GONE else View.VISIBLE
+        with(featuresDetails) {
+            setOnClickListener { mapModel.displayBottomSheet.value = true }
+
+            mapModel.selectedFeatures.observe(viewLifecycleOwner) { features ->
+                text = mapModel.details.value ?: when (val number = features.size) {
+                    0 -> String()
+                    1 -> features.first().name
+                    else -> getString(R.string.number_features).format(number)
+                }
+
+                visibility = if (text.isNotBlank())
+                    View.VISIBLE else
+                    View.GONE
+            }
         }
 
         coordinates.setOnClickListener {

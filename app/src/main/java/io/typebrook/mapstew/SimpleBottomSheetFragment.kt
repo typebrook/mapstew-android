@@ -1,17 +1,19 @@
 package io.typebrook.mapstew
 
-
-import android.R
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.Spinner
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import io.typebrook.mapstew.databinding.FragmentSimpleBottomSheetBinding
 import io.typebrook.mapstew.main.MapViewModel
+import io.typebrook.mapstew.map.TiledFeature
+import timber.log.Timber
 
 /** Abstract base class for (quest) bottom sheets
  *
@@ -53,14 +55,24 @@ class SimpleBottomSheetFragment : Fragment() {
         }
 
         model.selectedFeatures.observe(viewLifecycleOwner) { features ->
-            title.text = features.size.toString()
+            featureSelector.setFeatures(features)
+        }
+    }
 
-            with(featureSelector) {
-                adapter = ArrayAdapter(
-                    requireContext(),
-                    R.layout.simple_dropdown_item_1line,
-                    features.map { it.name ?: it.osmId }
-                )
+    private fun Spinner.setFeatures(features: List<TiledFeature>) {
+        adapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_dropdown_item_1line,
+            features.map { it.name ?: it.osmId }
+        )
+
+        onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(p0: AdapterView<*>?, v: View?, p1: Int, id: Long) {
+                Timber.d("jojojo $id")
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                TODO("Not yet implemented")
             }
         }
     }
