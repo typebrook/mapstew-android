@@ -1,7 +1,5 @@
 package io.typebrook.mapstew.geometry
 
-import io.typebrook.mapstew.R
-
 /**
  * Taipower Coordinate System is a local CRS based on TWD67_TM2
  * For more details, see http://www.sunriver.com.tw/grid_taipower.htm
@@ -20,39 +18,47 @@ abstract class MaskedCRS(
     }
 }
 
-enum class Section(val xy: Pair<Int, Int>) {
-    A(170000 to 2750000),
-    B(250000 to 2750000),
-    C(330000 to 2750000),
-    D(170000 to 2700000),
-    E(250000 to 2700000),
-    F(330000 to 2700000),
-    G(170000 to 2650000),
-    H(250000 to 2650000),
-    J(90000 to 2600000),
-    K(170000 to 2600000),
-    L(250000 to 2600000),
-    M(90000 to 2550000),
-    N(170000 to 2550000),
-    O(250000 to 2550000),
-    P(90000 to 2500000),
-    Q(170000 to 2500000),
-    R(250000 to 2500000),
-    T(170000 to 2450000),
-    U(250000 to 2450000),
-    V(170000 to 2400000),
-    W(250000 to 2400000)
-}
-
-enum class Square {
-    A, B, C, D, E, F, G, H
-}
-
 object TaipowerCRS : MaskedCRS(
     displayName = "台灣電力座標",
     type = ParameterType.Proj4,
     parameter = "+proj=tmerc +lat_0=0 +lon_0=121 +k=0.9999 +x_0=250000 +y_0=0 +ellps=aust_SA  +towgs84=-750.739,-359.515,-180.510,0.00003863,0.00001721,0.00000197,0.99998180 +units=m +no_defs"
 ) {
+
+    const val LEFT_BOUNDARY = 90000
+    const val RIGHT_BOUNDARY = 410000
+    const val SECTION_WIDTH = 80000
+    const val BOTTOM_BOUNDARY = 2400000
+    const val TOP_BOUNDARY = 2800000
+    const val SECTION_HEIGHT = 50000
+
+    // The south-west point of each section
+    enum class Section(val xy: Pair<Int, Int>) {
+        A(LEFT_BOUNDARY + 1 * SECTION_WIDTH to BOTTOM_BOUNDARY + 7 * SECTION_HEIGHT), // 170000,2750000
+        B(LEFT_BOUNDARY + 2 * SECTION_WIDTH to BOTTOM_BOUNDARY + 7 * SECTION_HEIGHT), // 250000,2750000
+        C(LEFT_BOUNDARY + 3 * SECTION_WIDTH to BOTTOM_BOUNDARY + 7 * SECTION_HEIGHT), // 330000,2750000
+        D(LEFT_BOUNDARY + 1 * SECTION_WIDTH to BOTTOM_BOUNDARY + 6 * SECTION_HEIGHT), // 170000,2700000
+        E(LEFT_BOUNDARY + 2 * SECTION_WIDTH to BOTTOM_BOUNDARY + 6 * SECTION_HEIGHT), // 250000,2700000
+        F(LEFT_BOUNDARY + 3 * SECTION_WIDTH to BOTTOM_BOUNDARY + 6 * SECTION_HEIGHT), // 330000,2700000
+        G(LEFT_BOUNDARY + 1 * SECTION_WIDTH to BOTTOM_BOUNDARY + 5 * SECTION_HEIGHT), // 170000,2650000
+        H(LEFT_BOUNDARY + 2 * SECTION_WIDTH to BOTTOM_BOUNDARY + 5 * SECTION_HEIGHT), // 250000,2650000
+        J(LEFT_BOUNDARY + 0 * SECTION_WIDTH to BOTTOM_BOUNDARY + 4 * SECTION_HEIGHT), //  90000,2600000
+        K(LEFT_BOUNDARY + 1 * SECTION_WIDTH to BOTTOM_BOUNDARY + 4 * SECTION_HEIGHT), // 170000,2600000
+        L(LEFT_BOUNDARY + 2 * SECTION_WIDTH to BOTTOM_BOUNDARY + 4 * SECTION_HEIGHT), // 250000,2600000
+        M(LEFT_BOUNDARY + 0 * SECTION_WIDTH to BOTTOM_BOUNDARY + 3 * SECTION_HEIGHT), //  90000,2550000
+        N(LEFT_BOUNDARY + 1 * SECTION_WIDTH to BOTTOM_BOUNDARY + 3 * SECTION_HEIGHT), // 170000,2550000
+        O(LEFT_BOUNDARY + 2 * SECTION_WIDTH to BOTTOM_BOUNDARY + 3 * SECTION_HEIGHT), // 250000,2550000
+        P(LEFT_BOUNDARY + 0 * SECTION_WIDTH to BOTTOM_BOUNDARY + 2 * SECTION_HEIGHT), //  90000,2500000
+        Q(LEFT_BOUNDARY + 1 * SECTION_WIDTH to BOTTOM_BOUNDARY + 2 * SECTION_HEIGHT), // 170000,2500000
+        R(LEFT_BOUNDARY + 2 * SECTION_WIDTH to BOTTOM_BOUNDARY + 2 * SECTION_HEIGHT), // 250000,2500000
+        T(LEFT_BOUNDARY + 1 * SECTION_WIDTH to BOTTOM_BOUNDARY + 1 * SECTION_HEIGHT), // 170000,2450000
+        U(LEFT_BOUNDARY + 2 * SECTION_WIDTH to BOTTOM_BOUNDARY + 1 * SECTION_HEIGHT), // 250000,2450000
+        V(LEFT_BOUNDARY + 1 * SECTION_WIDTH to BOTTOM_BOUNDARY + 0 * SECTION_HEIGHT), // 170000,2400000
+        W(LEFT_BOUNDARY + 2 * SECTION_WIDTH to BOTTOM_BOUNDARY + 0 * SECTION_HEIGHT)  // 250000,2400000
+    }
+
+    enum class Square {
+        A, B, C, D, E, F, G, H
+    }
 
     override fun mask(coord: XYPair): String? {
         var (x, y) = coord.x.toInt() to coord.y.toInt()

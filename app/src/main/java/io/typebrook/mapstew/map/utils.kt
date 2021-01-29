@@ -13,6 +13,12 @@ import com.mapbox.mapboxsdk.style.layers.SymbolLayer
 import com.mapbox.mapboxsdk.style.sources.CustomGeometrySource
 import com.mapbox.mapboxsdk.style.sources.GeometryTileProvider
 import io.typebrook.mapstew.geometry.*
+import io.typebrook.mapstew.geometry.TaipowerCRS.BOTTOM_BOUNDARY
+import io.typebrook.mapstew.geometry.TaipowerCRS.LEFT_BOUNDARY
+import io.typebrook.mapstew.geometry.TaipowerCRS.RIGHT_BOUNDARY
+import io.typebrook.mapstew.geometry.TaipowerCRS.SECTION_HEIGHT
+import io.typebrook.mapstew.geometry.TaipowerCRS.SECTION_WIDTH
+import io.typebrook.mapstew.geometry.TaipowerCRS.TOP_BOUNDARY
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -244,11 +250,9 @@ class TaipowerSpacingAdapter : SpacingAdapter() {
 
     override fun isValid(zoom: Int): Boolean = zoom >= 6
 
-    private val sectionXRules = Triple(80000, 90000.0, 330000.0)
-    private val sectionYRules = Triple(50000, 2400000.0, 2800000.0)
     fun xSpacing(zoom: Int): Int? = when (zoom) {
         in 0..5 -> null
-        in 6..9 -> sectionXRules.first
+        in 6..9 -> SECTION_WIDTH
         in 10..11 -> 8000
         in 12..14 -> 800
         in 15..17 -> 100
@@ -257,39 +261,39 @@ class TaipowerSpacingAdapter : SpacingAdapter() {
 
     fun ySpacing(zoom: Int): Int? = when (zoom) {
         in 0..5 -> null
-        in 6..9 -> sectionYRules.first
+        in 6..9 -> SECTION_HEIGHT
         in 10..11 -> 5000
         in 12..14 -> 500
         in 15..17 -> 100
         else -> 10
     }
 
-    override fun firstX(x: Double, zoom: Int): Double? = if (x < sectionXRules.second)
-        sectionXRules.second else
+    override fun firstX(x: Double, zoom: Int): Double? = if (x < LEFT_BOUNDARY)
+        LEFT_BOUNDARY.toDouble() else
         xSpacing(zoom)?.let { spacing ->
-            ceil((x - sectionXRules.second) / spacing) * spacing + sectionXRules.second
+            ceil((x - LEFT_BOUNDARY) / spacing) * spacing + LEFT_BOUNDARY
         }.takeIf {
-            x <= sectionXRules.third
+            x <= RIGHT_BOUNDARY
         }
 
     override fun nextX(x: Double, zoom: Int): Double? = xSpacing(zoom)?.let { spacing ->
         x + spacing
     }?.takeIf {
-        it <= sectionXRules.third
+        it <= RIGHT_BOUNDARY
     }
 
-    override fun firstY(y: Double, zoom: Int): Double? = if (y < sectionYRules.second)
-        sectionYRules.second else
+    override fun firstY(y: Double, zoom: Int): Double? = if (y < BOTTOM_BOUNDARY)
+        BOTTOM_BOUNDARY.toDouble() else
         ySpacing(zoom)?.let { spacing ->
-            ceil((y - sectionYRules.second) / spacing) * spacing + sectionYRules.second
+            ceil((y - BOTTOM_BOUNDARY) / spacing) * spacing + BOTTOM_BOUNDARY
         }.takeIf {
-            y <= sectionYRules.third
+            y <= TOP_BOUNDARY
         }
 
     override fun nextY(y: Double, zoom: Int): Double? = ySpacing(zoom)?.let { spacing ->
         y + spacing
     }?.takeIf {
-        it <= sectionYRules.third
+        it <= TOP_BOUNDARY
     }
 }
 
