@@ -53,6 +53,7 @@ class MapViewModel : ViewModel() {
     // Details of features rendered on map
     val details = SafeMutableLiveData<String?>(null)
     val selectedFeatures = SafeMutableLiveData<List<TiledFeature>>(emptyList())
+    val focusedFeatureId = SafeMutableLiveData<String?>(null)
 
     val locateUser = SafeMutableLiveData(false)
 

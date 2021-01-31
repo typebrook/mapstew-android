@@ -13,7 +13,6 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import io.typebrook.mapstew.databinding.FragmentSimpleBottomSheetBinding
 import io.typebrook.mapstew.main.MapViewModel
 import io.typebrook.mapstew.map.TiledFeature
-import timber.log.Timber
 
 /** Abstract base class for (quest) bottom sheets
  *
@@ -68,7 +67,9 @@ class SimpleBottomSheetFragment : Fragment() {
 
         onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(p0: AdapterView<*>?, v: View?, p1: Int, id: Long) {
-                Timber.d("jojojo $id")
+                model.focusedFeatureId.value = if (model.displayBottomSheet.value)
+                    features[p1].osmId else
+                    null
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {

@@ -10,6 +10,8 @@ import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.JsonArray
 import com.google.gson.JsonParser
+import com.mapbox.geojson.Feature
+import com.mapbox.geojson.FeatureCollection
 import com.mapbox.mapboxsdk.Mapbox
 import com.mapbox.mapboxsdk.camera.CameraPosition
 import com.mapbox.mapboxsdk.geometry.LatLng
@@ -19,8 +21,10 @@ import com.mapbox.mapboxsdk.location.modes.CameraMode
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.maps.SupportMapFragment
+import com.mapbox.mapboxsdk.style.layers.LineLayer
 import com.mapbox.mapboxsdk.style.layers.Property
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory
+import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 import io.typebrook.mapstew.R
 import io.typebrook.mapstew.geometry.CRSWrapper
 import io.typebrook.mapstew.livedata.SafeMutableLiveData
@@ -50,6 +54,9 @@ class MapboxFragment : SupportMapFragment() {
             getString(R.string.uri_style_rudymap)
         SafeMutableLiveData(Style.Builder().fromUri(uri))
     }
+
+    private val selectedFeatureSource by lazy { GeoJsonSource("foo") }
+    private var selectedFeatures: List<Feature> = emptyList()
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -104,8 +111,6 @@ class MapboxFragment : SupportMapFragment() {
                     }
                     // Override glyphs and sprite with asset
                     addProperty("glyphs", "asset://fonts/KlokanTech%20{fontstack}/{range}.pbf")
-                    // TODO A proper way to check if upstream sprite is updated
-                    addProperty("sprite", "asset://rudymap")
 
                     styleBuilder.value = Style.Builder().fromJson(toString())
                 }
@@ -134,23 +139,24 @@ class MapboxFragment : SupportMapFragment() {
             model.center.value = cameraPosition.run {
                 Triple(target.longitude, target.latitude, zoom.toFloat())
             }
+            model.focusedFeatureId.value = null
         }
 
         addOnCameraIdleListener {
-            val features = model.center.value
+            selectedFeatures = model.center.value
                 .run { LatLng(second, first) }
                 .run(mapboxMap.projection::toScreenLocation)
                 .run { RectF(x - 20, y + 20, x + 20, y - 20) }
                 .let { queryRenderedFeatures(it) }
 
-            model.selectedFeatures.value = features.mapNotNull {
+            model.selectedFeatures.value = selectedFeatures.mapNotNull {
                 val osmId = it.id() ?: return@mapNotNull null
                 TiledFeature(osmId = osmId, name = it.getStringProperty("name"))
             }
 
             if (requireContext().prefShowHint()) {
-                val detailText = features
-                    .mapNotNull { it.id() + it.properties()?.toString() }
+                val detailText = selectedFeatures
+                    .map { it.id() + it.properties()?.toString() }
                     .let { if (it.isEmpty()) null else it }
                     ?.joinToString("\n\n")
                 model.details.value = detailText
@@ -166,6 +172,12 @@ class MapboxFragment : SupportMapFragment() {
                     .zoom(camera.zoom.toDouble())
                     .build()
             }
+        }
+
+        model.focusedFeatureId.observe(viewLifecycleOwner) { id ->
+            id ?: return@observe
+            val features = selectedFeatures.filter { it.id() == id }
+            selectedFeatureSource.setGeoJson(FeatureCollection.fromFeatures(features))
         }
     }
 
@@ -211,6 +223,10 @@ class MapboxFragment : SupportMapFragment() {
                 addSource(gridSource(crsWrapper))
             }
         }
+
+        style.addSource(selectedFeatureSource)
+        val highlightedFeature = LineLayer("bar", selectedFeatureSource.id)
+        style.addLayer(highlightedFeature)
     }
 
     // FIXME handle permission properly
