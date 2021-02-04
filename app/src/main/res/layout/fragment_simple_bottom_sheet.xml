@@ -24,7 +24,6 @@
         android:background="@drawable/shape_bottom_sheet"
         android:orientation="vertical"
         app:behavior_hideable="true"
-        app:behavior_skipCollapsed="true"
         app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
 
         <TextView
