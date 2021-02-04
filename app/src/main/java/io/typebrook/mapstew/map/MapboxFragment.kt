@@ -15,6 +15,7 @@ import com.mapbox.geojson.FeatureCollection
 import com.mapbox.mapboxsdk.Mapbox
 import com.mapbox.mapboxsdk.annotations.MarkerOptions
 import com.mapbox.mapboxsdk.camera.CameraPosition
+import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
 import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
 import com.mapbox.mapboxsdk.location.LocationComponentOptions
@@ -22,6 +23,7 @@ import com.mapbox.mapboxsdk.location.modes.CameraMode
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.maps.SupportMapFragment
+import com.mapbox.mapboxsdk.style.expressions.Expression
 import com.mapbox.mapboxsdk.style.layers.LineLayer
 import com.mapbox.mapboxsdk.style.layers.Property
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory
@@ -36,6 +38,7 @@ import io.typebrook.mapstew.offline.MBTilesServer
 import io.typebrook.mapstew.offline.MBTilesSource
 import io.typebrook.mapstew.offline.MBTilesSourceException
 import io.typebrook.mapstew.preference.prefShowHint
+import kotlinx.android.synthetic.main.input_degree.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -140,7 +143,6 @@ class MapboxFragment : SupportMapFragment() {
             model.center.value = cameraPosition.run {
                 Triple(target.longitude, target.latitude, zoom.toFloat())
             }
-            model.focusedFeatureId.value = null
         }
 
         addOnMapClickListener {
@@ -158,7 +160,6 @@ class MapboxFragment : SupportMapFragment() {
             val bbox = RectF(point.x - 20, point.y + 20, point.x + 20, point.y - 20)
             selectedFeatures = queryRenderedFeatures(bbox, Expression.has("id"))
 
-            model.displayBottomSheet.value = false
             model.selectedFeatures.value = selectedFeatures.mapNotNull {
                 val osmId = it.id() ?: return@mapNotNull null
                 TiledFeature(osmId = osmId, name = it.getStringProperty("name"))
@@ -185,9 +186,23 @@ class MapboxFragment : SupportMapFragment() {
         }
 
         model.focusedFeatureId.observe(viewLifecycleOwner) { id ->
-            id ?: return@observe
-            val features = selectedFeatures.filter { it.id() == id }
-            selectedFeatureSource.setGeoJson(FeatureCollection.fromFeatures(features))
+            val features = selectedFeatures.filter { it.id() != null && it.id() == id }
+            val featureCollection = FeatureCollection.fromFeatures(features)
+            selectedFeatureSource.setGeoJson(featureCollection)
+
+            val positions = features
+                    .mapNotNull { it.geometry() }
+                    .mapNotNull { getCameraForGeometry(it) }
+                    .takeIf { it.isNotEmpty() }
+                    ?: return@observe
+            val averageLat = positions.fold(0.0) { acc, pos -> acc + pos.target.latitude } / positions.size
+            val averageLng = positions.fold(0.0) { acc, pos -> acc + pos.target.longitude } / positions.size
+            val minZoom = positions.reduce { acc, pos -> if (acc.zoom < pos.zoom) acc else pos }.zoom
+            val cameraUpdate = CameraUpdateFactory.newLatLngZoom(
+                    LatLng(averageLat, averageLng),
+                    if (minZoom < 18) minZoom - 1 else 18.0
+            )
+            animateCamera(cameraUpdate, 600)
         }
     }
 
@@ -230,13 +245,16 @@ class MapboxFragment : SupportMapFragment() {
         }
 
         style.addSource(selectedFeatureSource)
-        val highlightedFeature = LineLayer("bar", selectedFeatureSource.id)
+        val highlightedFeature = LineLayer("bar", selectedFeatureSource.id).withProperties(
+                PropertyFactory.lineWidth(6f),
+                PropertyFactory.lineColor("yellow")
+        )
         style.addLayer(highlightedFeature)
     }
 
     // FIXME handle permission properly
     @SuppressLint("MissingPermission")
-    fun MapboxMap.enableLocationComponent(style: Style) {
+    private fun MapboxMap.enableLocationComponent(style: Style) {
         val locationComponentOptions = LocationComponentOptions.builder(requireContext())
                 .accuracyAlpha(0.5F)
                 .build()

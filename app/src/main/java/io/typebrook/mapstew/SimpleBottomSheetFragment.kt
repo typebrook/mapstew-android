@@ -38,9 +38,12 @@ class SimpleBottomSheetFragment : Fragment() {
         bottomSheetBehavior.addBottomSheetCallback(object :
                 BottomSheetBehavior.BottomSheetCallback() {
             override fun onStateChanged(bottomSheet: View, newState: Int) {
-                shadow.visibility = if (newState != BottomSheetBehavior.STATE_HIDDEN)
-                    View.VISIBLE else
-                    View.GONE
+                if (newState != BottomSheetBehavior.STATE_HIDDEN) {
+                    shadow.visibility = View.VISIBLE
+                } else {
+                    shadow.visibility = View.GONE
+                    model.displayBottomSheet.value = false
+                }
             }
 
             override fun onSlide(bottomSheet: View, slideOffset: Float) {

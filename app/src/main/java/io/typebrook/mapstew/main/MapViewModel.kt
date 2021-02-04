@@ -48,7 +48,6 @@ class MapViewModel : ViewModel() {
 
     // List of MBTiles inside internal storage
     val mbTilesList = object : SafeMutableLiveData<List<String>>(emptyList()) {
-        override val predicate = { new: List<String> -> new != value }
         override val transformer = { newState: List<String> -> newState.distinct() }
     }
 
@@ -61,7 +60,16 @@ class MapViewModel : ViewModel() {
     val locateUser = SafeMutableLiveData(false)
     val displayGrid = SafeMutableLiveData(false)
     val displayLayers = SafeMutableLiveData(false)
-    val displayBottomSheet = SafeMutableLiveData(false)
+    val displayBottomSheet = object : SafeMutableLiveData<Boolean>(false) {
+        override val predicate = { value: Boolean ->
+            if (!value) {
+                focusPoint.value = null
+                selectedFeatures.value = emptyList()
+                focusedFeatureId.value = null
+            }
+            true
+        }
+    }
 
     data class CrsState(
             val crsWrapper: CRSWrapper = CRSWrapper.WGS84,
