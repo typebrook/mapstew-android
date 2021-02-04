@@ -30,4 +30,6 @@
     <string name="displayGrid">顯示格線：</string>
     <string name="in_use">使用中</string>
     <string name="out_of_boundary">超出範圍</string>
+    <string name="map_btn_create_note">新增註解</string>
+    <string name="number_features">%s個物件</string>
 </resources>

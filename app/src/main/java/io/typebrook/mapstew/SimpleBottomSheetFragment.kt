@@ -1,15 +1,18 @@
 package io.typebrook.mapstew
 
-
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.Spinner
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import io.typebrook.mapstew.databinding.FragmentSimpleBottomSheetBinding
 import io.typebrook.mapstew.main.MapViewModel
+import io.typebrook.mapstew.map.TiledFeature
 
 /** Abstract base class for (quest) bottom sheets
  *
@@ -21,9 +24,9 @@ class SimpleBottomSheetFragment : Fragment() {
     private val model by activityViewModels<MapViewModel>()
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
     ): View {
         return binding.root
     }
@@ -33,11 +36,11 @@ class SimpleBottomSheetFragment : Fragment() {
         val bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet)
 
         bottomSheetBehavior.addBottomSheetCallback(object :
-            BottomSheetBehavior.BottomSheetCallback() {
+                BottomSheetBehavior.BottomSheetCallback() {
             override fun onStateChanged(bottomSheet: View, newState: Int) {
-                shadow.visibility = if (newState == BottomSheetBehavior.STATE_HIDDEN)
-                    View.GONE else
-                    View.VISIBLE
+                shadow.visibility = if (newState != BottomSheetBehavior.STATE_HIDDEN)
+                    View.VISIBLE else
+                    View.GONE
             }
 
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
@@ -48,6 +51,11 @@ class SimpleBottomSheetFragment : Fragment() {
             bottomSheetBehavior.state = if (display)
                 BottomSheetBehavior.STATE_EXPANDED else
                 BottomSheetBehavior.STATE_HIDDEN
+        }
+
+        model.focusedFeatureId.observe(viewLifecycleOwner) { id ->
+            val feature = model.selectedFeatures.value.firstOrNull { it.osmId == id }
+            details.text = feature.toString()
         }
     }
 }

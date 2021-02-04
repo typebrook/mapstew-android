@@ -1,8 +1,10 @@
 package io.typebrook.mapstew.main
 
+import android.graphics.PointF
 import androidx.lifecycle.ViewModel
 import io.typebrook.mapstew.geometry.*
 import io.typebrook.mapstew.livedata.SafeMutableLiveData
+import io.typebrook.mapstew.map.TiledFeature
 
 typealias Camera = Triple<Double, Double, Float>
 
@@ -13,7 +15,7 @@ class MapViewModel : ViewModel() {
 
     // Camera of center of map
     val center = object : SafeMutableLiveData<Camera>(
-        Triple(121.585674, 25.023167, 12F)
+            Triple(121.585674, 25.023167, 12F)
     ) {
         override val predicate = { value: Camera ->
             with(value) { first to second }.isLongLatPair()
@@ -34,8 +36,9 @@ class MapViewModel : ViewModel() {
                     newState.copy(expression = CoordExpression.DMS)
                 }
                 !newState.crsWrapper.isLongLat -> {
-                    val expression =
-                        if (newState.crsWrapper is MaskedCRS) CoordExpression.SINGLE else CoordExpression.XY
+                    val expression = if (newState.crsWrapper is MaskedCRS)
+                        CoordExpression.SINGLE else
+                        CoordExpression.XY
                     newState.copy(expression = expression)
                 }
                 else -> newState
@@ -51,17 +54,18 @@ class MapViewModel : ViewModel() {
 
     // Details of features rendered on map
     val details = SafeMutableLiveData<String?>(null)
+    val selectedFeatures = SafeMutableLiveData<List<TiledFeature>>(emptyList())
+    val focusedFeatureId = SafeMutableLiveData<String?>(null)
+    val focusPoint = SafeMutableLiveData<PointF?>(null)
 
     val locateUser = SafeMutableLiveData(false)
+    val displayGrid = SafeMutableLiveData(false)
+    val displayLayers = SafeMutableLiveData(false)
+    val displayBottomSheet = SafeMutableLiveData(false)
 
     data class CrsState(
-        val crsWrapper: CRSWrapper = CRSWrapper.WGS84,
-        val expression: CoordExpression = CoordExpression.DMS
+            val crsWrapper: CRSWrapper = CRSWrapper.WGS84,
+            val expression: CoordExpression = CoordExpression.DMS
     )
 
-    val displayGrid = SafeMutableLiveData(false)
-
-    val displayLayers = SafeMutableLiveData(false)
-
-    val displayBottomSheet = SafeMutableLiveData(false)
 }

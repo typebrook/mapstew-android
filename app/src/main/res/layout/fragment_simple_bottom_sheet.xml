@@ -3,7 +3,8 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#00000000">
     <!-- If I do not set any background color here, the layout will leave a few pixels free at the
  bottom on my Android 6.0 emulator; so, setting to transparent-->
 
@@ -12,24 +13,26 @@
         android:layout_width="match_parent"
         android:layout_height="24dp"
         android:background="@drawable/shape_gradient_top_shadow"
+        android:visibility="gone"
         app:layout_anchor="@id/bottom_sheet" />
 
-    <FrameLayout
+    <LinearLayout
         android:id="@+id/bottom_sheet"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="14dp"
         android:background="@drawable/shape_bottom_sheet"
+        android:orientation="vertical"
         app:behavior_hideable="true"
         app:behavior_skipCollapsed="true"
         app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_margin="50dp"
-            android:text="bar"
-            android:textColor="@android:color/black" />
-    </FrameLayout>
+            android:id="@+id/details"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center" />
+    </LinearLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

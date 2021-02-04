@@ -8,10 +8,12 @@ import android.view.Gravity
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.lifecycleScope
-import androidx.preference.PreferenceManager
 import com.google.gson.JsonArray
 import com.google.gson.JsonParser
+import com.mapbox.geojson.Feature
+import com.mapbox.geojson.FeatureCollection
 import com.mapbox.mapboxsdk.Mapbox
+import com.mapbox.mapboxsdk.annotations.MarkerOptions
 import com.mapbox.mapboxsdk.camera.CameraPosition
 import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
@@ -20,8 +22,10 @@ import com.mapbox.mapboxsdk.location.modes.CameraMode
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.maps.SupportMapFragment
+import com.mapbox.mapboxsdk.style.layers.LineLayer
 import com.mapbox.mapboxsdk.style.layers.Property
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory
+import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 import io.typebrook.mapstew.R
 import io.typebrook.mapstew.geometry.CRSWrapper
 import io.typebrook.mapstew.livedata.SafeMutableLiveData
@@ -31,6 +35,7 @@ import io.typebrook.mapstew.network.GithubService
 import io.typebrook.mapstew.offline.MBTilesServer
 import io.typebrook.mapstew.offline.MBTilesSource
 import io.typebrook.mapstew.offline.MBTilesSourceException
+import io.typebrook.mapstew.preference.prefShowHint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -50,6 +55,9 @@ class MapboxFragment : SupportMapFragment() {
             getString(R.string.uri_style_rudymap)
         SafeMutableLiveData(Style.Builder().fromUri(uri))
     }
+
+    private val selectedFeatureSource by lazy { GeoJsonSource("foo") }
+    private var selectedFeatures: List<Feature> = emptyList()
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -104,8 +112,6 @@ class MapboxFragment : SupportMapFragment() {
                     }
                     // Override glyphs and sprite with asset
                     addProperty("glyphs", "asset://fonts/KlokanTech%20{fontstack}/{range}.pbf")
-                    // TODO A proper way to check if upstream sprite is updated
-                    addProperty("sprite", "asset://rudymap")
 
                     styleBuilder.value = Style.Builder().fromJson(toString())
                 }
@@ -127,42 +133,61 @@ class MapboxFragment : SupportMapFragment() {
         }
 
         cameraPosition = CameraPosition.Builder()
-            .zoom(model.center.value.zoom.toDouble())
-            .build()
+                .zoom(model.center.value.zoom.toDouble())
+                .build()
 
         addOnCameraMoveListener {
             model.center.value = cameraPosition.run {
                 Triple(target.longitude, target.latitude, zoom.toFloat())
             }
+            model.focusedFeatureId.value = null
         }
 
-        addOnCameraIdleListener {
-            val showHint = PreferenceManager.getDefaultSharedPreferences(requireContext())
-                .getBoolean(getString(R.string.pref_feature_details), false)
+        addOnMapClickListener {
+            model.focusPoint.value = null
+            model.displayBottomSheet.value = false
+            true
+        }
 
-            if (!showHint) {
-                model.details.value = null
-                return@addOnCameraIdleListener
+        model.focusPoint.observe(this@MapboxFragment.viewLifecycleOwner) { point ->
+            markers.forEach(::removeMarker)
+            if (point == null) return@observe
+
+            addMarker(MarkerOptions().position(projection.fromScreenLocation(point)))
+
+            val bbox = RectF(point.x - 20, point.y + 20, point.x + 20, point.y - 20)
+            selectedFeatures = queryRenderedFeatures(bbox)
+
+            model.displayBottomSheet.value = false
+            model.selectedFeatures.value = selectedFeatures.mapNotNull {
+                val osmId = it.id() ?: return@mapNotNull null
+                TiledFeature(osmId = osmId, name = it.getStringProperty("name"))
             }
-            // FIXME This is just a simple feature query for debug
-            val details: String? = model.center.value
-                .run { LatLng(second, first) }
-                .run(mapboxMap.projection::toScreenLocation)
-                .run { RectF(x - 20, y + 20, x + 20, y - 20) }
-                .let { queryRenderedFeatures(it) }
-                .mapNotNull { it.id() + it.properties()?.toString() }
-                .let { if (it.isEmpty()) null else it }
-                ?.joinToString("\n\n")
-            model.details.value = details
+
+            if (requireContext().prefShowHint()) {
+                val detailText = selectedFeatures
+                        .map { it.id() + it.properties()?.toString() }
+                        .let { if (it.isEmpty()) null else it }
+                        ?.joinToString("\n\n")
+                model.details.value = detailText
+            } else {
+                model.details.value = null
+            }
         }
 
         model.target.observe(viewLifecycleOwner) { camera ->
             animateCamera {
                 CameraPosition.Builder()
-                    .target(LatLng(camera.second, camera.first))
-                    .zoom(camera.zoom.toDouble())
-                    .build()
+                        .target(LatLng(camera.second, camera.first))
+                        .zoom(camera.zoom.toDouble())
+                        .build()
             }
+        }
+
+        model.focusedFeatureId.observe(viewLifecycleOwner) { id ->
+            id ?: return@observe
+            val features = selectedFeatures.filter { it.id() == id }
+            selectedFeatureSource.setGeoJson(FeatureCollection.fromFeatures(features))
         }
     }
 
@@ -178,13 +203,8 @@ class MapboxFragment : SupportMapFragment() {
             }
         }
 
-        mapboxMap.addOnMapClickListener {
-            model.displayBottomSheet.value = false
-            true
-        }
-
-        mapboxMap.addOnMapLongClickListener {
-            model.displayBottomSheet.value = true
+        mapboxMap.addOnMapLongClickListener { latLng ->
+            model.focusPoint.value = mapboxMap.projection.toScreenLocation(latLng)
             true
         }
 
@@ -208,18 +228,22 @@ class MapboxFragment : SupportMapFragment() {
                 addSource(gridSource(crsWrapper))
             }
         }
+
+        style.addSource(selectedFeatureSource)
+        val highlightedFeature = LineLayer("bar", selectedFeatureSource.id)
+        style.addLayer(highlightedFeature)
     }
 
     // FIXME handle permission properly
     @SuppressLint("MissingPermission")
     fun MapboxMap.enableLocationComponent(style: Style) {
         val locationComponentOptions = LocationComponentOptions.builder(requireContext())
-            .accuracyAlpha(0.5F)
-            .build()
+                .accuracyAlpha(0.5F)
+                .build()
         val locationComponentActivationOptions = LocationComponentActivationOptions
-            .builder(requireContext(), style)
-            .locationComponentOptions(locationComponentOptions)
-            .build()
+                .builder(requireContext(), style)
+                .locationComponentOptions(locationComponentOptions)
+                .build()
         with(locationComponent) {
             activateLocationComponent(locationComponentActivationOptions)
             cameraMode = CameraMode.TRACKING
@@ -239,18 +263,18 @@ class MapboxFragment : SupportMapFragment() {
         setNeutralButton("Toggle") { _, _ ->
             layersFromStyle.forEach { layer ->
                 val visibility =
-                    if (layer.visibility.value == Property.VISIBLE) Property.NONE else Property.VISIBLE
+                        if (layer.visibility.value == Property.VISIBLE) Property.NONE else Property.VISIBLE
                 layer.setProperties(
-                    PropertyFactory.visibility(visibility)
+                        PropertyFactory.visibility(visibility)
                 )
             }
         }
 
         // List of id prefix, like 'road', 'water'
         val layerGroupList = layersFromStyle.sortedBy { it.id }
-            .map { it.id.substringBefore('_') }
-            .distinct()
-            .toTypedArray()
+                .map { it.id.substringBefore('_') }
+                .distinct()
+                .toTypedArray()
         val checkedList = layerGroupList.map { idPrefix ->
             layersFromStyle.first { it.id.startsWith(idPrefix) }?.visibility?.value == Property.VISIBLE
         }.toBooleanArray()
@@ -262,9 +286,9 @@ class MapboxFragment : SupportMapFragment() {
             // Enable/Disable a layer group
             layersFromStyle.filter { it.id.startsWith(prefix) }.forEach { layer ->
                 layer.setProperties(
-                    PropertyFactory.visibility(
-                        if (isChecked) Property.VISIBLE else Property.NONE
-                    )
+                        PropertyFactory.visibility(
+                                if (isChecked) Property.VISIBLE else Property.NONE
+                        )
                 )
             }
         }
