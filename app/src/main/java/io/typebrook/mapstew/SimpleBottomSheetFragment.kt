@@ -24,9 +24,9 @@ class SimpleBottomSheetFragment : Fragment() {
     private val model by activityViewModels<MapViewModel>()
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
     ): View {
         return binding.root
     }
@@ -36,7 +36,7 @@ class SimpleBottomSheetFragment : Fragment() {
         val bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet)
 
         bottomSheetBehavior.addBottomSheetCallback(object :
-            BottomSheetBehavior.BottomSheetCallback() {
+                BottomSheetBehavior.BottomSheetCallback() {
             override fun onStateChanged(bottomSheet: View, newState: Int) {
                 shadow.visibility = if (newState != BottomSheetBehavior.STATE_HIDDEN)
                     View.VISIBLE else
@@ -53,28 +53,9 @@ class SimpleBottomSheetFragment : Fragment() {
                 BottomSheetBehavior.STATE_HIDDEN
         }
 
-        model.selectedFeatures.observe(viewLifecycleOwner) { features ->
-            featureSelector.setFeatures(features)
-        }
-    }
-
-    private fun Spinner.setFeatures(features: List<TiledFeature>) {
-        adapter = ArrayAdapter(
-            requireContext(),
-            android.R.layout.simple_dropdown_item_1line,
-            features.map { it.name ?: it.osmId }
-        )
-
-        onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(p0: AdapterView<*>?, v: View?, p1: Int, id: Long) {
-                model.focusedFeatureId.value = if (model.displayBottomSheet.value)
-                    features[p1].osmId else
-                    null
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-                TODO("Not yet implemented")
-            }
+        model.focusedFeatureId.observe(viewLifecycleOwner) { id ->
+            val feature = model.selectedFeatures.value.firstOrNull { it.osmId == id }
+            details.text = feature.toString()
         }
     }
 }

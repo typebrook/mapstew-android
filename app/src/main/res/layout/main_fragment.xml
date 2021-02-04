@@ -123,4 +123,8 @@
             android:layout_weight="4" />
     </LinearLayout>
 
+    <View
+        android:id="@+id/contextMenuView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"/>
 </RelativeLayout>

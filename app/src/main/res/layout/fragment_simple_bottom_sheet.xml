@@ -27,12 +27,12 @@
         app:behavior_skipCollapsed="true"
         app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
 
-        <Spinner
-            android:id="@+id/feature_selector"
+        <TextView
+            android:id="@+id/details"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:gravity="end" />
+            android:gravity="center" />
     </LinearLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

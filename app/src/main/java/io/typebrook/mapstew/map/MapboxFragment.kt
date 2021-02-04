@@ -13,6 +13,7 @@ import com.google.gson.JsonParser
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.mapboxsdk.Mapbox
+import com.mapbox.mapboxsdk.annotations.MarkerOptions
 import com.mapbox.mapboxsdk.camera.CameraPosition
 import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
@@ -132,8 +133,8 @@ class MapboxFragment : SupportMapFragment() {
         }
 
         cameraPosition = CameraPosition.Builder()
-            .zoom(model.center.value.zoom.toDouble())
-            .build()
+                .zoom(model.center.value.zoom.toDouble())
+                .build()
 
         addOnCameraMoveListener {
             model.center.value = cameraPosition.run {
@@ -142,13 +143,22 @@ class MapboxFragment : SupportMapFragment() {
             model.focusedFeatureId.value = null
         }
 
-        addOnCameraIdleListener {
-            selectedFeatures = model.center.value
-                .run { LatLng(second, first) }
-                .run(mapboxMap.projection::toScreenLocation)
-                .run { RectF(x - 20, y + 20, x + 20, y - 20) }
-                .let { queryRenderedFeatures(it) }
+        addOnMapClickListener {
+            model.focusPoint.value = null
+            model.displayBottomSheet.value = false
+            true
+        }
 
+        model.focusPoint.observe(this@MapboxFragment.viewLifecycleOwner) { point ->
+            markers.forEach(::removeMarker)
+            if (point == null) return@observe
+
+            addMarker(MarkerOptions().position(projection.fromScreenLocation(point)))
+
+            val bbox = RectF(point.x - 20, point.y + 20, point.x + 20, point.y - 20)
+            selectedFeatures = queryRenderedFeatures(bbox)
+
+            model.displayBottomSheet.value = false
             model.selectedFeatures.value = selectedFeatures.mapNotNull {
                 val osmId = it.id() ?: return@mapNotNull null
                 TiledFeature(osmId = osmId, name = it.getStringProperty("name"))
@@ -156,9 +166,9 @@ class MapboxFragment : SupportMapFragment() {
 
             if (requireContext().prefShowHint()) {
                 val detailText = selectedFeatures
-                    .map { it.id() + it.properties()?.toString() }
-                    .let { if (it.isEmpty()) null else it }
-                    ?.joinToString("\n\n")
+                        .map { it.id() + it.properties()?.toString() }
+                        .let { if (it.isEmpty()) null else it }
+                        ?.joinToString("\n\n")
                 model.details.value = detailText
             } else {
                 model.details.value = null
@@ -168,9 +178,9 @@ class MapboxFragment : SupportMapFragment() {
         model.target.observe(viewLifecycleOwner) { camera ->
             animateCamera {
                 CameraPosition.Builder()
-                    .target(LatLng(camera.second, camera.first))
-                    .zoom(camera.zoom.toDouble())
-                    .build()
+                        .target(LatLng(camera.second, camera.first))
+                        .zoom(camera.zoom.toDouble())
+                        .build()
             }
         }
 
@@ -193,13 +203,8 @@ class MapboxFragment : SupportMapFragment() {
             }
         }
 
-        mapboxMap.addOnMapClickListener {
-            model.displayBottomSheet.value = false
-            true
-        }
-
-        mapboxMap.addOnMapLongClickListener {
-            model.displayBottomSheet.value = true
+        mapboxMap.addOnMapLongClickListener { latLng ->
+            model.focusPoint.value = mapboxMap.projection.toScreenLocation(latLng)
             true
         }
 
@@ -233,12 +238,12 @@ class MapboxFragment : SupportMapFragment() {
     @SuppressLint("MissingPermission")
     fun MapboxMap.enableLocationComponent(style: Style) {
         val locationComponentOptions = LocationComponentOptions.builder(requireContext())
-            .accuracyAlpha(0.5F)
-            .build()
+                .accuracyAlpha(0.5F)
+                .build()
         val locationComponentActivationOptions = LocationComponentActivationOptions
-            .builder(requireContext(), style)
-            .locationComponentOptions(locationComponentOptions)
-            .build()
+                .builder(requireContext(), style)
+                .locationComponentOptions(locationComponentOptions)
+                .build()
         with(locationComponent) {
             activateLocationComponent(locationComponentActivationOptions)
             cameraMode = CameraMode.TRACKING
@@ -258,18 +263,18 @@ class MapboxFragment : SupportMapFragment() {
         setNeutralButton("Toggle") { _, _ ->
             layersFromStyle.forEach { layer ->
                 val visibility =
-                    if (layer.visibility.value == Property.VISIBLE) Property.NONE else Property.VISIBLE
+                        if (layer.visibility.value == Property.VISIBLE) Property.NONE else Property.VISIBLE
                 layer.setProperties(
-                    PropertyFactory.visibility(visibility)
+                        PropertyFactory.visibility(visibility)
                 )
             }
         }
 
         // List of id prefix, like 'road', 'water'
         val layerGroupList = layersFromStyle.sortedBy { it.id }
-            .map { it.id.substringBefore('_') }
-            .distinct()
-            .toTypedArray()
+                .map { it.id.substringBefore('_') }
+                .distinct()
+                .toTypedArray()
         val checkedList = layerGroupList.map { idPrefix ->
             layersFromStyle.first { it.id.startsWith(idPrefix) }?.visibility?.value == Property.VISIBLE
         }.toBooleanArray()
@@ -281,9 +286,9 @@ class MapboxFragment : SupportMapFragment() {
             // Enable/Disable a layer group
             layersFromStyle.filter { it.id.startsWith(prefix) }.forEach { layer ->
                 layer.setProperties(
-                    PropertyFactory.visibility(
-                        if (isChecked) Property.VISIBLE else Property.NONE
-                    )
+                        PropertyFactory.visibility(
+                                if (isChecked) Property.VISIBLE else Property.NONE
+                        )
                 )
             }
         }

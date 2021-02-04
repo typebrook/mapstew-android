@@ -39,4 +39,5 @@
     <string name="out_of_boundary">Out of Boundary</string>
     <string name="pref_feature_details" translatable="false">debug_features</string>
     <string name="number_features">%s items</string>
+    <string name="map_btn_create_note">Add a new note</string>
 </resources>
