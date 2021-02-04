@@ -156,7 +156,7 @@ class MapboxFragment : SupportMapFragment() {
             addMarker(MarkerOptions().position(projection.fromScreenLocation(point)))
 
             val bbox = RectF(point.x - 20, point.y + 20, point.x + 20, point.y - 20)
-            selectedFeatures = queryRenderedFeatures(bbox)
+            selectedFeatures = queryRenderedFeatures(bbox, Expression.has("id"))
 
             model.displayBottomSheet.value = false
             model.selectedFeatures.value = selectedFeatures.mapNotNull {
