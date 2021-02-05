@@ -72,11 +72,6 @@ class MainFragment : Fragment() {
             }
         }
 
-        with(featuresDetails) {
-            mapModel.selectableFeatures.observe(viewLifecycleOwner) { features ->
-            }
-        }
-
         coordinates.setOnClickListener {
             CoordInputDialogFragment().show(childFragmentManager, null)
         }
