@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.*
-import androidx.appcompat.widget.ListPopupWindow
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -111,20 +110,13 @@ class MainFragment : Fragment() {
             mapModel.displayLayers.value = true
         }
 
+        mapModel.details.observe(viewLifecycleOwner) { text ->
+            featuresDetails.visibility = if (text != null) View.VISIBLE else View.GONE
+            featuresDetails.text = text
+        }
+
         // If feature query is finished, show the popup window to let user do selection
         mapModel.selectableFeatures.observe(viewLifecycleOwner) { features ->
-            with(featuresDetails) {
-                text = mapModel.details.value ?: when (val number = features.size) {
-                    0 -> String()
-                    1 -> features.first().name
-                    else -> getString(R.string.number_features).format(number)
-                }
-
-                visibility = if (text.isNotBlank())
-                    View.VISIBLE else
-                    View.GONE
-            }
-
             val point = mapModel.focusPoint.value
             if (point == null || features.isEmpty()) return@observe
 
@@ -133,7 +125,7 @@ class MainFragment : Fragment() {
                 contentView = ListView(requireContext()).apply {
                     adapter = ArrayAdapter<String>(requireContext(), android.R.layout.simple_list_item_1).apply {
                         val items = listOf(getString(R.string.map_btn_create_note)) + features.map {
-                            it.name ?: String()
+                            it.name ?: it.osmId
                         }
                         addAll(items)
                     }

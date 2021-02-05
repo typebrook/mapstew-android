@@ -151,29 +151,36 @@ class MapboxFragment : SupportMapFragment() {
             true
         }
 
+        // If user choose a point, query features nearby
         model.focusPoint.observe(this@MapboxFragment.viewLifecycleOwner) { point ->
+            // Remove all makers anyway when focus changes
             markers.forEach(::removeMarker)
             if (point == null) return@observe
 
+            // Add a new marker on the point
             addMarker(MarkerOptions().position(projection.fromScreenLocation(point)))
 
+            // Query features with OSM ID nearby feature
             val bbox = RectF(point.x - 20, point.y + 20, point.x + 20, point.y - 20)
             selectedFeatures = queryRenderedFeatures(bbox, Expression.has("id"))
 
+            // Update ViewModel with selectable unique OSM features
             model.selectableFeatures.value = selectedFeatures.mapNotNull {
                 val osmId = it.id() ?: return@mapNotNull null
                 TiledFeature(osmId = osmId, name = it.getStringProperty("name"))
+            }.fold(emptyList()) { acc, feature ->
+                // Remove features with same OSM ID
+                if (feature.osmId in acc.map { it.osmId })
+                    acc else
+                    acc + feature
             }
 
-            if (requireContext().prefShowHint()) {
-                val detailText = selectedFeatures
-                        .map { it.id() + it.properties()?.toString() }
+            // Update ViewModel with feature details if needed
+            model.details.value = if (requireContext().prefShowHint())
+                selectedFeatures.map { it.id() + it.properties()?.toString() }
                         .let { if (it.isEmpty()) null else it }
-                        ?.joinToString("\n\n")
-                model.details.value = detailText
-            } else {
-                model.details.value = null
-            }
+                        ?.joinToString("\n\n") else
+                null
         }
 
         model.target.observe(viewLifecycleOwner) { camera ->
