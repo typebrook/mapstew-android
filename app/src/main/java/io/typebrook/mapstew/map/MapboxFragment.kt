@@ -252,11 +252,16 @@ class MapboxFragment : SupportMapFragment() {
         }
 
         style.addSource(selectedFeatureSource)
-        val highlightedFeature = LineLayer("bar", selectedFeatureSource.id).withProperties(
-                PropertyFactory.lineWidth(6f),
+        val highlightedCasing = LineLayer("foo", selectedFeatureSource.id).withProperties(
+                PropertyFactory.lineWidth(13f),
+                PropertyFactory.lineColor("red")
+        )
+        val highlightedLine = LineLayer("bar", selectedFeatureSource.id).withProperties(
+                PropertyFactory.lineWidth(9f),
                 PropertyFactory.lineColor("yellow")
         )
-        style.addLayer(highlightedFeature)
+        style.addLayer(highlightedCasing)
+        style.addLayer(highlightedLine)
     }
 
     // FIXME handle permission properly
