@@ -160,7 +160,7 @@ class MapboxFragment : SupportMapFragment() {
             val bbox = RectF(point.x - 20, point.y + 20, point.x + 20, point.y - 20)
             selectedFeatures = queryRenderedFeatures(bbox, Expression.has("id"))
 
-            model.selectedFeatures.value = selectedFeatures.mapNotNull {
+            model.selectableFeatures.value = selectedFeatures.mapNotNull {
                 val osmId = it.id() ?: return@mapNotNull null
                 TiledFeature(osmId = osmId, name = it.getStringProperty("name"))
             }

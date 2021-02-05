@@ -73,7 +73,7 @@ class MainFragment : Fragment() {
         }
 
         with(featuresDetails) {
-            mapModel.selectedFeatures.observe(viewLifecycleOwner) { features ->
+            mapModel.selectableFeatures.observe(viewLifecycleOwner) { features ->
             }
         }
 
@@ -117,7 +117,7 @@ class MainFragment : Fragment() {
         }
 
         // If feature query is finished, show the popup window to let user do selection
-        mapModel.selectedFeatures.observe(viewLifecycleOwner) { features ->
+        mapModel.selectableFeatures.observe(viewLifecycleOwner) { features ->
             with(featuresDetails) {
                 text = mapModel.details.value ?: when (val number = features.size) {
                     0 -> String()

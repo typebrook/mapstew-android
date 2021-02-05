@@ -57,7 +57,7 @@ class SimpleBottomSheetFragment : Fragment() {
         }
 
         model.focusedFeatureId.observe(viewLifecycleOwner) { id ->
-            val feature = model.selectedFeatures.value.firstOrNull { it.osmId == id }
+            val feature = model.selectableFeatures.value.firstOrNull { it.osmId == id }
             details.text = feature.toString()
         }
     }

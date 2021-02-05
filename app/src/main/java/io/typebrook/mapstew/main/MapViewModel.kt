@@ -53,7 +53,7 @@ class MapViewModel : ViewModel() {
 
     // Details of features rendered on map
     val details = SafeMutableLiveData<String?>(null)
-    val selectedFeatures = SafeMutableLiveData<List<TiledFeature>>(emptyList())
+    val selectableFeatures = SafeMutableLiveData<List<TiledFeature>>(emptyList())
     val focusedFeatureId = SafeMutableLiveData<String?>(null)
     val focusPoint = SafeMutableLiveData<PointF?>(null)
 
@@ -64,7 +64,7 @@ class MapViewModel : ViewModel() {
         override val predicate = { value: Boolean ->
             if (!value) {
                 focusPoint.value = null
-                selectedFeatures.value = emptyList()
+                selectableFeatures.value = emptyList()
                 focusedFeatureId.value = null
             }
             true
