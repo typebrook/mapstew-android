@@ -117,8 +117,7 @@ class MainFragment : Fragment() {
 
         // If feature query is finished, show the popup window to let user do selection
         mapModel.selectableFeatures.observe(viewLifecycleOwner) { features ->
-            val point = mapModel.focusPoint.value
-            if (point == null || features.isEmpty()) return@observe
+            val point = mapModel.focusPoint.value ?: return@observe
 
             // TODO consider the case that there is only one feature
             PopupWindow(requireContext()).apply {

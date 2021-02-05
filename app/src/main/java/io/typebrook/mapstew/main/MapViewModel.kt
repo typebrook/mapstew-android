@@ -53,7 +53,9 @@ class MapViewModel : ViewModel() {
 
     // Details of features rendered on map
     val details = SafeMutableLiveData<String?>(null)
-    val selectableFeatures = SafeMutableLiveData<List<TiledFeature>>(emptyList())
+    val selectableFeatures = object : SafeMutableLiveData<List<TiledFeature>>(emptyList()) {
+        override val predicate = { _: List<TiledFeature> -> true }
+    }
     val focusedFeatureId = SafeMutableLiveData<String?>(null)
     val focusPoint = SafeMutableLiveData<PointF?>(null)
 
