@@ -162,7 +162,7 @@ class MapboxFragment : SupportMapFragment() {
 
             // Query features with OSM ID nearby feature
             val bbox = RectF(point.x - 20, point.y + 20, point.x + 20, point.y - 20)
-            selectedFeatures = queryRenderedFeatures(bbox, Expression.has("id"))
+            selectedFeatures = queryRenderedFeatures(bbox, Expression.has("id"), "rudymap-hike")
 
             // Update ViewModel with selectable unique OSM features
             model.selectableFeatures.value = selectedFeatures.mapNotNull {
