@@ -124,7 +124,7 @@ class MainFragment : Fragment() {
                 contentView = ListView(requireContext()).apply {
                     adapter = ArrayAdapter<String>(requireContext(), android.R.layout.simple_list_item_1).apply {
                         val items = listOf(getString(R.string.map_btn_create_note)) + features.map {
-                            it.name ?: it.osmId
+                            it.name ?: it.osmId.substringAfter('/')
                         }
                         addAll(items)
                     }

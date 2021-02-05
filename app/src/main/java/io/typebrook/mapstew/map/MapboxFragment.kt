@@ -162,11 +162,13 @@ class MapboxFragment : SupportMapFragment() {
 
             // Query features with OSM ID nearby feature
             val bbox = RectF(point.x - 20, point.y + 20, point.x + 20, point.y - 20)
-            selectedFeatures = queryRenderedFeatures(bbox, Expression.has("id"), "rudymap-hike")
+            selectedFeatures = queryRenderedFeatures(bbox)
 
             // Update ViewModel with selectable unique OSM features
-            model.selectableFeatures.value = selectedFeatures.mapNotNull {
-                val osmId = it.id() ?: return@mapNotNull null
+            model.selectableFeatures.value = selectedFeatures.filter {
+                it.getStringProperty("class") == "path"
+            }.mapNotNull {
+                val osmId = it.getStringProperty("id") ?: return@mapNotNull null
                 TiledFeature(osmId = osmId, name = it.getStringProperty("name"))
             }.fold(emptyList()) { acc, feature ->
                 // Remove features with same OSM ID
@@ -193,7 +195,7 @@ class MapboxFragment : SupportMapFragment() {
         }
 
         model.focusedFeatureId.observe(viewLifecycleOwner) { id ->
-            val features = selectedFeatures.filter { it.id() != null && it.id() == id }
+            val features = selectedFeatures.filter { it.getStringProperty("id") == id }
             val featureCollection = FeatureCollection.fromFeatures(features)
             selectedFeatureSource.setGeoJson(featureCollection)
 
