@@ -150,7 +150,6 @@ class MapboxFragment : SupportMapFragment() {
         }
 
         addOnMapClickListener {
-            model.focusPoint.value = null
             model.displayBottomSheet.value = false
             true
         }
@@ -159,7 +158,12 @@ class MapboxFragment : SupportMapFragment() {
         model.focusPoint.observe(this@MapboxFragment.viewLifecycleOwner) { point ->
             // Remove all makers anyway when focus changes
             markers.forEach(::removeMarker)
-            if (point == null) return@observe
+
+            if (point == null){
+                model.selectableFeatures.value = emptyList()
+                model.details.value = null
+                return@observe
+            }
 
             // Add a new marker on the point
             addMarker(MarkerOptions().position(projection.fromScreenLocation(point)))
@@ -199,7 +203,9 @@ class MapboxFragment : SupportMapFragment() {
         }
 
         model.focusedFeatureId.observe(viewLifecycleOwner) { id ->
-            val features = selectedFeatures.filter { it.getStringProperty("id") == id }
+            val features = if (id != null)
+                selectedFeatures.filter { it.getStringProperty("id") == id } else
+                emptyList()
             val featureCollection = FeatureCollection.fromFeatures(features)
             selectedFeatureSource.setGeoJson(featureCollection)
 
