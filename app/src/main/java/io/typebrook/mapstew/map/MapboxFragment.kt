@@ -171,7 +171,7 @@ class MapboxFragment : SupportMapFragment() {
             addMarker(MarkerOptions().position(projection.fromScreenLocation(point)))
 
             // Query features with OSM ID nearby feature
-            val bbox = RectF(point.x - 20, point.y + 20, point.x + 20, point.y - 20)
+            val bbox = RectF(point.x - 30, point.y + 30, point.x + 30, point.y - 30)
             selectedFeatures = queryRenderedFeatures(bbox)
 
             // Update ViewModel with selectable unique OSM features
