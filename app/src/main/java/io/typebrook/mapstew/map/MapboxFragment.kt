@@ -3,6 +3,7 @@ package io.typebrook.mapstew.map
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
+import android.graphics.PointF
 import android.graphics.RectF
 import android.view.Gravity
 import androidx.fragment.app.activityViewModels
@@ -12,6 +13,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonParser
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
+import com.mapbox.geojson.Point
 import com.mapbox.mapboxsdk.Mapbox
 import com.mapbox.mapboxsdk.annotations.MarkerOptions
 import com.mapbox.mapboxsdk.camera.CameraPosition
@@ -23,7 +25,6 @@ import com.mapbox.mapboxsdk.location.modes.CameraMode
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.maps.SupportMapFragment
-import com.mapbox.mapboxsdk.style.expressions.Expression
 import com.mapbox.mapboxsdk.style.layers.LineLayer
 import com.mapbox.mapboxsdk.style.layers.Property
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory
@@ -32,6 +33,7 @@ import io.typebrook.mapstew.R
 import io.typebrook.mapstew.geometry.CRSWrapper
 import io.typebrook.mapstew.livedata.SafeMutableLiveData
 import io.typebrook.mapstew.main.MapViewModel
+import io.typebrook.mapstew.main.MapViewModel.Companion.ID_NOTE
 import io.typebrook.mapstew.main.zoom
 import io.typebrook.mapstew.network.GithubService
 import io.typebrook.mapstew.offline.MBTilesServer
@@ -159,7 +161,7 @@ class MapboxFragment : SupportMapFragment() {
             // Remove all makers anyway when focus changes
             markers.forEach(::removeMarker)
 
-            if (point == null){
+            if (point == null) {
                 model.selectableFeatures.value = emptyList()
                 model.details.value = null
                 return@observe
@@ -187,7 +189,7 @@ class MapboxFragment : SupportMapFragment() {
 
             // Update ViewModel with feature details if needed
             model.details.value = if (requireContext().prefShowHint())
-                selectedFeatures.map { it.id() + it.properties()?.toString() }
+                selectedFeatures.map { it.id() + " " + it.properties()?.toString() }
                         .let { if (it.isEmpty()) null else it }
                         ?.joinToString("\n\n") else
                 null
@@ -203,9 +205,15 @@ class MapboxFragment : SupportMapFragment() {
         }
 
         model.focusedFeatureId.observe(viewLifecycleOwner) { id ->
-            val features = if (id != null)
-                selectedFeatures.filter { it.getStringProperty("id") == id } else
-                emptyList()
+            val features = when (id) {
+                null -> emptyList()
+                ID_NOTE -> model.focusPoint.value
+                    ?.let { it: PointF -> projection.fromScreenLocation(it) }
+                    ?.let { it: LatLng -> Point.fromLngLat(it.longitude, it.latitude) }
+                    ?.let { it: Point -> listOf(Feature.fromGeometry(it)) }
+                    ?: emptyList()
+                else -> selectedFeatures.filter { it.getStringProperty("id") == id }
+            }
             val featureCollection = FeatureCollection.fromFeatures(features)
             selectedFeatureSource.setGeoJson(featureCollection)
 

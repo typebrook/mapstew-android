@@ -58,7 +58,12 @@ class MapViewModel : ViewModel() {
     }
     val details = SafeMutableLiveData<String?>(null)
 
-    val focusedFeatureId = SafeMutableLiveData<String?>(null)
+    val focusedFeatureId = object : SafeMutableLiveData<String?>(null) {
+        override val predicate = { newValue: String? ->
+            if (newValue != ID_NOTE) focusPoint.value = null
+            value != newValue
+        }
+    }
 
     val locateUser = SafeMutableLiveData(false)
     val displayGrid = SafeMutableLiveData(false)
@@ -75,4 +80,7 @@ class MapViewModel : ViewModel() {
             val expression: CoordExpression = CoordExpression.DMS
     )
 
+    companion object {
+        const val ID_NOTE = "note"
+    }
 }

@@ -19,6 +19,7 @@ import io.typebrook.mapstew.R
 import io.typebrook.mapstew.SimpleBottomSheetFragment
 import io.typebrook.mapstew.databinding.MainFragmentBinding
 import io.typebrook.mapstew.geometry.*
+import io.typebrook.mapstew.main.MapViewModel.Companion.ID_NOTE
 import io.typebrook.mapstew.map.MapboxFragment
 import io.typebrook.mapstew.map.OfflineFragment
 import io.typebrook.mapstew.offline.getLocalMBTiles
@@ -129,9 +130,11 @@ class MainFragment : Fragment() {
                         addAll(items)
                     }
                     setOnItemClickListener { _, _, position, id ->
+                        mapModel.displayBottomSheet.value = true
                         if (position != 0) {
-                            mapModel.displayBottomSheet.value = true
                             mapModel.focusedFeatureId.value = features[position - 1].osmId
+                        } else {
+                            mapModel.focusedFeatureId.value = ID_NOTE
                         }
                         dismiss()
                     }
@@ -144,7 +147,10 @@ class MainFragment : Fragment() {
                     translationX = point.x
                     translationY = point.y
                 })
-                setOnDismissListener { mapModel.focusPoint.value = null }
+                setOnDismissListener {
+                    if (mapModel.focusedFeatureId.value == null)
+                        mapModel.focusPoint.value = null
+                }
             }
         }
     }
