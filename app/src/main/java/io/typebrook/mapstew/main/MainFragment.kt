@@ -139,7 +139,7 @@ class MainFragment : Fragment() {
                         mapModel.displayBottomSheet.value = true
                         mapModel.focusedFeatureId.value = if (position != 0)
                             features[position - 1].osmId else
-                            ID_NOTE
+                            "$ID_NOTE@${ISO8601Utils.format(Date())}"
                         dismiss()
                     }
                 }

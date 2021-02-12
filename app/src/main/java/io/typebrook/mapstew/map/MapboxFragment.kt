@@ -211,9 +211,9 @@ class MapboxFragment : SupportMapFragment() {
         }
 
         model.focusedFeatureId.observe(viewLifecycleOwner) { id ->
-            val features = when (id) {
-                null -> emptyList()
-                ID_NOTE -> model.focusPoint.value
+            val features = when {
+                id == null -> emptyList()
+                id.startsWith(ID_NOTE) -> model.focusPoint.value
                     ?.let { it: PointF -> projection.fromScreenLocation(it) }
                     ?.let { it: LatLng -> Point.fromLngLat(it.longitude, it.latitude) }
                     ?.let { it: Point -> listOf(Feature.fromGeometry(it)) }
@@ -239,12 +239,13 @@ class MapboxFragment : SupportMapFragment() {
         }
 
         db.noteDao().getAll().observe(viewLifecycleOwner) { notes: List<Note> ->
+            markers.forEach(::removeMarker)
             Timber.d("jojojo note changed")
             notes.forEach { note ->
                 val marker = MarkerOptions()
                     .position(LatLng(note.lat, note.lon))
+                    .title(note.id)
                     .snippet(note.content)
-                    .title(ISO8601Utils.format(note.date))
                 addMarker(marker)
             }
         }
@@ -256,6 +257,9 @@ class MapboxFragment : SupportMapFragment() {
                     .target(marker.position)
                     .build()
             }
+            model.focusedFeatureId.value = marker.title
+            model.details.value = marker.title
+            model.displayBottomSheet.value = true
             true
         }
     }

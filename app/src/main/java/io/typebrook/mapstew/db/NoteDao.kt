@@ -8,6 +8,9 @@ interface NoteDao {
     @Query("SELECT * FROM note")
     fun getAll(): LiveData<List<Note>>
 
+    @Query("SELECT * FROM note where id = :id")
+    fun getFromId(id: String): List<Note>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(note: Note)
 

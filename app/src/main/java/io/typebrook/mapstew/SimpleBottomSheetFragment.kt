@@ -4,6 +4,7 @@ import android.app.Activity.RESULT_OK
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -24,7 +25,9 @@ import io.typebrook.mapstew.storage.newImageUri
 import kotlinx.android.synthetic.main.fragment_simple_bottom_sheet.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
+import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -74,6 +77,21 @@ class SimpleBottomSheetFragment : Fragment() {
 
         model.focusedFeatureId.observe(viewLifecycleOwner) { id ->
             details.text = id
+            content.text.clear()
+            id ?: return@observe
+
+            lifecycleScope.launch {
+                val note: Note = withContext(Dispatchers.IO) {
+                    db.noteDao().getFromId(id).firstOrNull()
+                } ?: return@launch
+                content.setText(note.content)
+                try {
+                    photoUri = note.photo
+                    image.setImageURI(note.photo)
+                } catch (e: Exception) {
+                    
+                }
+            }
         }
 
         photo.setOnClickListener {
@@ -87,18 +105,30 @@ class SimpleBottomSheetFragment : Fragment() {
                 // display error state to the user
             }
         }
+
+        // FIXME Just a quick workround
+        details.setOnLongClickListener {
+            lifecycleScope.launch(Dispatchers.IO) {
+                val id = model.focusedFeatureId.value ?: return@launch
+                val note: Note = db.noteDao().getFromId(id).firstOrNull() ?: return@launch
+                db.noteDao().delete(note)
+                withContext(Dispatchers.Main) {
+                    model.displayBottomSheet.postValue(false)
+                }
+            }
+            true
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
 
-            val id = model.focusedFeatureId.value
-            val uri = data?.data ?: photoUri ?: return
+            val id = model.focusedFeatureId.value ?: return
+            val uri = photoUri ?: return
             photoUri = null
 
             val note = Note(
-                date = Date(),
-                osmId = if (id == ID_NOTE) null else id,
+                id = id,
                 lon = model.center.value.first,
                 lat = model.center.value.second,
                 content = binding.content.text.toString(),
