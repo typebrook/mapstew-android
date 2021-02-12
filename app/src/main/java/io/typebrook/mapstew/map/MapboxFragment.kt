@@ -11,10 +11,12 @@ import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.JsonArray
 import com.google.gson.JsonParser
+import com.google.gson.internal.bind.util.ISO8601Utils
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
 import com.mapbox.mapboxsdk.Mapbox
+import com.mapbox.mapboxsdk.annotations.Marker
 import com.mapbox.mapboxsdk.annotations.MarkerOptions
 import com.mapbox.mapboxsdk.camera.CameraPosition
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
@@ -30,6 +32,8 @@ import com.mapbox.mapboxsdk.style.layers.Property
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 import io.typebrook.mapstew.R
+import io.typebrook.mapstew.db.Note
+import io.typebrook.mapstew.db.db
 import io.typebrook.mapstew.geometry.CRSWrapper
 import io.typebrook.mapstew.livedata.SafeMutableLiveData
 import io.typebrook.mapstew.main.MapViewModel
@@ -40,6 +44,7 @@ import io.typebrook.mapstew.offline.MBTilesServer
 import io.typebrook.mapstew.offline.MBTilesSource
 import io.typebrook.mapstew.offline.MBTilesSourceException
 import io.typebrook.mapstew.preference.prefShowHint
+import kotlinx.android.synthetic.main.fragment_simple_bottom_sheet.view.*
 import kotlinx.android.synthetic.main.input_degree.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -63,6 +68,7 @@ class MapboxFragment : SupportMapFragment() {
 
     private val selectedFeatureSource by lazy { GeoJsonSource("foo") }
     private var selectedFeatures: List<Feature> = emptyList()
+    private var focusedMarker: Marker? = null
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -159,7 +165,7 @@ class MapboxFragment : SupportMapFragment() {
         // If user choose a point, query features nearby
         model.focusPoint.observe(this@MapboxFragment.viewLifecycleOwner) { point ->
             // Remove all makers anyway when focus changes
-            markers.forEach(::removeMarker)
+            focusedMarker?.let {removeMarker(it)}
 
             if (point == null) {
                 model.selectableFeatures.value = emptyList()
@@ -168,7 +174,7 @@ class MapboxFragment : SupportMapFragment() {
             }
 
             // Add a new marker on the point
-            addMarker(MarkerOptions().position(projection.fromScreenLocation(point)))
+            focusedMarker = addMarker(MarkerOptions().position(projection.fromScreenLocation(point)))
 
             // Query features with OSM ID nearby feature
             val bbox = RectF(point.x - 30, point.y + 30, point.x + 30, point.y - 30)
@@ -230,6 +236,27 @@ class MapboxFragment : SupportMapFragment() {
                     if (minZoom < 18) minZoom - 1 else 18.0
             )
             animateCamera(cameraUpdate, 600)
+        }
+
+        db.noteDao().getAll().observe(viewLifecycleOwner) { notes: List<Note> ->
+            Timber.d("jojojo note changed")
+            notes.forEach { note ->
+                val marker = MarkerOptions()
+                    .position(LatLng(note.lat, note.lon))
+                    .snippet(note.content)
+                    .title(ISO8601Utils.format(note.date))
+                addMarker(marker)
+            }
+        }
+
+        setOnMarkerClickListener { marker ->
+            selectMarker(marker)
+            animateCamera {
+                CameraPosition.Builder()
+                    .target(marker.position)
+                    .build()
+            }
+            true
         }
     }
 
