@@ -40,4 +40,7 @@
     <string name="pref_feature_details" translatable="false">debug_features</string>
     <string name="number_features">%s items</string>
     <string name="map_btn_create_note">Add a new note</string>
+    <string name="take_photo">Take Photo</string>
+    <string name="file_provider_name">.fileProvider</string>
+    <string name="select_capture_image">select picture</string>
 </resources>

@@ -13,6 +13,7 @@ import androidx.fragment.app.commit
 import androidx.lifecycle.MediatorLiveData
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.gson.internal.bind.util.ISO8601Utils
 import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
 import io.typebrook.mapstew.R
@@ -24,6 +25,8 @@ import io.typebrook.mapstew.map.MapboxFragment
 import io.typebrook.mapstew.map.OfflineFragment
 import io.typebrook.mapstew.offline.getLocalMBTiles
 import kotlinx.android.synthetic.main.main_fragment.*
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 class MainFragment : Fragment() {
@@ -32,7 +35,7 @@ class MainFragment : Fragment() {
     private val binding by lazy { MainFragmentBinding.inflate(layoutInflater) }
 
     override fun onCreateView(
-            inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
 
         mapModel.mbTilesList.value = requireContext().getLocalMBTiles()
@@ -99,7 +102,7 @@ class MainFragment : Fragment() {
                         0 -> OfflineFragment().show(childFragmentManager, null)
                         1 -> Toast.makeText(requireContext(), "NOTHING", Toast.LENGTH_SHORT).show()
                         2 -> findNavController().navigate(
-                                MainFragmentDirections.actionMainFragmentToSettingsFragment()
+                            MainFragmentDirections.actionMainFragmentToSettingsFragment()
                         )
                     }
                 }
@@ -123,7 +126,10 @@ class MainFragment : Fragment() {
             // TODO consider the case that there is only one feature
             PopupWindow(requireContext()).apply {
                 contentView = ListView(requireContext()).apply {
-                    adapter = ArrayAdapter<String>(requireContext(), android.R.layout.simple_list_item_1).apply {
+                    adapter = ArrayAdapter<String>(
+                        requireContext(),
+                        android.R.layout.simple_list_item_1
+                    ).apply {
                         val items = listOf(getString(R.string.map_btn_create_note)) + features.map {
                             it.name ?: it.osmId.substringAfter('/')
                         }
@@ -131,11 +137,9 @@ class MainFragment : Fragment() {
                     }
                     setOnItemClickListener { _, _, position, id ->
                         mapModel.displayBottomSheet.value = true
-                        if (position != 0) {
-                            mapModel.focusedFeatureId.value = features[position - 1].osmId
-                        } else {
-                            mapModel.focusedFeatureId.value = ID_NOTE
-                        }
+                        mapModel.focusedFeatureId.value = if (position != 0)
+                            features[position - 1].osmId else
+                            ID_NOTE
                         dismiss()
                     }
                 }
