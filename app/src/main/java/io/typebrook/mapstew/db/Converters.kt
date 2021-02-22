@@ -17,12 +17,12 @@ class Converters {
     }
 
     @TypeConverter
-    fun fromString(value: String): Uri {
-        return Uri.parse(value)
+    fun fromString(value: String?): Uri? {
+        return value?.let(Uri::parse)
     }
 
     @TypeConverter
-    fun toString(uri: Uri): String {
-        return uri.toString()
+    fun toString(uri: Uri?): String? {
+        return uri?.toString()
     }
 }
