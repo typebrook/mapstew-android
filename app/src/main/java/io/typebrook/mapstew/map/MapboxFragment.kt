@@ -3,6 +3,7 @@ package io.typebrook.mapstew.map
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
+import android.graphics.PointF
 import android.graphics.RectF
 import android.view.Gravity
 import androidx.fragment.app.activityViewModels
@@ -10,9 +11,12 @@ import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.JsonArray
 import com.google.gson.JsonParser
+import com.google.gson.internal.bind.util.ISO8601Utils
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
+import com.mapbox.geojson.Point
 import com.mapbox.mapboxsdk.Mapbox
+import com.mapbox.mapboxsdk.annotations.Marker
 import com.mapbox.mapboxsdk.annotations.MarkerOptions
 import com.mapbox.mapboxsdk.camera.CameraPosition
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
@@ -23,21 +27,24 @@ import com.mapbox.mapboxsdk.location.modes.CameraMode
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.maps.SupportMapFragment
-import com.mapbox.mapboxsdk.style.expressions.Expression
 import com.mapbox.mapboxsdk.style.layers.LineLayer
 import com.mapbox.mapboxsdk.style.layers.Property
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 import io.typebrook.mapstew.R
+import io.typebrook.mapstew.db.Note
+import io.typebrook.mapstew.db.db
 import io.typebrook.mapstew.geometry.CRSWrapper
 import io.typebrook.mapstew.livedata.SafeMutableLiveData
 import io.typebrook.mapstew.main.MapViewModel
+import io.typebrook.mapstew.main.MapViewModel.Companion.ID_NOTE
 import io.typebrook.mapstew.main.zoom
 import io.typebrook.mapstew.network.GithubService
 import io.typebrook.mapstew.offline.MBTilesServer
 import io.typebrook.mapstew.offline.MBTilesSource
 import io.typebrook.mapstew.offline.MBTilesSourceException
 import io.typebrook.mapstew.preference.prefShowHint
+import kotlinx.android.synthetic.main.fragment_simple_bottom_sheet.view.*
 import kotlinx.android.synthetic.main.input_degree.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -61,6 +68,7 @@ class MapboxFragment : SupportMapFragment() {
 
     private val selectedFeatureSource by lazy { GeoJsonSource("foo") }
     private var selectedFeatures: List<Feature> = emptyList()
+    private var focusedMarker: Marker? = null
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -128,8 +136,12 @@ class MapboxFragment : SupportMapFragment() {
     @SuppressLint("RtlHardcoded")
     override fun onMapReady(mapboxMap: MapboxMap) = with(mapboxMap) {
 
-        uiSettings.compassGravity = Gravity.LEFT
-        uiSettings.setCompassMargins(24, 180, 0, 0)
+        with(uiSettings) {
+            compassGravity = Gravity.LEFT
+            setCompassMargins(24, 180, 0, 0)
+            isAttributionEnabled = false
+            isLogoEnabled = false
+        }
 
         styleBuilder.observe(this@MapboxFragment) { builder ->
             setStyle(builder) { style -> onStyleLoaded(this, style) }
@@ -146,7 +158,6 @@ class MapboxFragment : SupportMapFragment() {
         }
 
         addOnMapClickListener {
-            model.focusPoint.value = null
             model.displayBottomSheet.value = false
             true
         }
@@ -154,14 +165,19 @@ class MapboxFragment : SupportMapFragment() {
         // If user choose a point, query features nearby
         model.focusPoint.observe(this@MapboxFragment.viewLifecycleOwner) { point ->
             // Remove all makers anyway when focus changes
-            markers.forEach(::removeMarker)
-            if (point == null) return@observe
+            focusedMarker?.let {removeMarker(it)}
+
+            if (point == null) {
+                model.selectableFeatures.value = emptyList()
+                model.details.value = null
+                return@observe
+            }
 
             // Add a new marker on the point
-            addMarker(MarkerOptions().position(projection.fromScreenLocation(point)))
+            focusedMarker = addMarker(MarkerOptions().position(projection.fromScreenLocation(point)))
 
             // Query features with OSM ID nearby feature
-            val bbox = RectF(point.x - 20, point.y + 20, point.x + 20, point.y - 20)
+            val bbox = RectF(point.x - 30, point.y + 30, point.x + 30, point.y - 30)
             selectedFeatures = queryRenderedFeatures(bbox)
 
             // Update ViewModel with selectable unique OSM features
@@ -179,7 +195,7 @@ class MapboxFragment : SupportMapFragment() {
 
             // Update ViewModel with feature details if needed
             model.details.value = if (requireContext().prefShowHint())
-                selectedFeatures.map { it.id() + it.properties()?.toString() }
+                selectedFeatures.map { it.id() + " " + it.properties()?.toString() }
                         .let { if (it.isEmpty()) null else it }
                         ?.joinToString("\n\n") else
                 null
@@ -195,7 +211,15 @@ class MapboxFragment : SupportMapFragment() {
         }
 
         model.focusedFeatureId.observe(viewLifecycleOwner) { id ->
-            val features = selectedFeatures.filter { it.getStringProperty("id") == id }
+            val features = when {
+                id == null -> emptyList()
+                id.startsWith(ID_NOTE) -> model.focusPoint.value
+                    ?.let { it: PointF -> projection.fromScreenLocation(it) }
+                    ?.let { it: LatLng -> Point.fromLngLat(it.longitude, it.latitude) }
+                    ?.let { it: Point -> listOf(Feature.fromGeometry(it)) }
+                    ?: emptyList()
+                else -> selectedFeatures.filter { it.getStringProperty("id") == id }
+            }
             val featureCollection = FeatureCollection.fromFeatures(features)
             selectedFeatureSource.setGeoJson(featureCollection)
 
@@ -212,6 +236,31 @@ class MapboxFragment : SupportMapFragment() {
                     if (minZoom < 18) minZoom - 1 else 18.0
             )
             animateCamera(cameraUpdate, 600)
+        }
+
+        db.noteDao().getAll().observe(viewLifecycleOwner) { notes: List<Note> ->
+            markers.forEach(::removeMarker)
+            Timber.d("jojojo note changed")
+            notes.forEach { note ->
+                val marker = MarkerOptions()
+                    .position(LatLng(note.lat, note.lon))
+                    .title(note.id)
+                    .snippet(note.content)
+                addMarker(marker)
+            }
+        }
+
+        setOnMarkerClickListener { marker ->
+            selectMarker(marker)
+            animateCamera {
+                CameraPosition.Builder()
+                    .target(marker.position)
+                    .build()
+            }
+            model.focusedFeatureId.value = marker.title
+            model.details.value = marker.title
+            model.displayBottomSheet.value = true
+            true
         }
     }
 

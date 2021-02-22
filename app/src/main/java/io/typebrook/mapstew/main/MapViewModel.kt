@@ -52,23 +52,25 @@ class MapViewModel : ViewModel() {
     }
 
     // Details of features rendered on map
-    val details = SafeMutableLiveData<String?>(null)
+    val focusPoint = SafeMutableLiveData<PointF?>(null)
     val selectableFeatures = object : SafeMutableLiveData<List<TiledFeature>>(emptyList()) {
         override val predicate = { _: List<TiledFeature> -> true }
     }
-    val focusedFeatureId = SafeMutableLiveData<String?>(null)
-    val focusPoint = SafeMutableLiveData<PointF?>(null)
+    val details = SafeMutableLiveData<String?>(null)
+
+    val focusedFeatureId = object : SafeMutableLiveData<String?>(null) {
+        override val predicate = { newValue: String? ->
+            if (newValue == null || !newValue.startsWith(ID_NOTE)) focusPoint.value = null
+            value != newValue
+        }
+    }
 
     val locateUser = SafeMutableLiveData(false)
     val displayGrid = SafeMutableLiveData(false)
     val displayLayers = SafeMutableLiveData(false)
     val displayBottomSheet = object : SafeMutableLiveData<Boolean>(false) {
         override val predicate = { value: Boolean ->
-            if (!value) {
-                focusPoint.value = null
-                selectableFeatures.value = emptyList()
-                focusedFeatureId.value = null
-            }
+            if (!value) focusedFeatureId.value = null
             true
         }
     }
@@ -78,4 +80,7 @@ class MapViewModel : ViewModel() {
             val expression: CoordExpression = CoordExpression.DMS
     )
 
+    companion object {
+        const val ID_NOTE = "note"
+    }
 }

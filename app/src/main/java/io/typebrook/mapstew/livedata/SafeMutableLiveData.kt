@@ -7,12 +7,12 @@ open class SafeMutableLiveData<T>(initValue: T) : LiveData<T>(initValue) {
 
     override fun getValue(): T = super.getValue() as T
 
-    public override fun setValue(value: T) = if (predicate(value))
-        super.setValue(transformer(value)) else
+    public override fun setValue(newValue: T) = if (predicate(newValue))
+        super.setValue(transformer(newValue)) else
         Unit
 
-    public override fun postValue(value: T) = if (predicate(value))
-        super.postValue(transformer(value)) else
+    public override fun postValue(newValue: T) = if (predicate(newValue))
+        super.postValue(transformer(newValue)) else
         Unit
 
     protected open val predicate: (T) -> Boolean = { newValue -> newValue != value }
