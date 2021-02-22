@@ -18,6 +18,7 @@ data class Note(
     val lon: Double,
     val lat: Double,
     val content: String,
+    val modified: Date = Date(),
     val photoUri: Uri,
     val audioUri: Uri? = null
 )
