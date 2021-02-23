@@ -3,8 +3,6 @@ package io.typebrook.mapstew
 import android.app.Activity.RESULT_OK
 import android.content.ActivityNotFoundException
 import android.content.Intent
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -19,16 +17,13 @@ import io.typebrook.mapstew.databinding.FragmentSimpleBottomSheetBinding
 import io.typebrook.mapstew.db.Note
 import io.typebrook.mapstew.db.db
 import io.typebrook.mapstew.main.MapViewModel
-import io.typebrook.mapstew.main.MapViewModel.Companion.ID_NOTE
 import io.typebrook.mapstew.storage.getPickImageIntent
 import io.typebrook.mapstew.storage.newImageUri
 import kotlinx.android.synthetic.main.fragment_simple_bottom_sheet.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import java.lang.Exception
-import java.text.SimpleDateFormat
 import java.util.*
 
 /** Abstract base class for (quest) bottom sheets
@@ -86,8 +81,8 @@ class SimpleBottomSheetFragment : Fragment() {
                 } ?: return@launch
                 content.setText(note.content)
                 try {
-                    photoUri = note.photo
-                    image.setImageURI(note.photo)
+                    photoUri = note.photoUri
+                    image.setImageURI(note.photoUri)
                 } catch (e: Exception) {
                     
                 }
@@ -132,7 +127,7 @@ class SimpleBottomSheetFragment : Fragment() {
                 lon = model.center.value.first,
                 lat = model.center.value.second,
                 content = binding.content.text.toString(),
-                photo = uri
+                photoUri = uri
             )
             lifecycleScope.launch(Dispatchers.IO) {
                 db.noteDao().insert(note)
