@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
@@ -16,6 +18,7 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="60dp"
+        android:layout_gravity="center|top"
         android:background="@drawable/shape_coordinates"
         android:padding="12dp"
         android:textColor="@android:color/black"
@@ -24,8 +27,7 @@
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
+        android:layout_gravity="center"
         android:background="@mipmap/ic_cross_24dp"
         android:contentDescription="@string/res_desc_cross" />
 
@@ -33,9 +35,9 @@
         android:id="@+id/coordinates"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="8dp"
+        android:layout_gravity="center|bottom"
         android:background="@drawable/shape_coordinates"
         android:padding="8dp"
         android:textColor="#000000"
@@ -44,9 +46,9 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
+        android:layout_gravity="end|top"
         android:layout_marginTop="@dimen/margin_app_bar"
+        app:layout_behavior=""
         android:orientation="vertical">
 
         <ImageButton
@@ -72,9 +74,7 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentBottom="true"
+        android:layout_gravity="end|bottom"
         android:layout_marginBottom="32dp"
         android:orientation="vertical">
 
@@ -127,4 +127,4 @@
         android:id="@+id/contextMenuView"
         android:layout_width="0dp"
         android:layout_height="0dp"/>
-</RelativeLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
