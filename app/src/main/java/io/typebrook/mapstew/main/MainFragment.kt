@@ -187,7 +187,8 @@ class MainFragment : Fragment() {
             listOf(menuButton, layersButton, zoomInButton, zoomOutButton, locatingButton, coordinates).forEach {
                 it.isClickable = !hide
                 it.animate().setDuration(350)
-                        .translationY(if (hide) 300f else 0f)
+                        .scaleX(if (hide) 0f else 1f)
+                        .scaleY(if (hide) 0f else 1f)
                         .alpha(if (hide) 0f else 1f)
             }
         }
