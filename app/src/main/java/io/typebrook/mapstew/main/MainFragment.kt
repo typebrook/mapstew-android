@@ -20,20 +20,19 @@ import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
 import io.typebrook.mapstew.R
 import io.typebrook.mapstew.SimpleBottomSheetFragment
-import io.typebrook.mapstew.databinding.MainFragmentBinding
+import io.typebrook.mapstew.databinding.FragmentMainBinding
 import io.typebrook.mapstew.geometry.*
 import io.typebrook.mapstew.main.MapViewModel.Companion.ID_NOTE
 import io.typebrook.mapstew.map.MapboxFragment
 import io.typebrook.mapstew.map.OfflineFragment
 import io.typebrook.mapstew.offline.getLocalMBTiles
-import kotlinx.android.synthetic.main.main_fragment.*
 import java.util.*
 
 
 class MainFragment : Fragment() {
 
     private val mapModel by activityViewModels<MapViewModel>()
-    private val binding by lazy { MainFragmentBinding.inflate(layoutInflater) }
+    private val binding by lazy { FragmentMainBinding.inflate(layoutInflater) }
 
     override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
