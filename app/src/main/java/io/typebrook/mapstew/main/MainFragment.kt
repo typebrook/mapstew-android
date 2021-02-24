@@ -1,7 +1,5 @@
 package io.typebrook.mapstew.main
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
 import android.content.res.Resources
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -186,16 +184,11 @@ class MainFragment : Fragment() {
         }
 
         mapModel.hideButtons.observe(viewLifecycleOwner) { hide ->
-            listOf(buttonSet1, buttonSet2, coordinates).forEach {
-                it.animate()
-                        .setDuration(300)
+            listOf(menuButton, layersButton, zoomInButton, zoomOutButton, locatingButton, coordinates).forEach {
+                it.isClickable = !hide
+                it.animate().setDuration(350)
                         .translationY(if (hide) 300f else 0f)
-                        .alpha(if (hide) 0.0f else 1.0f)
-                        .setListener(object : AnimatorListenerAdapter() {
-                            override fun onAnimationEnd(animation: Animator?, isReverse: Boolean) {
-                                it.visibility = if (hide) View.GONE else View.VISIBLE
-                            }
-                        })
+                        .alpha(if (hide) 0f else 1f)
             }
         }
     }
