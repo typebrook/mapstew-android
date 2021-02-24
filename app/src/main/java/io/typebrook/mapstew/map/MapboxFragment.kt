@@ -158,7 +158,10 @@ class MapboxFragment : SupportMapFragment() {
         }
 
         addOnMapClickListener {
-            model.displayBottomSheet.value = false
+            with(model) {
+                hideButtons.value = !hideButtons.value
+                displayBottomSheet.value = false
+            }
             true
         }
 

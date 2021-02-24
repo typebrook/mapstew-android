@@ -44,6 +44,7 @@
         tools:ignore="RelativeOverlap,RtlHardcoded" />
 
     <LinearLayout
+        android:id="@+id/button_set_1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end|top"
@@ -71,6 +72,7 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/button_set_2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="32dp"

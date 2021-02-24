@@ -65,6 +65,7 @@ class MapViewModel : ViewModel() {
         }
     }
 
+    val hideButtons = SafeMutableLiveData(false)
     val locateUser = SafeMutableLiveData(false)
     val displayGrid = SafeMutableLiveData(false)
     val displayLayers = SafeMutableLiveData(false)
