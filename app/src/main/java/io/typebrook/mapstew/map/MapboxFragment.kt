@@ -165,7 +165,7 @@ class MapboxFragment : SupportMapFragment() {
         // If user choose a point, query features nearby
         model.focusPoint.observe(this@MapboxFragment.viewLifecycleOwner) { point ->
             // Remove all makers anyway when focus changes
-            focusedMarker?.let {removeMarker(it)}
+            focusedMarker?.remove()
 
             if (point == null) {
                 model.selectableFeatures.value = emptyList()
@@ -239,7 +239,7 @@ class MapboxFragment : SupportMapFragment() {
         }
 
         db.noteDao().getAll().observe(viewLifecycleOwner) { notes: List<Note> ->
-            markers.forEach(::removeMarker)
+            markers.forEach { it.remove() }
             Timber.d("jojojo note changed")
             notes.forEach { note ->
                 val marker = MarkerOptions()
