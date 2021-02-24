@@ -11,7 +11,6 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
-import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.gson.internal.bind.util.ISO8601Utils
 import io.typebrook.mapstew.databinding.FragmentSimpleBottomSheetBinding
 import io.typebrook.mapstew.db.Note
@@ -23,7 +22,6 @@ import kotlinx.android.synthetic.main.fragment_simple_bottom_sheet.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.lang.Exception
 import java.util.*
 
 /** Abstract base class for (quest) bottom sheets
@@ -38,37 +36,14 @@ class SimpleBottomSheetFragment : Fragment() {
     private var photoUri: Uri? = null
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
     ): View {
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) = with(binding) {
-
-        val bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet)
-
-        bottomSheetBehavior.addBottomSheetCallback(object :
-            BottomSheetBehavior.BottomSheetCallback() {
-            override fun onStateChanged(bottomSheet: View, newState: Int) {
-                if (newState != BottomSheetBehavior.STATE_HIDDEN) {
-                    shadow.visibility = View.VISIBLE
-                } else {
-                    shadow.visibility = View.GONE
-                    model.displayBottomSheet.value = false
-                }
-            }
-
-            override fun onSlide(bottomSheet: View, slideOffset: Float) {
-            }
-        })
-
-        model.displayBottomSheet.observe(viewLifecycleOwner) { display ->
-            bottomSheetBehavior.state = if (display)
-                BottomSheetBehavior.STATE_EXPANDED else
-                BottomSheetBehavior.STATE_HIDDEN
-        }
 
         model.focusedFeatureId.observe(viewLifecycleOwner) { id ->
             details.text = id
@@ -84,7 +59,7 @@ class SimpleBottomSheetFragment : Fragment() {
                     photoUri = note.photoUri
                     image.setImageURI(note.photoUri)
                 } catch (e: Exception) {
-                    
+
                 }
             }
         }
@@ -123,11 +98,11 @@ class SimpleBottomSheetFragment : Fragment() {
             photoUri = null
 
             val note = Note(
-                id = id,
-                lon = model.center.value.first,
-                lat = model.center.value.second,
-                content = binding.content.text.toString(),
-                photoUri = uri
+                    id = id,
+                    lon = model.center.value.first,
+                    lat = model.center.value.second,
+                    content = binding.content.text.toString(),
+                    photoUri = uri
             )
             lifecycleScope.launch(Dispatchers.IO) {
                 db.noteDao().insert(note)

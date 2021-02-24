@@ -48,7 +48,6 @@
         android:layout_height="wrap_content"
         android:layout_gravity="end|top"
         android:layout_marginTop="@dimen/margin_app_bar"
-        app:layout_behavior=""
         android:orientation="vertical">
 
         <ImageButton
@@ -106,22 +105,22 @@
             android:src="@android:drawable/ic_menu_mylocation" />
     </LinearLayout>
 
-    <LinearLayout
+    <View
+        android:id="@+id/shadow"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="24dp"
+        android:background="@drawable/shape_gradient_top_shadow"
+        android:visibility="gone"
+        app:layout_anchor="@id/bottom_sheet" />
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="6" />
-
-        <FrameLayout
-            android:id="@+id/bottom_sheet_container"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="4" />
-    </LinearLayout>
+    <FrameLayout
+        android:id="@+id/bottom_sheet"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="14dp"
+        android:background="@drawable/shape_bottom_sheet"
+        app:behavior_hideable="true"
+        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior" />
 
     <View
         android:id="@+id/contextMenuView"

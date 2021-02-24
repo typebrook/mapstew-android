@@ -1,5 +1,6 @@
 package io.typebrook.mapstew.main
 
+import android.content.res.Resources
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,6 +13,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.commit
 import androidx.lifecycle.MediatorLiveData
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.gson.internal.bind.util.ISO8601Utils
 import com.yanzhenjie.permission.AndPermission
@@ -25,7 +27,6 @@ import io.typebrook.mapstew.map.MapboxFragment
 import io.typebrook.mapstew.map.OfflineFragment
 import io.typebrook.mapstew.offline.getLocalMBTiles
 import kotlinx.android.synthetic.main.main_fragment.*
-import java.text.SimpleDateFormat
 import java.util.*
 
 
@@ -35,7 +36,7 @@ class MainFragment : Fragment() {
     private val binding by lazy { MainFragmentBinding.inflate(layoutInflater) }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+            inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
 
         mapModel.mbTilesList.value = requireContext().getLocalMBTiles()
@@ -44,7 +45,7 @@ class MainFragment : Fragment() {
         if (savedInstanceState == null) {
             requireActivity().supportFragmentManager.commit {
                 replace(R.id.map_container, MapboxFragment(), null)
-                replace(R.id.bottom_sheet_container, SimpleBottomSheetFragment(), null)
+                replace(R.id.bottom_sheet, SimpleBottomSheetFragment(), null)
 //              add<TangramFragment>(R.id.map_container, null)
             }
         }
@@ -102,7 +103,7 @@ class MainFragment : Fragment() {
                         0 -> OfflineFragment().show(childFragmentManager, null)
                         1 -> Toast.makeText(requireContext(), "NOTHING", Toast.LENGTH_SHORT).show()
                         2 -> findNavController().navigate(
-                            MainFragmentDirections.actionMainFragmentToSettingsFragment()
+                                MainFragmentDirections.actionMainFragmentToSettingsFragment()
                         )
                     }
                 }
@@ -127,8 +128,8 @@ class MainFragment : Fragment() {
             PopupWindow(requireContext()).apply {
                 contentView = ListView(requireContext()).apply {
                     adapter = ArrayAdapter<String>(
-                        requireContext(),
-                        android.R.layout.simple_list_item_1
+                            requireContext(),
+                            android.R.layout.simple_list_item_1
                     ).apply {
                         val items = listOf(getString(R.string.map_btn_create_note)) + features.map {
                             it.name ?: it.osmId.substringAfter('/')
@@ -156,6 +157,31 @@ class MainFragment : Fragment() {
                         mapModel.focusPoint.value = null
                 }
             }
+        }
+
+        val screenHeight = Resources.getSystem().displayMetrics.heightPixels
+        bottomSheet.layoutParams.height = (screenHeight * 0.4).toInt()
+
+        val bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet).apply {
+            addBottomSheetCallback(object :
+                    BottomSheetBehavior.BottomSheetCallback() {
+                override fun onStateChanged(bottomSheet: View, newState: Int) {
+                    if (newState != BottomSheetBehavior.STATE_HIDDEN) {
+                        shadow.visibility = View.VISIBLE
+                    } else {
+                        shadow.visibility = View.GONE
+                        mapModel.displayBottomSheet.value = false
+                    }
+                }
+
+                override fun onSlide(bottomSheet: View, slideOffset: Float) {
+                }
+            })
+        }
+        mapModel.displayBottomSheet.observe(viewLifecycleOwner) { display ->
+            bottomSheetBehavior.state = if (display)
+                BottomSheetBehavior.STATE_EXPANDED else
+                BottomSheetBehavior.STATE_HIDDEN
         }
     }
 }
