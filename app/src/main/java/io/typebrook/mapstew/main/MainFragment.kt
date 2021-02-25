@@ -148,6 +148,7 @@ class MainFragment : Fragment() {
                 }
                 height = WindowManager.LayoutParams.WRAP_CONTENT
                 width = 500
+                elevation = 40f
                 isOutsideTouchable = true
                 setBackgroundDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.shape_bottom_sheet))
                 showAsDropDown(contextMenuView.apply {
