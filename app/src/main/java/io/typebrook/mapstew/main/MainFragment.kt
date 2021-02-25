@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.commit
 import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -26,6 +27,8 @@ import io.typebrook.mapstew.main.MapViewModel.Companion.ID_NOTE
 import io.typebrook.mapstew.map.MapboxFragment
 import io.typebrook.mapstew.map.OfflineFragment
 import io.typebrook.mapstew.offline.getLocalMBTiles
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.*
 
 
@@ -152,8 +155,11 @@ class MainFragment : Fragment() {
                     translationY = point.y
                 })
                 setOnDismissListener {
-                    if (mapModel.focusedFeatureId.value == null)
-                        mapModel.focusPoint.value = null
+                    lifecycleScope.launch {
+                        delay(400)
+                        if (mapModel.focusedFeatureId.value == null)
+                            mapModel.focusPoint.value = null
+                    }
                 }
             }
         }

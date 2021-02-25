@@ -65,7 +65,11 @@ class MapViewModel : ViewModel() {
         }
     }
 
-    val hideButtons = SafeMutableLiveData(false)
+    val hideButtons = object : SafeMutableLiveData<Boolean>(false) {
+        override val predicate = { _: Boolean ->
+            focusPoint.value == null && focusedFeatureId.value == null && !displayBottomSheet.value
+        }
+    }
     val locateUser = SafeMutableLiveData(false)
     val displayGrid = SafeMutableLiveData(false)
     val displayLayers = SafeMutableLiveData(false)
