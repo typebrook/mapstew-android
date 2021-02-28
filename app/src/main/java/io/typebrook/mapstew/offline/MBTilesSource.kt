@@ -7,7 +7,6 @@ import com.mapbox.mapboxsdk.style.sources.Source
 import com.mapbox.mapboxsdk.style.sources.TileSet
 import com.mapbox.mapboxsdk.style.sources.VectorSource
 import java.io.File
-import java.io.FileOutputStream
 import kotlin.properties.Delegates
 
 /*
@@ -93,16 +92,5 @@ class MBTilesSource(file: File, sourceId: String? = null) {
     companion object {
         val validRasterFormats = listOf("jpg", "png")
         val validVectorFormats = listOf("pbf", "mvt")
-
-        fun readAsset(context: Context, asset: String): String =
-            context.assets.open(asset).use { inputStream ->
-                val path = context.getDatabasePath(asset).path
-                val outputFile = File(path)
-                FileOutputStream(outputFile).use { outputStream ->
-                    inputStream.copyTo(outputStream)
-                    outputStream.flush()
-                }
-                return path
-            }
     }
 }
