@@ -243,7 +243,6 @@ class MapboxFragment : SupportMapFragment() {
 
         db.noteDao().getAll().observe(viewLifecycleOwner) { notes: List<Note> ->
             markers.forEach { it.remove() }
-            Timber.d("jojojo note changed")
             notes.forEach { note ->
                 val marker = MarkerOptions()
                     .position(LatLng(note.lat, note.lon))
