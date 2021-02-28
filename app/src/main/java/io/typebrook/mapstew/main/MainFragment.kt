@@ -57,7 +57,7 @@ class MainFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) = with(binding) {
 
-        // Update text of coordinate by center of map and current coordinate referency system
+        // Update text of coordinate by center of map and current coordinate reference system
         MediatorLiveData<Int>().apply {
             addSource(mapModel.center) { value = value ?: 0 + 1 }
             addSource(mapModel.crsState) { value = value ?: 0 + 1 }
@@ -138,7 +138,7 @@ class MainFragment : Fragment() {
                         }
                         addAll(items)
                     }
-                    setOnItemClickListener { _, _, position, id ->
+                    setOnItemClickListener { _, _, position, _ ->
                         mapModel.displayBottomSheet.value = true
                         mapModel.focusedFeatureId.value = if (position != 0)
                             features[position - 1].osmId else
