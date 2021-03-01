@@ -62,12 +62,23 @@ internal open class TaipowerCRS(displayName: String = "台灣電力座標") : Co
 
         val visionXY = x / 10 to y / 10
 
-        return section.name +
+        val mask = section.name +
                 imageXY.first.toString().padStart(2, '0') +
                 imageXY.second.toString().padStart(2, '0') +
                 "-" +
                 Section.values()[squareXY.first].name + Section.values()[squareXY.second].name +
                 visionXY.first + visionXY.second
+
+        return when (zoom) {
+            null -> mask
+            in 0..5 -> null
+            in 6..9 -> section.name
+            in 10..11 -> "${mask.substring(1..1)}X${mask.substring(3..3)}X"
+            in 12..14 -> mask.substring(1..4)
+            in 15..17 -> mask.substring(6..7)
+            in 18..19 -> mask.substring(8..9)
+            else -> mask
+        }
     }
 
     @Throws(CoordMask.Companion.CannotHandleException::class)
