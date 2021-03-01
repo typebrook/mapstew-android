@@ -5,31 +5,11 @@ package io.typebrook.mapstew.geometry
  * For more details, see http://www.sunriver.com.tw/grid_taipower.htm
  */
 
-abstract class MaskedCRS(
-    displayName: String,
-    type: ParameterType = ParameterType.Code,
-    parameter: String
-) : CRSWrapper(displayName, type, parameter) {
-    abstract fun mask(coord: XYPair): String?
-    abstract fun reverseMask(rawMask: String): XYPair
-
-    companion object {
-        object CannotHandleException : Exception()
-    }
-}
-
-object TaipowerCRS : MaskedCRS(
-    displayName = "台灣電力座標",
-    type = ParameterType.Proj4,
-    parameter = "+proj=tmerc +lat_0=0 +lon_0=121 +k=0.9999 +x_0=250000 +y_0=0 +ellps=aust_SA  +towgs84=-750.739,-359.515,-180.510,0.00003863,0.00001721,0.00000197,0.99998180 +units=m +no_defs"
+internal open class TaipowerCRS(displayName: String = "台灣電力座標") : MaskedCRS(
+        displayName = displayName,
+        type = ParameterType.Proj4,
+        parameter = TWD67.parameter
 ) {
-
-    const val LEFT_BOUNDARY = 90000
-    const val RIGHT_BOUNDARY = 410000
-    const val SECTION_WIDTH = 80000
-    const val BOTTOM_BOUNDARY = 2400000
-    const val TOP_BOUNDARY = 2800000
-    const val SECTION_HEIGHT = 50000
 
     // The south-west point of each section
     enum class Section(val xy: Pair<Int, Int>) {
@@ -88,15 +68,15 @@ object TaipowerCRS : MaskedCRS(
                 visionXY.first + visionXY.second
     }
 
-    @Throws(Companion.CannotHandleException::class)
+    @Throws(MaskedCRS.Companion.CannotHandleException::class)
     override fun reverseMask(rawMask: String): XYPair = try {
         val mask = rawMask
-            .filter { it.isLetterOrDigit() }
-            .substring(0, 9)
-            .map { if (it.isLetter()) it.toUpperCase() else it }
-            .joinToString("")
+                .filter { it.isLetterOrDigit() }
+                .substring(0, 9)
+                .map { if (it.isLetter()) it.toUpperCase() else it }
+                .joinToString("")
         val sectionXY = Section.values().firstOrNull { it.name == mask[0].toString() }?.xy
-            ?: throw Companion.CannotHandleException
+                ?: throw MaskedCRS.Companion.CannotHandleException
         val imageXY = mask.substring(1, 3).toInt() * 800 to mask.substring(3, 5).toInt() * 500
         val squareXY = mask.substring(5, 7).run {
             val xIndex = Square.values().first { it.name == this[0].toString() }.ordinal
@@ -104,11 +84,20 @@ object TaipowerCRS : MaskedCRS(
             xIndex * 100 to yIndex * 100
         }
         val visionXY =
-            mask.substring(7, 8).toInt() * 10 + 5 to mask.substring(8, 9).toInt() * 10 + 5
+                mask.substring(7, 8).toInt() * 10 + 5 to mask.substring(8, 9).toInt() * 10 + 5
 
         (sectionXY.first + imageXY.first + squareXY.first + visionXY.first).toDouble() to
                 (sectionXY.second + imageXY.second + squareXY.second + visionXY.second).toDouble()
     } catch (e: Exception) {
-        throw Companion.CannotHandleException
+        throw MaskedCRS.Companion.CannotHandleException
+    }
+
+    companion object {
+        const val LEFT_BOUNDARY = 90000
+        const val RIGHT_BOUNDARY = 410000
+        const val SECTION_WIDTH = 80000
+        const val BOTTOM_BOUNDARY = 2400000
+        const val TOP_BOUNDARY = 2800000
+        const val SECTION_HEIGHT = 50000
     }
 }

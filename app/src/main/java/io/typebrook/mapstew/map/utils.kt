@@ -13,12 +13,12 @@ import com.mapbox.mapboxsdk.style.layers.SymbolLayer
 import com.mapbox.mapboxsdk.style.sources.CustomGeometrySource
 import com.mapbox.mapboxsdk.style.sources.GeometryTileProvider
 import io.typebrook.mapstew.geometry.*
-import io.typebrook.mapstew.geometry.TaipowerCRS.BOTTOM_BOUNDARY
-import io.typebrook.mapstew.geometry.TaipowerCRS.LEFT_BOUNDARY
-import io.typebrook.mapstew.geometry.TaipowerCRS.RIGHT_BOUNDARY
-import io.typebrook.mapstew.geometry.TaipowerCRS.SECTION_HEIGHT
-import io.typebrook.mapstew.geometry.TaipowerCRS.SECTION_WIDTH
-import io.typebrook.mapstew.geometry.TaipowerCRS.TOP_BOUNDARY
+import io.typebrook.mapstew.geometry.TaipowerCRS.Companion.BOTTOM_BOUNDARY
+import io.typebrook.mapstew.geometry.TaipowerCRS.Companion.LEFT_BOUNDARY
+import io.typebrook.mapstew.geometry.TaipowerCRS.Companion.RIGHT_BOUNDARY
+import io.typebrook.mapstew.geometry.TaipowerCRS.Companion.SECTION_HEIGHT
+import io.typebrook.mapstew.geometry.TaipowerCRS.Companion.SECTION_WIDTH
+import io.typebrook.mapstew.geometry.TaipowerCRS.Companion.TOP_BOUNDARY
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -61,7 +61,7 @@ fun gridLineProvider(crsWrapper: CRSWrapper) = object : GeometryTileProvider {
 
         val spacingAdapter = when {
             crsWrapper.isLongLat -> LatLngSpacingAdapter()
-            crsWrapper is TaipowerCRS -> TaipowerSpacingAdapter()
+            crsWrapper is TaipowerCRS -> TaipowerSpacingAdapter
             else -> MeterSpacingAdapter()
         }
         if (!spacingAdapter.isValid(zoom)) return FeatureCollection.fromFeatures(emptyList())
@@ -133,7 +133,7 @@ fun gridLineProvider(crsWrapper: CRSWrapper) = object : GeometryTileProvider {
                     Feature.fromGeometry(
                         Point.fromLngLat(lonLat.x, lonLat.y)
                     ).apply {
-                        val text = TaipowerCRS.mask(xy)?.run {
+                        val text = crsWrapper.mask(xy)?.run {
                             when (zoom) {
                                 in 0..5 -> null
                                 in 6..9 -> substring(0, 1)
@@ -246,7 +246,7 @@ class MeterSpacingAdapter : SpacingAdapter() {
         y + (gridSpacing[zoom] ?: smallestSpacing)
 }
 
-class TaipowerSpacingAdapter : SpacingAdapter() {
+object TaipowerSpacingAdapter : SpacingAdapter() {
 
     override fun isValid(zoom: Int): Boolean = zoom >= 6
 
