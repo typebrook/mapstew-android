@@ -32,7 +32,22 @@ class CoordInputDialogFragment : DialogFragment() {
     private val crs get() = mapModel.crsState.value.crsWrapper
     private val coord get() = mapModel.center.value.wgs84LongLat.convert(WGS84, crs)
 
-    private val validCrsList = listOf(WGS84, TWD97, TWD67, TaipowerCRS, EPSG_3857)
+    private val validCrsList by lazy {
+        listOf(
+                WGS84,
+                TWD97,
+                TWD67,
+                TaipowerCRS(),
+                RescueCRS().apply {
+                    resources.getStringArray(R.array.peaks).associate {
+                        it.substringBefore(",") to it.substringAfter(",")
+                    }.let {
+                        peaks.putAll(it)
+                    }
+                },
+                EPSG_3857
+        )
+    }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog = requireActivity().run {
 
@@ -156,18 +171,18 @@ class CoordInputDialogFragment : DialogFragment() {
         val binding = InputSingleBinding.inflate(layoutInflater)
         val currentCRS = crs
         override val view: View = with(binding) {
-            if (currentCRS is MaskedCRS) {
-                singleCoord.hint = currentCRS.mask(coord) ?: getString(R.string.out_of_boundary)
+            if (currentCRS is CoordMask) {
+                singleCoord.hint = currentCRS.mask(coord, null) ?: getString(R.string.out_of_boundary)
             }
             singleCoord.filters = arrayOf(LetterDigitFilter())
             root
         }
         override val wgs84LongLat: XYPair
             get() = with(binding) {
-                if (currentCRS is MaskedCRS) {
+                if (currentCRS is CoordMask) {
                     try {
                         singleCoord.raw.let(currentCRS::reverseMask).convert(crs, WGS84)
-                    } catch (e: MaskedCRS.Companion.CannotHandleException) {
+                    } catch (e: CoordMask.Companion.CannotHandleException) {
                         coord.convert(crs, WGS84)
                     }
                 } else {
