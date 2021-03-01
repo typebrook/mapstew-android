@@ -4,8 +4,8 @@ internal class RescueCRS : TaipowerCRS(displayName = "搜索分區") {
 
     val peaks = mutableMapOf<String, String>()
 
-    override fun mask(coord: XYPair): String? {
-        val origin = super.mask(coord) ?: return null
+    override fun mask(coord: XYPair, zoom: Int?): String? {
+        val origin = super.mask(coord, null) ?: return null
 
         val code = origin.substring(0..4)
                 .replaceRange(2..2, "X")

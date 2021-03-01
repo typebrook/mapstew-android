@@ -5,13 +5,14 @@ package io.typebrook.mapstew.geometry
  * For more details, see http://www.sunriver.com.tw/grid_taipower.htm
  */
 
-internal open class TaipowerCRS(displayName: String = "台灣電力座標") : MaskedCRS(
+internal open class TaipowerCRS(displayName: String = "台灣電力座標") : CoordMask, CRSWrapper(
         displayName = displayName,
         type = ParameterType.Proj4,
         parameter = TWD67.parameter
 ) {
 
-    // The south-west point of each section
+    // A Section is 80,000m x 50,000m
+    // xy is the south-west point of each section
     enum class Section(val xy: Pair<Int, Int>) {
         A(LEFT_BOUNDARY + 1 * SECTION_WIDTH to BOTTOM_BOUNDARY + 7 * SECTION_HEIGHT), // 170000,2750000
         B(LEFT_BOUNDARY + 2 * SECTION_WIDTH to BOTTOM_BOUNDARY + 7 * SECTION_HEIGHT), // 250000,2750000
@@ -36,11 +37,12 @@ internal open class TaipowerCRS(displayName: String = "台灣電力座標") : Ma
         W(LEFT_BOUNDARY + 2 * SECTION_WIDTH to BOTTOM_BOUNDARY + 0 * SECTION_HEIGHT)  // 250000,2400000
     }
 
+    // A Square is 100m x 100m
     enum class Square {
         A, B, C, D, E, F, G, H
     }
 
-    override fun mask(coord: XYPair): String? {
+    override fun mask(coord: XYPair, zoom: Int?): String? {
         var (x, y) = coord.x.toInt() to coord.y.toInt()
 
         val section = Section.values().firstOrNull {
@@ -68,7 +70,7 @@ internal open class TaipowerCRS(displayName: String = "台灣電力座標") : Ma
                 visionXY.first + visionXY.second
     }
 
-    @Throws(MaskedCRS.Companion.CannotHandleException::class)
+    @Throws(CoordMask.Companion.CannotHandleException::class)
     override fun reverseMask(rawMask: String): XYPair = try {
         val mask = rawMask
                 .filter { it.isLetterOrDigit() }
@@ -76,7 +78,7 @@ internal open class TaipowerCRS(displayName: String = "台灣電力座標") : Ma
                 .map { if (it.isLetter()) it.toUpperCase() else it }
                 .joinToString("")
         val sectionXY = Section.values().firstOrNull { it.name == mask[0].toString() }?.xy
-                ?: throw MaskedCRS.Companion.CannotHandleException
+                ?: throw CoordMask.Companion.CannotHandleException
         val imageXY = mask.substring(1, 3).toInt() * 800 to mask.substring(3, 5).toInt() * 500
         val squareXY = mask.substring(5, 7).run {
             val xIndex = Square.values().first { it.name == this[0].toString() }.ordinal
@@ -89,7 +91,7 @@ internal open class TaipowerCRS(displayName: String = "台灣電力座標") : Ma
         (sectionXY.first + imageXY.first + squareXY.first + visionXY.first).toDouble() to
                 (sectionXY.second + imageXY.second + squareXY.second + visionXY.second).toDouble()
     } catch (e: Exception) {
-        throw MaskedCRS.Companion.CannotHandleException
+        throw CoordMask.Companion.CannotHandleException
     }
 
     companion object {

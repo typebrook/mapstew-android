@@ -69,6 +69,7 @@ fun gridLineProvider(crsWrapper: CRSWrapper) = object : GeometryTileProvider {
         val startXY = (bounds.lonWest to bounds.latSouth).convert(CRSWrapper.WGS84, crsWrapper)
         val endXY = (bounds.lonEast to bounds.latNorth).convert(CRSWrapper.WGS84, crsWrapper)
 
+        // Add line features to format grids
         var y = spacingAdapter.firstY(startXY.y, zoom)
         while (y != null && y < endXY.second) {
             yValues.add(y)
@@ -122,6 +123,7 @@ fun gridLineProvider(crsWrapper: CRSWrapper) = object : GeometryTileProvider {
             x = spacingAdapter.nextX(x, zoom)
         }
 
+        // Add point features for MaskedCRS
         if (crsWrapper is TaipowerCRS && spacingAdapter is TaipowerSpacingAdapter) {
             yValues.forEach { crossY ->
                 xValues.forEach eachX@{ crossX ->
@@ -133,21 +135,7 @@ fun gridLineProvider(crsWrapper: CRSWrapper) = object : GeometryTileProvider {
                     Feature.fromGeometry(
                         Point.fromLngLat(lonLat.x, lonLat.y)
                     ).apply {
-                        val text = crsWrapper.mask(xy)?.run {
-                            when (zoom) {
-                                in 0..5 -> null
-                                in 6..9 -> substring(0, 1)
-                                in 10..11 -> substring(0, 5).toCharArray().let {
-                                    it[2] = 'X'
-                                    it[4] = 'X'
-                                    String(it)
-                                }
-                                in 12..14 -> substring(0, 5)
-                                in 15..17 -> substring(0, 8)
-                                else -> this
-                            }
-                        } ?: return@eachX
-
+                        val text = crsWrapper.mask(xy, zoom) ?: return@eachX
                         addStringProperty("name", text)
                     }.let(features::add)
                 }

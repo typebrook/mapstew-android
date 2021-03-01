@@ -36,7 +36,7 @@ class MapViewModel : ViewModel() {
                     newState.copy(expression = CoordExpression.DMS)
                 }
                 !newState.crsWrapper.isLongLat -> {
-                    val expression = if (newState.crsWrapper is MaskedCRS)
+                    val expression = if (newState.crsWrapper is CoordMask)
                         CoordExpression.SINGLE else
                         CoordExpression.XY
                     newState.copy(expression = expression)

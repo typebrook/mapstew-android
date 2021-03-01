@@ -70,8 +70,8 @@ class MainFragment : Fragment() {
                 CoordExpression.DegMin -> xy2DegMinString(xy).run { "$first $second" }
                 CoordExpression.DMS -> xy2DMSString(xy).run { "$first $second" }
                 CoordExpression.XY -> xy2IntString(xy).run { "$first $second" }
-                CoordExpression.SINGLE -> if (crsState.crsWrapper is MaskedCRS) {
-                    crsState.crsWrapper.mask(xy) ?: getString(R.string.out_of_boundary)
+                CoordExpression.SINGLE -> if (crsState.crsWrapper is CoordMask) {
+                    crsState.crsWrapper.mask(xy, null) ?: getString(R.string.out_of_boundary)
                 } else {
                     String()
                 }

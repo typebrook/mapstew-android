@@ -171,18 +171,18 @@ class CoordInputDialogFragment : DialogFragment() {
         val binding = InputSingleBinding.inflate(layoutInflater)
         val currentCRS = crs
         override val view: View = with(binding) {
-            if (currentCRS is MaskedCRS) {
-                singleCoord.hint = currentCRS.mask(coord) ?: getString(R.string.out_of_boundary)
+            if (currentCRS is CoordMask) {
+                singleCoord.hint = currentCRS.mask(coord, null) ?: getString(R.string.out_of_boundary)
             }
             singleCoord.filters = arrayOf(LetterDigitFilter())
             root
         }
         override val wgs84LongLat: XYPair
             get() = with(binding) {
-                if (currentCRS is MaskedCRS) {
+                if (currentCRS is CoordMask) {
                     try {
                         singleCoord.raw.let(currentCRS::reverseMask).convert(crs, WGS84)
-                    } catch (e: MaskedCRS.Companion.CannotHandleException) {
+                    } catch (e: CoordMask.Companion.CannotHandleException) {
                         coord.convert(crs, WGS84)
                     }
                 } else {
