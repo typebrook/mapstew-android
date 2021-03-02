@@ -23,7 +23,7 @@ import io.typebrook.mapstew.R
 import io.typebrook.mapstew.SimpleBottomSheetFragment
 import io.typebrook.mapstew.databinding.FragmentMainBinding
 import io.typebrook.mapstew.geometry.*
-import io.typebrook.mapstew.main.MapViewModel.Companion.ID_NOTE
+import io.typebrook.mapstew.main.MapViewModel.Companion.ID_SURVEY
 import io.typebrook.mapstew.map.MapboxFragment
 import io.typebrook.mapstew.map.OfflineFragment
 import io.typebrook.mapstew.offline.getLocalMBTiles
@@ -142,7 +142,7 @@ class MainFragment : Fragment() {
                         mapModel.displayBottomSheet.value = true
                         mapModel.focusedFeatureId.value = if (position != 0)
                             features[position - 1].osmId else
-                            "$ID_NOTE@${ISO8601Utils.format(Date())}"
+                            "$ID_SURVEY@${ISO8601Utils.format(Date())}"
                         dismiss()
                     }
                 }

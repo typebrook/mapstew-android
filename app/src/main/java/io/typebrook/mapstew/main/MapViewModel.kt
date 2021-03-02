@@ -60,7 +60,7 @@ class MapViewModel : ViewModel() {
 
     val focusedFeatureId = object : SafeMutableLiveData<String?>(null) {
         override val predicate = { newValue: String? ->
-            if (newValue == null || !newValue.startsWith(ID_NOTE)) focusPoint.value = null
+            if (newValue == null || !newValue.startsWith(ID_SURVEY)) focusPoint.value = null
             value != newValue
         }
     }
@@ -86,6 +86,6 @@ class MapViewModel : ViewModel() {
     )
 
     companion object {
-        const val ID_NOTE = "note"
+        const val ID_SURVEY = "survey"
     }
 }
