@@ -133,7 +133,7 @@ class MainFragment : Fragment() {
                             requireContext(),
                             android.R.layout.simple_list_item_1
                     ).apply {
-                        val items = listOf(getString(R.string.map_btn_create_note)) + features.map {
+                        val items = listOf(getString(R.string.map_btn_create_survey)) + features.map {
                             it.name ?: it.osmId.substringAfter('/')
                         }
                         addAll(items)

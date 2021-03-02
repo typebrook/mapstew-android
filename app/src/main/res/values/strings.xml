@@ -39,9 +39,9 @@
     <string name="out_of_boundary">Out of Boundary</string>
     <string name="pref_feature_details" translatable="false">debug_features</string>
     <string name="number_features">%s items</string>
-    <string name="map_btn_create_note">Add a new note</string>
+    <string name="map_btn_create_survey">Add a new survey</string>
     <string name="take_photo">Take Photo</string>
-    <string name="file_provider_name">.fileProvider</string>
+    <string name="file_provider_name" translatable="false">.fileProvider</string>
     <string name="select_capture_image">select picture</string>
-    <string name="placeholder_bottomsheet_title">title</string>
+    <string name="placeholder_bottomsheet_title" translatable="false">title</string>
 </resources>
