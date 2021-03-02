@@ -23,6 +23,8 @@ import kotlinx.android.synthetic.main.fragment_simple_bottom_sheet.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.text.ParseException
+import java.text.ParsePosition
 import java.util.*
 
 /** Abstract base class for (quest) bottom sheets
@@ -52,10 +54,15 @@ class SimpleBottomSheetFragment : Fragment() {
             id ?: return@observe
 
             lifecycleScope.launch {
+                val key = try {
+                    ISO8601Utils.parse(id, ParsePosition(0))
+                } catch (e: ParseException) {
+                    return@launch
+                }
                 val survey: Survey = withContext(Dispatchers.IO) {
-                    db.surveyDao().getFromId(id).firstOrNull()
+                    db.surveyDao().getFromKey(key).firstOrNull()
                 } ?: return@launch
-                content.setText(survey.content)
+                content.setText(survey.content + survey.osmNoteId)
                 try {
                     photoUri = survey.photoUri
                     image.setImageURI(survey.photoUri)
@@ -81,7 +88,7 @@ class SimpleBottomSheetFragment : Fragment() {
         details.setOnLongClickListener {
             lifecycleScope.launch(Dispatchers.IO) {
                 val id = model.focusedFeatureId.value ?: return@launch
-                val note: Survey = db.surveyDao().getFromId(id).firstOrNull() ?: return@launch
+                val note: Survey = db.surveyDao().getFromKey(ISO8601Utils.parse(id, ParsePosition(0))).firstOrNull() ?: return@launch
                 db.surveyDao().delete(note)
                 withContext(Dispatchers.Main) {
                     model.displayBottomSheet.postValue(false)

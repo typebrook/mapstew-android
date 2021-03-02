@@ -21,6 +21,7 @@ import com.yanzhenjie.permission.runtime.Permission
 import io.typebrook.mapstew.R
 import io.typebrook.mapstew.SimpleBottomSheetFragment
 import io.typebrook.mapstew.databinding.FragmentMainBinding
+import io.typebrook.mapstew.db.uploadSurveys
 import io.typebrook.mapstew.geometry.*
 import io.typebrook.mapstew.main.MapViewModel.Companion.ID_RAW_SURVEY
 import io.typebrook.mapstew.map.MapboxFragment
@@ -102,8 +103,9 @@ class MainFragment : Fragment() {
                 setItems(R.array.menu_items) { _, which ->
                     when (which) {
                         0 -> OfflineFragment().show(childFragmentManager, null)
-                        1 -> Toast.makeText(requireContext(), "NOTHING", Toast.LENGTH_SHORT).show()
-                        2 -> findNavController().navigate(
+                        1 -> uploadSurveys()
+                        2 -> Toast.makeText(requireContext(), "NOTHING", Toast.LENGTH_SHORT).show()
+                        3 -> findNavController().navigate(
                                 MainFragmentDirections.actionMainFragmentToSettingsFragment()
                         )
                     }

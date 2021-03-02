@@ -16,6 +16,7 @@ data class Survey(
     @PrimaryKey
     val dateCreated: Date = Date(),
     val relatedFeatureId: String? = null,
+    val osmNoteId: Long? = null,
     val lon: Double,
     val lat: Double,
     val content: String,

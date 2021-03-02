@@ -4,6 +4,7 @@
     <string name="app_name">mapstew</string>
     <string-array name="menu_items">
         <item>離線地圖</item>
+        <item>上傳回報</item>
         <item>介紹</item>
         <item>設定</item>
     </string-array>
