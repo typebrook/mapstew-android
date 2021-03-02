@@ -16,6 +16,7 @@ import io.typebrook.mapstew.databinding.FragmentSimpleBottomSheetBinding
 import io.typebrook.mapstew.db.Survey
 import io.typebrook.mapstew.db.db
 import io.typebrook.mapstew.main.MapViewModel
+import io.typebrook.mapstew.main.MapViewModel.Companion.ID_RAW_SURVEY
 import io.typebrook.mapstew.storage.getPickImageIntent
 import io.typebrook.mapstew.storage.newImageUri
 import kotlinx.android.synthetic.main.fragment_simple_bottom_sheet.*
@@ -76,7 +77,7 @@ class SimpleBottomSheetFragment : Fragment() {
             }
         }
 
-        // FIXME Just a quick workround
+        // FIXME Just a quick workaround
         details.setOnLongClickListener {
             lifecycleScope.launch(Dispatchers.IO) {
                 val id = model.focusedFeatureId.value ?: return@launch
@@ -98,11 +99,11 @@ class SimpleBottomSheetFragment : Fragment() {
             photoUri = null
 
             val survey = Survey(
-                    id = id,
-                    lon = model.center.value.first,
-                    lat = model.center.value.second,
-                    content = binding.content.text.toString(),
-                    photoUri = uri
+                relatedFeatureId = id.takeIf { it != ID_RAW_SURVEY },
+                lon = model.center.value.first,
+                lat = model.center.value.second,
+                content = binding.content.text.toString(),
+                photoUri = uri
             )
             lifecycleScope.launch(Dispatchers.IO) {
                 db.surveyDao().insert(survey)

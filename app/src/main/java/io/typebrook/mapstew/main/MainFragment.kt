@@ -16,14 +16,13 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.gson.internal.bind.util.ISO8601Utils
 import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
 import io.typebrook.mapstew.R
 import io.typebrook.mapstew.SimpleBottomSheetFragment
 import io.typebrook.mapstew.databinding.FragmentMainBinding
 import io.typebrook.mapstew.geometry.*
-import io.typebrook.mapstew.main.MapViewModel.Companion.ID_SURVEY
+import io.typebrook.mapstew.main.MapViewModel.Companion.ID_RAW_SURVEY
 import io.typebrook.mapstew.map.MapboxFragment
 import io.typebrook.mapstew.map.OfflineFragment
 import io.typebrook.mapstew.offline.getLocalMBTiles
@@ -141,8 +140,7 @@ class MainFragment : Fragment() {
                     setOnItemClickListener { _, _, position, _ ->
                         mapModel.displayBottomSheet.value = true
                         mapModel.focusedFeatureId.value = if (position != 0)
-                            features[position - 1].osmId else
-                            "$ID_SURVEY@${ISO8601Utils.format(Date())}"
+                            features[position - 1].osmId else ID_RAW_SURVEY
                         dismiss()
                     }
                 }

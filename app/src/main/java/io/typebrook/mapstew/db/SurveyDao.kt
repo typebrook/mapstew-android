@@ -8,7 +8,7 @@ interface SurveyDao {
     @Query("SELECT * FROM survey")
     fun getAll(): LiveData<List<Survey>>
 
-    @Query("SELECT * FROM survey where id = :id")
+    @Query("SELECT * FROM survey where dateCreated = :id")
     fun getFromId(id: String): List<Survey>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

@@ -14,11 +14,12 @@ import java.util.*
 @Entity
 data class Survey(
     @PrimaryKey
-    val id: String,
+    val dateCreated: Date = Date(),
+    val relatedFeatureId: String? = null,
     val lon: Double,
     val lat: Double,
     val content: String,
-    val modified: Date = Date(),
+    val dateModified: Date = Date(),
     val photoUri: Uri,
     val audioUri: Uri? = null
 )
