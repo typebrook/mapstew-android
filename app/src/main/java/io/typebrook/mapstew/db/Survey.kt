@@ -7,18 +7,20 @@ import androidx.room.PrimaryKey
 import java.util.*
 
 /**
- * If a Note references an OSM feature, the id is in form: way/[feature id]
- * If it is not, the id is in form: note/[ISO8601 datetime string]
+ * If a Survey references an OSM feature, the id is in form: way/[feature id]
+ * If it is not, the id is in form: survey/[ISO8601 datetime string]
  */
 
 @Entity
-data class Note(
+data class Survey(
     @PrimaryKey
-    val id: String,
+    val dateCreated: Date = Date(),
+    val relatedFeatureId: String? = null,
+    val osmNoteId: Long? = null,
     val lon: Double,
     val lat: Double,
     val content: String,
-    val modified: Date = Date(),
+    val dateModified: Date = Date(),
     val photoUri: Uri,
     val audioUri: Uri? = null
 )
