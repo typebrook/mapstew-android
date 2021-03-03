@@ -13,15 +13,18 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.internal.bind.util.ISO8601Utils
 import io.typebrook.mapstew.databinding.FragmentSimpleBottomSheetBinding
-import io.typebrook.mapstew.db.Note
+import io.typebrook.mapstew.db.Survey
 import io.typebrook.mapstew.db.db
 import io.typebrook.mapstew.main.MapViewModel
+import io.typebrook.mapstew.main.MapViewModel.Companion.ID_RAW_SURVEY
 import io.typebrook.mapstew.storage.getPickImageIntent
 import io.typebrook.mapstew.storage.newImageUri
 import kotlinx.android.synthetic.main.fragment_simple_bottom_sheet.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.text.ParseException
+import java.text.ParsePosition
 import java.util.*
 
 /** Abstract base class for (quest) bottom sheets
@@ -51,13 +54,18 @@ class SimpleBottomSheetFragment : Fragment() {
             id ?: return@observe
 
             lifecycleScope.launch {
-                val note: Note = withContext(Dispatchers.IO) {
-                    db.noteDao().getFromId(id).firstOrNull()
+                val key = try {
+                    ISO8601Utils.parse(id, ParsePosition(0))
+                } catch (e: ParseException) {
+                    return@launch
+                }
+                val survey: Survey = withContext(Dispatchers.IO) {
+                    db.surveyDao().getFromKey(key).firstOrNull()
                 } ?: return@launch
-                content.setText(note.content)
+                content.setText(survey.content + survey.osmNoteId)
                 try {
-                    photoUri = note.photoUri
-                    image.setImageURI(note.photoUri)
+                    photoUri = survey.photoUri
+                    image.setImageURI(survey.photoUri)
                 } catch (e: Exception) {
 
                 }
@@ -76,12 +84,12 @@ class SimpleBottomSheetFragment : Fragment() {
             }
         }
 
-        // FIXME Just a quick workround
+        // FIXME Just a quick workaround
         details.setOnLongClickListener {
             lifecycleScope.launch(Dispatchers.IO) {
                 val id = model.focusedFeatureId.value ?: return@launch
-                val note: Note = db.noteDao().getFromId(id).firstOrNull() ?: return@launch
-                db.noteDao().delete(note)
+                val note: Survey = db.surveyDao().getFromKey(ISO8601Utils.parse(id, ParsePosition(0))).firstOrNull() ?: return@launch
+                db.surveyDao().delete(note)
                 withContext(Dispatchers.Main) {
                     model.displayBottomSheet.postValue(false)
                 }
@@ -97,15 +105,15 @@ class SimpleBottomSheetFragment : Fragment() {
             val uri = photoUri ?: return
             photoUri = null
 
-            val note = Note(
-                    id = id,
-                    lon = model.center.value.first,
-                    lat = model.center.value.second,
-                    content = binding.content.text.toString(),
-                    photoUri = uri
+            val survey = Survey(
+                relatedFeatureId = id.takeIf { it != ID_RAW_SURVEY },
+                lon = model.center.value.first,
+                lat = model.center.value.second,
+                content = binding.content.text.toString(),
+                photoUri = uri
             )
             lifecycleScope.launch(Dispatchers.IO) {
-                db.noteDao().insert(note)
+                db.surveyDao().insert(survey)
             }
 
             // exit bottom sheet

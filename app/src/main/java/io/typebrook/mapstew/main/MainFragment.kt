@@ -16,14 +16,14 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.gson.internal.bind.util.ISO8601Utils
 import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
 import io.typebrook.mapstew.R
 import io.typebrook.mapstew.SimpleBottomSheetFragment
 import io.typebrook.mapstew.databinding.FragmentMainBinding
+import io.typebrook.mapstew.db.uploadSurveys
 import io.typebrook.mapstew.geometry.*
-import io.typebrook.mapstew.main.MapViewModel.Companion.ID_NOTE
+import io.typebrook.mapstew.main.MapViewModel.Companion.ID_RAW_SURVEY
 import io.typebrook.mapstew.map.MapboxFragment
 import io.typebrook.mapstew.map.OfflineFragment
 import io.typebrook.mapstew.offline.getLocalMBTiles
@@ -103,8 +103,9 @@ class MainFragment : Fragment() {
                 setItems(R.array.menu_items) { _, which ->
                     when (which) {
                         0 -> OfflineFragment().show(childFragmentManager, null)
-                        1 -> Toast.makeText(requireContext(), "NOTHING", Toast.LENGTH_SHORT).show()
-                        2 -> findNavController().navigate(
+                        1 -> uploadSurveys()
+                        2 -> Toast.makeText(requireContext(), "NOTHING", Toast.LENGTH_SHORT).show()
+                        3 -> findNavController().navigate(
                                 MainFragmentDirections.actionMainFragmentToSettingsFragment()
                         )
                     }
@@ -133,7 +134,7 @@ class MainFragment : Fragment() {
                             requireContext(),
                             android.R.layout.simple_list_item_1
                     ).apply {
-                        val items = listOf(getString(R.string.map_btn_create_note)) + features.map {
+                        val items = listOf(getString(R.string.map_btn_create_survey)) + features.map {
                             it.name ?: it.osmId.substringAfter('/')
                         }
                         addAll(items)
@@ -141,8 +142,7 @@ class MainFragment : Fragment() {
                     setOnItemClickListener { _, _, position, _ ->
                         mapModel.displayBottomSheet.value = true
                         mapModel.focusedFeatureId.value = if (position != 0)
-                            features[position - 1].osmId else
-                            "$ID_NOTE@${ISO8601Utils.format(Date())}"
+                            features[position - 1].osmId else ID_RAW_SURVEY
                         dismiss()
                     }
                 }

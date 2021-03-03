@@ -4,6 +4,7 @@
     <string name="app_name">mapstew</string>
     <string-array name="menu_items">
         <item>離線地圖</item>
+        <item>上傳回報</item>
         <item>介紹</item>
         <item>設定</item>
     </string-array>
@@ -30,7 +31,8 @@
     <string name="displayGrid">顯示格線：</string>
     <string name="in_use">使用中</string>
     <string name="out_of_boundary">超出範圍</string>
-    <string name="map_btn_create_note">新增註解</string>
+    <string name="map_btn_create_survey">新增回報</string>
     <string name="number_features">%s個物件</string>
     <string name="take_photo">拍照</string>
+    <string name="select_capture_image">新增照片</string>
 </resources>

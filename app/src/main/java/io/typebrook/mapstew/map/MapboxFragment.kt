@@ -32,12 +32,12 @@ import com.mapbox.mapboxsdk.style.layers.Property
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
 import io.typebrook.mapstew.R
-import io.typebrook.mapstew.db.Note
+import io.typebrook.mapstew.db.Survey
 import io.typebrook.mapstew.db.db
 import io.typebrook.mapstew.geometry.CRSWrapper
 import io.typebrook.mapstew.livedata.SafeMutableLiveData
 import io.typebrook.mapstew.main.MapViewModel
-import io.typebrook.mapstew.main.MapViewModel.Companion.ID_NOTE
+import io.typebrook.mapstew.main.MapViewModel.Companion.ID_RAW_SURVEY
 import io.typebrook.mapstew.main.zoom
 import io.typebrook.mapstew.network.GithubService
 import io.typebrook.mapstew.offline.MBTilesServer
@@ -214,9 +214,9 @@ class MapboxFragment : SupportMapFragment() {
         }
 
         model.focusedFeatureId.observe(viewLifecycleOwner) { id ->
-            val features = when {
-                id == null -> emptyList()
-                id.startsWith(ID_NOTE) -> model.focusPoint.value
+            val features = when(id) {
+                null -> emptyList()
+                ID_RAW_SURVEY -> model.focusPoint.value
                     ?.let { it: PointF -> projection.fromScreenLocation(it) }
                     ?.let { it: LatLng -> Point.fromLngLat(it.longitude, it.latitude) }
                     ?.let { it: Point -> listOf(Feature.fromGeometry(it)) }
@@ -241,13 +241,13 @@ class MapboxFragment : SupportMapFragment() {
             animateCamera(cameraUpdate, 600)
         }
 
-        db.noteDao().getAll().observe(viewLifecycleOwner) { notes: List<Note> ->
+        db.surveyDao().getAll().observe(viewLifecycleOwner) { surveys: List<Survey> ->
             markers.forEach { it.remove() }
-            notes.forEach { note ->
+            surveys.forEach { survey ->
                 val marker = MarkerOptions()
-                    .position(LatLng(note.lat, note.lon))
-                    .title(note.id)
-                    .snippet(note.content)
+                    .position(LatLng(survey.lat, survey.lon))
+                    .title(survey.relatedFeatureId ?: ISO8601Utils.format(survey.dateCreated))
+                    .snippet(survey.content)
                 addMarker(marker)
             }
         }
