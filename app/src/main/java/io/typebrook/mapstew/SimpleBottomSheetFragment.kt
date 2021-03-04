@@ -23,8 +23,7 @@ import kotlinx.android.synthetic.main.fragment_simple_bottom_sheet.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.text.ParseException
-import java.text.ParsePosition
+import timber.log.Timber
 import java.util.*
 
 /** Abstract base class for (quest) bottom sheets
@@ -36,6 +35,7 @@ class SimpleBottomSheetFragment : Fragment() {
     private val binding by lazy { FragmentSimpleBottomSheetBinding.inflate(layoutInflater) }
     private val model by activityViewModels<MapViewModel>()
 
+    private var survey: Survey? = null
     private var photoUri: Uri? = null
 
     override fun onCreateView(
@@ -49,26 +49,23 @@ class SimpleBottomSheetFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) = with(binding) {
 
         model.focusedFeatureId.observe(viewLifecycleOwner) { id ->
-            details.text = id
             content.text.clear()
+            details.text = id
             id ?: return@observe
 
-            lifecycleScope.launch {
+            lifecycleScope.launch setWithSurvey@{
                 val key = try {
-                    ISO8601Utils.parse(id, ParsePosition(0))
-                } catch (e: ParseException) {
-                    return@launch
+                    id.toLong()
+                } catch (e: NumberFormatException) {
+                    return@setWithSurvey
                 }
-                val survey: Survey = withContext(Dispatchers.IO) {
+                survey = withContext(Dispatchers.IO) {
                     db.surveyDao().getFromKey(key).firstOrNull()
-                } ?: return@launch
-                content.setText(survey.content + survey.osmNoteId)
-                try {
-                    photoUri = survey.photoUri
-                    image.setImageURI(survey.photoUri)
-                } catch (e: Exception) {
-
-                }
+                }?.also {
+                    content.setText(it.content + it.osmNoteId)
+                    photoUri = it.photoUri
+                    image.setImageURI(it.photoUri)
+                } ?: return@setWithSurvey
             }
         }
 
@@ -87,9 +84,7 @@ class SimpleBottomSheetFragment : Fragment() {
         // FIXME Just a quick workaround
         details.setOnLongClickListener {
             lifecycleScope.launch(Dispatchers.IO) {
-                val id = model.focusedFeatureId.value ?: return@launch
-                val note: Survey = db.surveyDao().getFromKey(ISO8601Utils.parse(id, ParsePosition(0))).firstOrNull() ?: return@launch
-                db.surveyDao().delete(note)
+                survey?.let { db.surveyDao().delete(it) }
                 withContext(Dispatchers.Main) {
                     model.displayBottomSheet.postValue(false)
                 }

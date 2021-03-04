@@ -12,8 +12,8 @@ interface SurveyDao {
     @Query("SELECT * FROM survey where osmNoteId is NULL")
     fun listReadyToUpload(): List<Survey>
 
-    @Query("SELECT * FROM survey where dateCreated = :key")
-    fun getFromKey(key: Date): List<Survey>
+    @Query("SELECT * FROM survey where dateCreated = :timeStamp")
+    fun getFromKey(timeStamp: Long): List<Survey>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(survey: Survey)

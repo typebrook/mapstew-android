@@ -60,7 +60,7 @@ class MapViewModel : ViewModel() {
 
     val focusedFeatureId = object : SafeMutableLiveData<String?>(null) {
         override val predicate = { newValue: String? ->
-            if (newValue in listOf(null, ID_RAW_SURVEY)) focusPoint.value = null
+            if (newValue == null) focusPoint.value = null
             value != newValue
         }
     }
