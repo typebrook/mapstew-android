@@ -6,10 +6,13 @@ import android.content.Context
 import android.graphics.PointF
 import android.graphics.RectF
 import android.view.Gravity
+import androidx.collection.forEach
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.JsonArray
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.google.gson.internal.bind.util.ISO8601Utils
 import com.mapbox.geojson.Feature
@@ -24,9 +27,12 @@ import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
 import com.mapbox.mapboxsdk.location.LocationComponentOptions
 import com.mapbox.mapboxsdk.location.modes.CameraMode
+import com.mapbox.mapboxsdk.maps.MapView
 import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.Style
 import com.mapbox.mapboxsdk.maps.SupportMapFragment
+import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager
+import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions
 import com.mapbox.mapboxsdk.style.layers.LineLayer
 import com.mapbox.mapboxsdk.style.layers.Property
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory
@@ -55,6 +61,7 @@ import java.io.FileReader
 
 class MapboxFragment : SupportMapFragment() {
 
+    private val mapView get() = view as MapView
     private val model by activityViewModels<MapViewModel>()
     private val styleFile by lazy {
         File(requireContext().filesDir.absolutePath + File.separator + "rudymap.json")
@@ -177,7 +184,8 @@ class MapboxFragment : SupportMapFragment() {
             }
 
             // Add a new marker on the point
-            focusedMarker = addMarker(MarkerOptions().position(projection.fromScreenLocation(point)))
+            val markerOptions = MarkerOptions().position(projection.fromScreenLocation(point))
+            focusedMarker = addMarker(markerOptions)
 
             // Query features with OSM ID nearby feature
             val bbox = RectF(point.x - 30, point.y + 30, point.x + 30, point.y - 30)
@@ -199,8 +207,8 @@ class MapboxFragment : SupportMapFragment() {
             // Update ViewModel with feature details if needed
             model.details.value = if (requireContext().prefShowHint())
                 selectedFeatures.map { it.id() + " " + it.properties()?.toString() }
-                        .let { if (it.isEmpty()) null else it }
-                        ?.joinToString("\n\n") else
+                    .let { if (it.isEmpty()) null else it }
+                    ?.joinToString("\n\n") else
                 null
         }
 
@@ -239,30 +247,6 @@ class MapboxFragment : SupportMapFragment() {
                     if (minZoom < 18) minZoom - 1 else 18.0
             )
             animateCamera(cameraUpdate, 600)
-        }
-
-        db.surveyDao().getAll().observe(viewLifecycleOwner) { surveys: List<Survey> ->
-            markers.forEach { it.remove() }
-            surveys.forEach { survey ->
-                val marker = MarkerOptions()
-                    .position(LatLng(survey.lat, survey.lon))
-                    .title(survey.relatedFeatureId ?: ISO8601Utils.format(survey.dateCreated))
-                    .snippet(survey.content)
-                addMarker(marker)
-            }
-        }
-
-        setOnMarkerClickListener { marker ->
-            selectMarker(marker)
-            animateCamera {
-                CameraPosition.Builder()
-                    .target(marker.position)
-                    .build()
-            }
-            model.focusedFeatureId.value = marker.title
-            model.details.value = marker.title
-            model.displayBottomSheet.value = true
-            true
         }
     }
 
@@ -315,6 +299,31 @@ class MapboxFragment : SupportMapFragment() {
         )
         style.addLayer(highlightedCasing)
         style.addLayer(highlightedLine)
+
+        // Add symbols for surveys
+        style.addImage("foo", resources.getDrawable(R.drawable.mapbox_marker_icon_default))
+        val symbolManager = SymbolManager(mapView, mapboxMap, style)
+        symbolManager.addClickListener { symbol ->
+            mapboxMap.animateCamera {
+                CameraPosition.Builder()
+                    .target(symbol.latLng)
+                    .build()
+            }
+            model.focusedFeatureId.value = symbol.data?.asJsonObject?.get("key")?.asString
+            model.displayBottomSheet.value = true
+            true
+        }
+        db.surveyDao().getAll().observe(viewLifecycleOwner) { surveys: List<Survey> ->
+            symbolManager.annotations.clear()
+            surveys.map { survey ->
+                SymbolOptions()
+                    .withLatLng(LatLng(survey.lat, survey.lon))
+                    .withIconImage("foo")
+                    .withData(JsonObject().apply{
+                        this.addProperty("key", survey.dateCreated.time.toString())
+                    })
+            }.let (symbolManager::create)
+        }
     }
 
     // FIXME handle permission properly
