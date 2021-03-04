@@ -54,13 +54,8 @@ class SimpleBottomSheetFragment : Fragment() {
             id ?: return@observe
 
             lifecycleScope.launch {
-                val key = try {
-                    ISO8601Utils.parse(id, ParsePosition(0))
-                } catch (e: ParseException) {
-                    return@launch
-                }
                 val survey: Survey = withContext(Dispatchers.IO) {
-                    db.surveyDao().getFromKey(key).firstOrNull()
+                    db.surveyDao().getFromKey(id).firstOrNull()
                 } ?: return@launch
                 content.setText(survey.content + survey.osmNoteId)
                 try {
@@ -88,7 +83,7 @@ class SimpleBottomSheetFragment : Fragment() {
         details.setOnLongClickListener {
             lifecycleScope.launch(Dispatchers.IO) {
                 val id = model.focusedFeatureId.value ?: return@launch
-                val note: Survey = db.surveyDao().getFromKey(ISO8601Utils.parse(id, ParsePosition(0))).firstOrNull() ?: return@launch
+                val note: Survey = db.surveyDao().getFromKey(id).firstOrNull() ?: return@launch
                 db.surveyDao().delete(note)
                 withContext(Dispatchers.Main) {
                     model.displayBottomSheet.postValue(false)

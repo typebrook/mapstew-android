@@ -13,7 +13,7 @@ interface SurveyDao {
     fun listReadyToUpload(): List<Survey>
 
     @Query("SELECT * FROM survey where dateCreated = :key")
-    fun getFromKey(key: Date): List<Survey>
+    fun getFromKey(key: String): List<Survey>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(survey: Survey)
