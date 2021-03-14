@@ -47,7 +47,7 @@ class MainFragment : Fragment() {
         if (savedInstanceState == null) {
             requireActivity().supportFragmentManager.commit {
                 replace(R.id.map_container, MapboxFragment(), null)
-                replace(R.id.bottom_sheet, SimpleBottomSheetFragment(), null)
+                replace(R.id.bottom_sheet_content, SimpleBottomSheetFragment(), null)
 //              add<TangramFragment>(R.id.map_container, null)
             }
         }
