@@ -45,4 +45,5 @@
     <string name="file_provider_name" translatable="false">.fileProvider</string>
     <string name="select_capture_image">select picture</string>
     <string name="placeholder_bottomsheet_title" translatable="false">title</string>
+    <string name="placeholder_path">unnamed path</string>
 </resources>

@@ -26,6 +26,7 @@ import io.typebrook.mapstew.geometry.*
 import io.typebrook.mapstew.main.MapViewModel.Companion.ID_RAW_SURVEY
 import io.typebrook.mapstew.map.MapboxFragment
 import io.typebrook.mapstew.map.OfflineFragment
+import io.typebrook.mapstew.map.TiledFeature.Companion.displayName
 import io.typebrook.mapstew.offline.getLocalMBTiles
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -135,7 +136,7 @@ class MainFragment : Fragment() {
                             android.R.layout.simple_list_item_1
                     ).apply {
                         val items = listOf(getString(R.string.map_btn_create_survey)) + features.map {
-                            it.name ?: it.osmId.substringAfter('/')
+                            it.displayName(requireContext())
                         }
                         addAll(items)
                     }

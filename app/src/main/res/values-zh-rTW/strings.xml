@@ -35,4 +35,5 @@
     <string name="number_features">%s個物件</string>
     <string name="take_photo">拍照</string>
     <string name="select_capture_image">新增照片</string>
+    <string name="placeholder_path">無名步道</string>
 </resources>
