@@ -100,19 +100,28 @@ class MainFragment : Fragment() {
         }
 
         menuButton.setOnClickListener {
-            with(MaterialAlertDialogBuilder(requireContext(), R.style.AlertDialogTheme)) {
-                setItems(R.array.menu_items) { _, which ->
-                    when (which) {
-                        0 -> OfflineFragment().show(childFragmentManager, null)
-                        1 -> uploadSurveys()
-                        2 -> Toast.makeText(requireContext(), "NOTHING", Toast.LENGTH_SHORT).show()
-                        3 -> findNavController().navigate(
-                                MainFragmentDirections.actionMainFragmentToSettingsFragment()
+            with(PopupMenu(requireContext(), it)) {
+                inflate(R.menu.main)
+                setOnMenuItemClickListener { item ->
+                    when (item.itemId) {
+                        R.id.action_offline_maps -> OfflineFragment().show(
+                            childFragmentManager,
+                            null
+                        )
+                        R.id.action_upload_surveys -> uploadSurveys()
+                        R.id.action_introduction -> Toast.makeText(
+                            requireContext(),
+                            "NOTHING",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        R.id.action_settings -> findNavController().navigate(
+                            MainFragmentDirections.actionMainFragmentToSettingsFragment()
                         )
                     }
+                    true
                 }
-                create()
-            }.show()
+                show()
+            }
         }
 
         layersButton.setOnClickListener {

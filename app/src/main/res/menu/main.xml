@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_offline_maps"
+        android:orderInCategory="100"
+        android:title="@string/action_offline_maps"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_upload_surveys"
+        android:orderInCategory="100"
+        android:title="@string/action_upload_surveys"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_introduction"
+        android:orderInCategory="100"
+        android:title="@string/action_introduction"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_settings"
+        android:orderInCategory="100"
+        android:title="@string/action_settings"
+        app:showAsAction="never" />
+</menu>
