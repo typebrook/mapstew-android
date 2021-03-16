@@ -48,6 +48,7 @@ class SimpleSurveyFragment : Fragment() {
 
         model.focusedFeatureId.observe(viewLifecycleOwner) { id ->
             content.text.clear()
+            image.setImageURI(null)
             details.text = id
             id ?: return@observe
 
@@ -113,6 +114,8 @@ class SimpleSurveyFragment : Fragment() {
             val uri = photoUri ?: return
             photoUri = null
 
+            binding.image.setImageURI(uri)
+
             val survey = Survey(
                 relatedFeatureId = id.takeIf { it != ID_RAW_SURVEY },
                 lon = model.center.value.first,
@@ -123,10 +126,6 @@ class SimpleSurveyFragment : Fragment() {
             lifecycleScope.launch(Dispatchers.IO) {
                 db.surveyDao().insert(survey)
             }
-
-            // exit bottom sheet
-            binding.content.text.clear()
-            model.displayBottomSheet.value = false
         }
     }
 
