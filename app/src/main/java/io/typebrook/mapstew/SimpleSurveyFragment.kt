@@ -5,9 +5,12 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore.ACTION_IMAGE_CAPTURE
+import android.provider.MediaStore.EXTRA_OUTPUT
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -23,14 +26,9 @@ import kotlinx.android.synthetic.main.fragment_simple_bottom_sheet.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import java.util.*
 
-/** Abstract base class for (quest) bottom sheets
- *
- * Note: The AbstractBottomSheetFragment currently assumes that it will be inflated with the views
-that are in fragment_quest_answer by any subclass!*/
-class SimpleBottomSheetFragment : Fragment() {
+class SimpleSurveyFragment : Fragment() {
 
     private val binding by lazy { FragmentSimpleBottomSheetBinding.inflate(layoutInflater) }
     private val model by activityViewModels<MapViewModel>()
@@ -39,9 +37,9 @@ class SimpleBottomSheetFragment : Fragment() {
     private var photoUri: Uri? = null
 
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View {
         return binding.root
     }
@@ -50,6 +48,7 @@ class SimpleBottomSheetFragment : Fragment() {
 
         model.focusedFeatureId.observe(viewLifecycleOwner) { id ->
             content.text.clear()
+            image.setImageURI(null)
             details.text = id
             id ?: return@observe
 
@@ -57,15 +56,30 @@ class SimpleBottomSheetFragment : Fragment() {
                 val key = try {
                     id.toLong()
                 } catch (e: NumberFormatException) {
+                    // If it is a new survey, take a photo directly
+                    if (model.displayBottomSheet.value) {
+                        val uri = newImageUri("${ISO8601Utils.format(Date())}.png")
+                        photoUri = uri
+                        startActivityForResult(
+                            Intent(ACTION_IMAGE_CAPTURE).putExtra(EXTRA_OUTPUT, uri),
+                            REQUEST_IMAGE_CAPTURE
+                        )
+                        Toast.makeText(
+                            requireContext(),
+                            getString(R.string.hint_take_photo),
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
                     return@setWithSurvey
                 }
+
                 survey = withContext(Dispatchers.IO) {
                     db.surveyDao().getFromKey(key).firstOrNull()
                 }?.also {
                     content.setText(it.content + it.osmNoteId)
                     photoUri = it.photoUri
                     image.setImageURI(it.photoUri)
-                } ?: return@setWithSurvey
+                }
             }
         }
 
@@ -100,6 +114,8 @@ class SimpleBottomSheetFragment : Fragment() {
             val uri = photoUri ?: return
             photoUri = null
 
+            binding.image.setImageURI(uri)
+
             val survey = Survey(
                 relatedFeatureId = id.takeIf { it != ID_RAW_SURVEY },
                 lon = model.center.value.first,
@@ -110,10 +126,6 @@ class SimpleBottomSheetFragment : Fragment() {
             lifecycleScope.launch(Dispatchers.IO) {
                 db.surveyDao().insert(survey)
             }
-
-            // exit bottom sheet
-            binding.content.text.clear()
-            model.displayBottomSheet.value = false
         }
     }
 

@@ -44,4 +44,5 @@
     <string name="select_capture_image">select picture</string>
     <string name="placeholder_bottomsheet_title" translatable="false">title</string>
     <string name="placeholder_path">unnamed path</string>
+    <string name="hint_take_photo">Please take a photo</string>
 </resources>

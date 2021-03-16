@@ -15,11 +15,10 @@ import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
 import io.typebrook.mapstew.R
-import io.typebrook.mapstew.SimpleBottomSheetFragment
+import io.typebrook.mapstew.SimpleSurveyFragment
 import io.typebrook.mapstew.databinding.FragmentMainBinding
 import io.typebrook.mapstew.db.uploadSurveys
 import io.typebrook.mapstew.geometry.*
@@ -48,7 +47,7 @@ class MainFragment : Fragment() {
         if (savedInstanceState == null) {
             requireActivity().supportFragmentManager.commit {
                 replace(R.id.map_container, MapboxFragment(), null)
-                replace(R.id.bottom_sheet_content, SimpleBottomSheetFragment(), null)
+                replace(R.id.bottom_sheet_content, SimpleSurveyFragment(), null)
 //              add<TangramFragment>(R.id.map_container, null)
             }
         }
