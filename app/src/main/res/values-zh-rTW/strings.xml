@@ -34,4 +34,5 @@
     <string name="take_photo">拍照</string>
     <string name="select_capture_image">新增照片</string>
     <string name="placeholder_path">無名步道</string>
+    <string name="hint_take_photo">請先拍照</string>
 </resources>
