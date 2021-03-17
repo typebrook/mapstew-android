@@ -7,6 +7,7 @@ import android.graphics.PointF
 import android.graphics.RectF
 import android.view.Gravity
 import androidx.collection.forEach
+import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.lifecycleScope
@@ -251,6 +252,8 @@ class MapboxFragment : SupportMapFragment() {
     }
 
     private fun onStyleLoaded(mapboxMap: MapboxMap, style: Style) {
+        style.addImagesByDrawables()
+
         model.locateUser.observe(this@MapboxFragment) locate@{ enable ->
             if (enable) mapboxMap.enableLocationComponent(style)
         }
@@ -301,7 +304,6 @@ class MapboxFragment : SupportMapFragment() {
         style.addLayer(highlightedLine)
 
         // Add symbols for surveys
-        style.addImage("foo", resources.getDrawable(R.drawable.mapbox_marker_icon_default))
         val symbolManager = SymbolManager(mapView, mapboxMap, style)
         symbolManager.addClickListener { symbol ->
             mapboxMap.animateCamera (
@@ -323,7 +325,7 @@ class MapboxFragment : SupportMapFragment() {
             surveys.map { survey ->
                 SymbolOptions()
                     .withLatLng(LatLng(survey.lat, survey.lon))
-                    .withIconImage("foo")
+                    .withIconImage(IMAGE_NAME_DEFAULT_MARKER)
                     .withData(JsonObject().apply{
                         this.addProperty("key", survey.dateCreated.time.toString())
                     })
@@ -390,5 +392,15 @@ class MapboxFragment : SupportMapFragment() {
             }
         }
         create().show()
+    }
+
+    private fun Style.addImagesByDrawables() {
+        val imageDefaultMarker =
+            ResourcesCompat.getDrawable(resources, R.drawable.mapbox_marker_icon_default, null)
+        imageDefaultMarker?.let { addImage(IMAGE_NAME_DEFAULT_MARKER, it) }
+    }
+
+    companion object {
+        const val IMAGE_NAME_DEFAULT_MARKER = "default_marker"
     }
 }
