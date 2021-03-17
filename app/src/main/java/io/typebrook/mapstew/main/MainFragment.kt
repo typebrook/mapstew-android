@@ -151,7 +151,8 @@ class MainFragment : Fragment() {
                     setOnItemClickListener { _, _, position, _ ->
                         mapModel.displayBottomSheet.value = true
                         mapModel.focusedFeatureId.value = if (position != 0)
-                            features[position - 1].osmId else ID_RAW_SURVEY
+                            features[position - 1].osmId else
+                            ID_RAW_SURVEY
                         dismiss()
                     }
                 }
