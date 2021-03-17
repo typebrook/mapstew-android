@@ -304,16 +304,21 @@ class MapboxFragment : SupportMapFragment() {
         style.addImage("foo", resources.getDrawable(R.drawable.mapbox_marker_icon_default))
         val symbolManager = SymbolManager(mapView, mapboxMap, style)
         symbolManager.addClickListener { symbol ->
-            mapboxMap.animateCamera {
-                CameraPosition.Builder()
-                    .target(symbol.latLng)
-                    .build()
-            }
-            model.focusedFeatureId.value = symbol.data?.asJsonObject?.get("key")?.asString
-            model.displayBottomSheet.value = true
+            mapboxMap.animateCamera (
+                CameraUpdateFactory.newLatLng(symbol.latLng),
+                object: MapboxMap.CancelableCallback {
+                    override fun onFinish() {
+                        model.focusedFeatureId.value = symbol.data?.asJsonObject?.get("key")?.asString
+                        model.displayBottomSheet.value = true
+                    }
+                    override fun onCancel(){}
+                }
+            )
             true
         }
         db.surveyDao().getAll().observe(viewLifecycleOwner) { surveys: List<Survey> ->
+            if (symbolManager.annotations.size() == surveys.size) return@observe
+
             symbolManager.annotations.clear()
             surveys.map { survey ->
                 SymbolOptions()
