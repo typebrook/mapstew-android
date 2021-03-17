@@ -317,6 +317,8 @@ class MapboxFragment : SupportMapFragment() {
             true
         }
         db.surveyDao().getAll().observe(viewLifecycleOwner) { surveys: List<Survey> ->
+            if (symbolManager.annotations.size() == surveys.size) return@observe
+
             symbolManager.annotations.clear()
             surveys.map { survey ->
                 SymbolOptions()

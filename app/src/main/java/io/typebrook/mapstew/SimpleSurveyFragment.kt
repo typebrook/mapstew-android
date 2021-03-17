@@ -11,6 +11,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -47,6 +48,7 @@ class SimpleSurveyFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) = with(binding) {
 
         model.focusedFeatureId.observe(viewLifecycleOwner) { id ->
+            survey = null
             content.text.clear()
             image.setImageURI(null)
             details.text = id
@@ -75,8 +77,8 @@ class SimpleSurveyFragment : Fragment() {
 
                 survey = withContext(Dispatchers.IO) {
                     db.surveyDao().getFromKey(key).firstOrNull()
-                }?.also {
-                    content.setText(it.content + it.osmNoteId)
+                }?.also { it ->
+                    content.setText(it.content)
                     photoUri = it.photoUri
                     image.setImageURI(it.photoUri)
                 }
@@ -105,6 +107,18 @@ class SimpleSurveyFragment : Fragment() {
             }
             true
         }
+
+        with(content) {
+            addTextChangedListener {
+                val newSurvey = survey?.copy(content = it.toString()) ?: return@addTextChangedListener
+
+                lifecycleScope.launch(Dispatchers.IO) {
+                    db.surveyDao().insert(newSurvey)
+                }
+            }
+        }
+
+        Unit
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
