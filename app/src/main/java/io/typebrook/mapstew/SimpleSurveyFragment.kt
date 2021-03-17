@@ -78,7 +78,10 @@ class SimpleSurveyFragment : Fragment() {
                 survey = withContext(Dispatchers.IO) {
                     db.surveyDao().getFromKey(key).firstOrNull()
                 }?.also { it ->
-                    content.setText(it.content)
+                    with(content) {
+                        setText(it.content)
+                        setSelection(it.content.length)
+                    }
                     photoUri = it.photoUri
                     image.setImageURI(it.photoUri)
                 }
@@ -130,15 +133,16 @@ class SimpleSurveyFragment : Fragment() {
 
             binding.image.setImageURI(uri)
 
-            val survey = Survey(
+            val newSurvey = Survey(
                 relatedFeatureId = id.takeIf { it != ID_RAW_SURVEY },
                 lon = model.center.value.first,
                 lat = model.center.value.second,
                 content = binding.content.text.toString(),
                 photoUri = uri
             )
+            survey = newSurvey
             lifecycleScope.launch(Dispatchers.IO) {
-                db.surveyDao().insert(survey)
+                db.surveyDao().insert(newSurvey)
             }
         }
     }
