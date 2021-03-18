@@ -119,11 +119,13 @@
 
     <LinearLayout
         android:id="@+id/bottom_sheet"
-        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="14dp"
         android:background="@drawable/shape_bottom_sheet"
+        android:clickable="true"
+        android:focusable="true"
+        android:orientation="vertical"
         app:behavior_hideable="true"
         app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
         app:layout_insetEdge="bottom">
