@@ -306,8 +306,9 @@ class MapboxFragment : SupportMapFragment() {
         // Add symbols for surveys
         val symbolManager = SymbolManager(mapView, mapboxMap, style)
         symbolManager.addClickListener { symbol ->
-            mapboxMap.animateCamera (
-                CameraUpdateFactory.newLatLng(symbol.latLng),
+            val targetZoom = mapboxMap.cameraPosition.zoom.let { if (it > 16.0) it else 16.0 }
+                mapboxMap.animateCamera (
+                CameraUpdateFactory.newLatLngZoom(symbol.latLng, targetZoom),
                 object: MapboxMap.CancelableCallback {
                     override fun onFinish() {
                         model.focusedFeatureId.value = symbol.data?.asJsonObject?.get("key")?.asString
