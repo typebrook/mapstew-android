@@ -6,16 +6,13 @@ import android.content.Context
 import android.graphics.PointF
 import android.graphics.RectF
 import android.view.Gravity
-import androidx.collection.forEach
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.JsonArray
-import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import com.google.gson.internal.bind.util.ISO8601Utils
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
@@ -28,10 +25,7 @@ import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
 import com.mapbox.mapboxsdk.location.LocationComponentOptions
 import com.mapbox.mapboxsdk.location.modes.CameraMode
-import com.mapbox.mapboxsdk.maps.MapView
-import com.mapbox.mapboxsdk.maps.MapboxMap
-import com.mapbox.mapboxsdk.maps.Style
-import com.mapbox.mapboxsdk.maps.SupportMapFragment
+import com.mapbox.mapboxsdk.maps.*
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions
 import com.mapbox.mapboxsdk.style.layers.LineLayer
@@ -326,7 +320,9 @@ class MapboxFragment : SupportMapFragment() {
             surveys.map { survey ->
                 SymbolOptions()
                     .withLatLng(LatLng(survey.lat, survey.lon))
-                    .withIconImage(IMAGE_NAME_DEFAULT_MARKER)
+                    .withIconImage(
+                        if (survey.osmNoteId == null) IMAGE_NAME_DEFAULT_MARKER else IMAGE_NAME_UPLOADED_NOTE
+                    )
                     .withData(JsonObject().apply{
                         this.addProperty("key", survey.dateCreated.time.toString())
                     })
@@ -398,10 +394,16 @@ class MapboxFragment : SupportMapFragment() {
     private fun Style.addImagesByDrawables() {
         val imageDefaultMarker =
             ResourcesCompat.getDrawable(resources, R.drawable.mapbox_marker_icon_default, null)
-        imageDefaultMarker?.let { addImage(IMAGE_NAME_DEFAULT_MARKER, it) }
+                ?: return
+        addImage(IMAGE_NAME_DEFAULT_MARKER, imageDefaultMarker)
+
+        val uploadedMarker = ResourcesCompat.getDrawable(resources, R.drawable.purple_marker, null)
+            ?: return
+        addImage(IMAGE_NAME_UPLOADED_NOTE, uploadedMarker)
     }
 
     companion object {
         const val IMAGE_NAME_DEFAULT_MARKER = "default_marker"
+        const val IMAGE_NAME_UPLOADED_NOTE = "uploaded_note"
     }
 }
