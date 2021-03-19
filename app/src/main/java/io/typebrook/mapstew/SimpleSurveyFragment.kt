@@ -84,6 +84,9 @@ class SimpleSurveyFragment : Fragment() {
                     }
                     photoUri = it.photoUri
                     image.setImageURI(it.photoUri)
+                    if (it.osmNoteId != null) {
+                        details.text = "Note: ${it.osmNoteId}"
+                    }
                 }
             }
         }

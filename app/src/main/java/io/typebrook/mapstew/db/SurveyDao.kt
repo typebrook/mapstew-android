@@ -15,6 +15,9 @@ interface SurveyDao {
     @Query("SELECT * FROM survey where dateCreated = :timeStamp")
     fun getFromKey(timeStamp: Long): List<Survey>
 
+    @Update(entity = Survey::class)
+    fun update(survey: Survey)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(survey: Survey)
 
