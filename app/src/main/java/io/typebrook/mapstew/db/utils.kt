@@ -22,7 +22,7 @@ val Fragment.db get() = AppDatabase.getDatabase(requireContext())
 
 fun Fragment.uploadSurveys() {
     val osm = OsmConnection(
-        "https://master.apis.dev.openstreetmap.org/api/0.6/",
+        "https://openstreetmap.org/api/0.6/",
         "whatever", null
     )
     lifecycleScope.launch(Dispatchers.IO) {
