@@ -70,7 +70,9 @@ class MapViewModel : ViewModel() {
             focusPoint.value == null && focusedFeatureId.value == null && !displayBottomSheet.value
         }
     }
-    val locateUser = SafeMutableLiveData(false)
+    val locateUser = object : SafeMutableLiveData<Boolean>(false) {
+        override val predicate = { _: Boolean -> true }
+    }
     val displayGrid = SafeMutableLiveData(false)
     val displayLayers = SafeMutableLiveData(false)
     val displayBottomSheet = object : SafeMutableLiveData<Boolean>(false) {
