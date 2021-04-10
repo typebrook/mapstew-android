@@ -2,30 +2,28 @@ package io.typebrook.mapstew.map
 
 import android.annotation.SuppressLint
 import android.app.Dialog
-import android.content.Context
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.BaseAdapter
+import android.widget.ArrayAdapter
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import io.typebrook.mapstew.R
-import io.typebrook.mapstew.databinding.OfflineMapItemBinding
 import io.typebrook.mapstew.main.MapViewModel
 import io.typebrook.mapstew.network.DownloadWorker
 import io.typebrook.mapstew.network.DownloadWorker.Companion.DATA_KEY_PROGRESS
 import io.typebrook.mapstew.offline.getLocalMBTiles
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import io.typebrook.mapstew.databinding.OfflineMapItemBinding
+import kotlinx.android.synthetic.main.offline_map_item.view.*
 
 
 // TODO i18n for texts
 class OfflineFragment : DialogFragment() {
 
     val mapModel by activityViewModels<MapViewModel>()
-    private val workManager by lazy { WorkManager.getInstance(requireContext()) }
 
     inner class OfflineMap(val displayName: String, val path: String)
 
@@ -45,17 +43,17 @@ class OfflineFragment : DialogFragment() {
     )
 
     private val adapter by lazy {
-        object : BaseAdapter() {
+        object : ArrayAdapter<OfflineMap>(requireContext(), 0, maps) {
+            private val workManager by lazy { WorkManager.getInstance(requireContext()) }
+
             @SuppressLint("ViewHolder")
-            override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-                val map = getItem(position)
-                val layoutInflater =
-                    requireContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
-                val binding = OfflineMapItemBinding.inflate(layoutInflater)
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val map = getItem(position)!!
+                val view = convertView ?: OfflineMapItemBinding.inflate(layoutInflater).root
 
-                binding.name.text = map.displayName
+                view.name.text = map.displayName
 
-                with(binding.button) {
+                with(view.button) {
                     val localMBTiles = map.path.substringAfterLast("/")
 
                     workManager.getWorkInfosByTagLiveData(localMBTiles)
@@ -68,7 +66,7 @@ class OfflineFragment : DialogFragment() {
                                         if (localMBTiles !in value &&
                                             localMBTiles in requireContext().getLocalMBTiles()
                                         ) {
-                                            value = requireContext().getLocalMBTiles()
+                                            postValue(requireContext().getLocalMBTiles())
                                         }
                                     }
                                 }
@@ -85,7 +83,7 @@ class OfflineFragment : DialogFragment() {
                                     )
                                 }
                                 else -> {
-                                    text = "Calculating"
+                                    text = "計算中"
                                 }
                             }
                         }
@@ -107,12 +105,9 @@ class OfflineFragment : DialogFragment() {
                     }
                 }
 
-                return binding.root
+                return view
             }
 
-            override fun getCount(): Int = maps.size
-            override fun getItem(position: Int): OfflineMap = maps[position]
-            override fun getItemId(position: Int): Long = getItem(position).hashCode().toLong()
         }
     }
 
