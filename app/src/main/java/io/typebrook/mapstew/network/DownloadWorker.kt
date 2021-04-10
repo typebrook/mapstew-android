@@ -100,8 +100,10 @@ class DownloadWorker(private val context: Context, params: WorkerParameters) :
 
                     progress += read
                     val progressString = (progress / fileSize * 100).toInt().toString() + "%"
+                    val progressDetails = "%.1f".format(progress / 1024 / 1024) +
+                            "MB/${fileSize / 1024 / 1024}MB  $progressString"
                     val foregroundInfo =
-                        ForegroundInfo(notificationId, createNotification(progressString))
+                        ForegroundInfo(notificationId, createNotification(progressDetails))
                     setForegroundAsync(foregroundInfo).get()
                     setProgressAsync(workDataOf(DATA_KEY_PROGRESS to progressString))
                     Timber.d("Write stream body to storage: $progressString $progress/$fileSize")
