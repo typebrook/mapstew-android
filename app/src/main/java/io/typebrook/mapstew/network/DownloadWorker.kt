@@ -1,7 +1,10 @@
 package io.typebrook.mapstew.network
 
 import android.app.Notification
+import android.content.ContentValues
 import android.content.Context
+import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteException
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LiveData
@@ -14,8 +17,6 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.util.concurrent.ExecutionException
 
-const val KEY_PATH = "path"
-
 // TODO i18n for non logger text
 private const val NOTIFICATION_CHANNEL_ID = "DOWNLOAD"
 
@@ -23,7 +24,8 @@ private const val NOTIFICATION_CHANNEL_ID = "DOWNLOAD"
 class DownloadWorker(private val context: Context, params: WorkerParameters) :
     CoroutineWorker(context, params) {
 
-    private val path: String = inputData.getString(KEY_PATH) ?: throw NoPathSpecifiedException
+    private val path: String = inputData.getString(KEY_PATH) ?: throw InputNotEnoughException
+    private val urlTemplate: String = inputData.getString(KEY_URL_TEMPLATE) ?: throw InputNotEnoughException
     private val fileName get() = path.substringAfterLast("/")
     private val unfinishedFileName get() = "$fileName.tmp"
     private val notificationId get() = path.hashCode()
@@ -54,13 +56,19 @@ class DownloadWorker(private val context: Context, params: WorkerParameters) :
         Timber.d("Server contacted and has file")
         val writtenToDisk: Boolean = writeResponseBodyToStorage(body, unfinishedFileName)
         Timber.d("File saved? $writtenToDisk")
+        if (!writtenToDisk) return Result.failure()
 
-        return if (writtenToDisk) {
-            context.getDatabasePath(unfinishedFileName).renameTo(context.getDatabasePath(fileName))
-            Result.success()
+        val dbFile = context.getDatabasePath(fileName)
+        context.getDatabasePath(unfinishedFileName).renameTo(dbFile)
+        val urlTemplateInserted = insertUrlTemplate(dbFile, urlTemplate)
+        if (!urlTemplateInserted) {
+            Timber.d("Fail to insert url template")
+            return Result.failure()
         } else {
-            Result.failure()
+            Timber.d("Success to insert url template")
         }
+
+        return Result.success()
     }
 
     private fun createNotification(progress: String): Notification =
@@ -119,11 +127,31 @@ class DownloadWorker(private val context: Context, params: WorkerParameters) :
         false
     }
 
+    fun insertUrlTemplate(dbFile: File, urlTemplate: String): Boolean = try {
+        SQLiteDatabase.openDatabase(dbFile.path, null, SQLiteDatabase.OPEN_READWRITE).use { db ->
+            val record = ContentValues().apply {
+                put("name", KEY_URL_TEMPLATE)
+                put("value", urlTemplate)
+            }
+            db.insertWithOnConflict("metadata", null, record, SQLiteDatabase.CONFLICT_REPLACE)
+        }
+        true
+    } catch (e: SQLiteException) {
+        false
+    }
+
     companion object {
 
+        const val KEY_PATH = "path"
+        const val KEY_URL_TEMPLATE = "url_template"
         const val DATA_KEY_PROGRESS = "PROGRESS"
 
-        fun enqueue(context: Context, path: String, tag: String): LiveData<WorkInfo> {
+        fun enqueue(
+            context: Context,
+            path: String,
+            urlTemplate: String,
+            tag: String
+        ): LiveData<WorkInfo> {
             val workManager = WorkManager.getInstance(context)
             val constraints = Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -131,7 +159,12 @@ class DownloadWorker(private val context: Context, params: WorkerParameters) :
             val workRequest = OneTimeWorkRequestBuilder<DownloadWorker>()
                 .addTag(tag)
                 .setConstraints(constraints)
-                .setInputData(workDataOf(KEY_PATH to path))
+                .setInputData(
+                    workDataOf(
+                        KEY_PATH to path,
+                        KEY_URL_TEMPLATE to urlTemplate
+                    )
+                )
                 .build()
             workManager.enqueueUniqueWork(
                 path,
@@ -141,6 +174,6 @@ class DownloadWorker(private val context: Context, params: WorkerParameters) :
             return workManager.getWorkInfoByIdLiveData(workRequest.id)
         }
 
-        object NoPathSpecifiedException : Exception()
+        object InputNotEnoughException : Exception()
     }
 }

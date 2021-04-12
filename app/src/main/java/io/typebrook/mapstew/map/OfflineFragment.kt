@@ -25,20 +25,23 @@ class OfflineFragment : DialogFragment() {
 
     val mapModel by activityViewModels<MapViewModel>()
 
-    inner class OfflineMap(val displayName: String, val path: String)
+    inner class OfflineMap(val displayName: String, val path: String, val urlTemplate: String)
 
     val maps = listOf(
         OfflineMap(
             displayName = "Contours",
-            path = "typebrook/contours/releases/download/2020/contours.mbtiles"
+            path = "typebrook/contours/releases/download/2020/contours.mbtiles",
+            urlTemplate = "https://typebrook.github.io/contours/tiles/{z}/{x}/{y}.pbf"
         ),
         OfflineMap(
             displayName = "Mapstew",
-            path = "typebrook/mapstew/releases/download/cache-2020.12.11/mapstew.mbtiles"
+            path = "typebrook/mapstew/releases/download/cache-2020.12.11/mapstew.mbtiles",
+            urlTemplate = "https://typebrook.github.io/mapstew/tiles/{z}/{x}/{y}.pbf"
         ),
         OfflineMap(
             displayName = "Hillshade",
-            path = "osmhacktw/terrain-rgb/releases/download/2020/terrain-rgb.mbtiles"
+            path = "osmhacktw/terrain-rgb/releases/download/2020/terrain-rgb.mbtiles",
+            urlTemplate = "https://osmhacktw.github.io/terrain-rgb/tiles/{z}/{x}/{y}.png"
         )
     )
 
@@ -90,7 +93,7 @@ class OfflineFragment : DialogFragment() {
 
                     setOnClickListener {
                         isClickable = false
-                        DownloadWorker.enqueue(requireContext(), map.path, localMBTiles)
+                        DownloadWorker.enqueue(requireContext(), map.path, map.urlTemplate, localMBTiles)
                     }
 
                     mapModel.mbTilesList.observe(this@OfflineFragment) { list ->
