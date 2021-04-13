@@ -27,8 +27,11 @@ import io.typebrook.mapstew.map.MapboxFragment
 import io.typebrook.mapstew.map.OfflineFragment
 import io.typebrook.mapstew.map.TiledFeature.Companion.displayName
 import io.typebrook.mapstew.offline.getLocalMBTiles
+import io.typebrook.mapstew.offline.importMBTilesIntoMbgl
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.util.*
 
 
@@ -36,6 +39,7 @@ class MainFragment : Fragment() {
 
     private val mapModel by activityViewModels<MapViewModel>()
     private val binding by lazy { FragmentMainBinding.inflate(layoutInflater) }
+    private val mapFragment: Fragment by lazy { MapboxFragment() }
 
     override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -46,7 +50,7 @@ class MainFragment : Fragment() {
 
         if (savedInstanceState == null) {
             requireActivity().supportFragmentManager.commit {
-                replace(R.id.map_container, MapboxFragment(), null)
+                replace(R.id.map_container, mapFragment, null)
                 replace(R.id.bottom_sheet_content, SimpleSurveyFragment(), null)
 //              add<TangramFragment>(R.id.map_container, null)
             }
@@ -56,6 +60,25 @@ class MainFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) = with(binding) {
+
+        mapModel.mbTilesList.observe(viewLifecycleOwner) { list ->
+            if (list.isEmpty()) return@observe
+
+            // FIXME error handling
+            lifecycleScope.launch(Dispatchers.IO) {
+                requireActivity().supportFragmentManager.commit {
+                    remove(mapFragment)
+                    Timber.d("jojojo remove!")
+                }
+                list.forEach {
+                    requireContext().importMBTilesIntoMbgl(it)
+                }
+                requireActivity().supportFragmentManager.commit {
+                    replace(R.id.map_container, mapFragment)
+                    Timber.d("jojojo replace!")
+                }
+            }
+        }
 
         // Update text of coordinate by center of map and current coordinate reference system
         MediatorLiveData<Int>().apply {

@@ -26,12 +26,14 @@ import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
 import com.mapbox.mapboxsdk.location.LocationComponentOptions
 import com.mapbox.mapboxsdk.location.modes.CameraMode
 import com.mapbox.mapboxsdk.maps.*
+import com.mapbox.mapboxsdk.offline.OfflineManager
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolManager
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions
 import com.mapbox.mapboxsdk.style.layers.LineLayer
 import com.mapbox.mapboxsdk.style.layers.Property
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
+import com.mapbox.mapboxsdk.style.sources.RasterDemSource
 import io.typebrook.mapstew.R
 import io.typebrook.mapstew.db.Survey
 import io.typebrook.mapstew.db.db
@@ -41,9 +43,6 @@ import io.typebrook.mapstew.main.MapViewModel
 import io.typebrook.mapstew.main.MapViewModel.Companion.ID_RAW_SURVEY
 import io.typebrook.mapstew.main.zoom
 import io.typebrook.mapstew.network.GithubService
-import io.typebrook.mapstew.offline.MBTilesServer
-import io.typebrook.mapstew.offline.MBTilesSource
-import io.typebrook.mapstew.offline.MBTilesSourceException
 import io.typebrook.mapstew.preference.prefShowHint
 import kotlinx.android.synthetic.main.fragment_simple_bottom_sheet.view.*
 import kotlinx.android.synthetic.main.input_degree.*
@@ -99,30 +98,30 @@ class MapboxFragment : SupportMapFragment() {
         }
 
         model.mbTilesList.observe(this) { list ->
-            list.forEach { mbtiles ->
-                // Create MBTilesSource
-                val file = context.getDatabasePath(mbtiles)
-                val sourceId = mbtiles.substringBefore(".mbtiles")
-                try {
-                    MBTilesSource(file, sourceId).apply { activate() }
-                } catch (e: MBTilesSourceException.CouldNotReadFileException) {
-                    // TODO Deal with error if fail to read MBTiles
-                }
-            }
+//            list.forEach { mbtiles ->
+//                // Create MBTilesSource
+//                val file = context.getDatabasePath(mbtiles)
+//                val ourceId = mbtiles.substringBefore(".mbtiles")
+//                try {
+//                    MBTilesSource(file, sourceId).apply { activate() }
+//                } catch (e: MBTilesSourceException.CouldNotReadFileException) {
+//                    // TODO Deal with error if fail to read MBTiles
+//                }
+//            }
 
             try {
                 with(JsonParser.parseReader(FileReader(styleFile)).asJsonObject) {
 
                     // Override sources with local MBTiles
-                    getAsJsonObject("sources")?.run {
-                        MBTilesServer.sources.forEach {
-                            val source = it.value
-                            with(getAsJsonObject(source.id)) {
-                                add("tiles", JsonArray().apply { add(source.url) })
-                                remove("url")
-                            }
-                        }
-                    }
+//                    getAsJsonObject("sources")?.run {
+//                        MBTilesServer.sources.forEach {
+//                            val source = it.value
+//                            with(getAsJsonObject(source.id)) {
+//                                add("tiles", JsonArray().apply { add(source.url) })
+//                                remove("url")
+//                            }
+//                        }
+//                    }
                     // Override glyphs and sprite with asset
                     addProperty("glyphs", "asset://fonts/KlokanTech%20{fontstack}/{range}.pbf")
 
