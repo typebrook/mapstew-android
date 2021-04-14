@@ -20,8 +20,9 @@ import io.typebrook.mapstew.main.MapViewModel
 import io.typebrook.mapstew.offline.OfflineMap
 import io.typebrook.mapstew.offline.getLocalMBTiles
 import io.typebrook.mapstew.offline.downloadableMaps
+import io.typebrook.mapstew.offline.importMBTilesIntoMbgl
 import kotlinx.android.synthetic.main.offline_map_item.view.*
-import timber.log.Timber
+import java.io.File
 
 
 // TODO i18n for texts
@@ -41,16 +42,20 @@ class OfflineFragment : DialogFragment() {
                 view.name.text = map.displayName
 
                 with(view.button) {
-                    val localMBTiles = map.path.substringAfterLast("/")
-
                     setOnClickListener {
                         isClickable = false
-                        val id = download(map)
-                        Timber.d("jojojo $id")
+
+                        val localMBTiles = File(requireContext().filesDir, map.fileName)
+                        if (localMBTiles.exists())  {
+                            requireContext().importMBTilesIntoMbgl(localMBTiles, map.urlTemplate)
+                        }
+                        else {
+                            download(map)
+                        }
                     }
 
                     mapModel.mbTilesList.observe(this@OfflineFragment) { list ->
-                        if (localMBTiles in list) {
+                        if (map.fileName in list) {
                             text = getString(R.string.in_use)
                             isClickable = false
                             setBackgroundColor(resources.getColor(android.R.color.darker_gray))
@@ -79,8 +84,9 @@ class OfflineFragment : DialogFragment() {
 
     private fun download(map: OfflineMap): Long {
         val request = DownloadManager.Request(Uri.parse(map.path)).apply {
+            val fileName = map.path.substringAfterLast('/')
             setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
-            setTitle(map.path.substringAfterLast('/'))
+            setTitle(fileName)
             setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
         }
         val manager = requireActivity().getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
