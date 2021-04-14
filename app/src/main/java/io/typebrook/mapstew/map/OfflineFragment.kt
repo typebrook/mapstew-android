@@ -12,14 +12,14 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
-import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.typebrook.mapstew.R
 import io.typebrook.mapstew.databinding.OfflineMapItemBinding
 import io.typebrook.mapstew.main.MapViewModel
-import io.typebrook.mapstew.network.DownloadWorker.Companion.DATA_KEY_PROGRESS
+import io.typebrook.mapstew.offline.OfflineMap
 import io.typebrook.mapstew.offline.getLocalMBTiles
+import io.typebrook.mapstew.offline.downloadableMaps
 import kotlinx.android.synthetic.main.offline_map_item.view.*
 import timber.log.Timber
 
@@ -29,28 +29,8 @@ class OfflineFragment : DialogFragment() {
 
     val mapModel by activityViewModels<MapViewModel>()
 
-    inner class OfflineMap(val displayName: String, val path: String, val urlTemplate: String)
-
-    val maps = listOf(
-        OfflineMap(
-            displayName = "Contours",
-            path = "https://github.com/typebrook/contours/releases/download/2020/contours.mbtiles",
-            urlTemplate = "https://typebrook.github.io/contours/tiles/{z}/{x}/{y}.pbf"
-        ),
-        OfflineMap(
-            displayName = "Mapstew",
-            path = "https://github.com/typebrook/mapstew/releases/download/cache-2020.12.11/mapstew.mbtiles",
-            urlTemplate = "https://typebrook.github.io/mapstew/tiles/{z}/{x}/{y}.pbf"
-        ),
-        OfflineMap(
-            displayName = "Hillshade",
-            path = "https://github.com/osmhacktw/terrain-rgb/releases/download/2020/terrain-rgb.mbtiles",
-            urlTemplate = "https://osmhacktw.github.io/terrain-rgb/tiles/{z}/{x}/{y}.png"
-        )
-    )
-
     private val adapter by lazy {
-        object : ArrayAdapter<OfflineMap>(requireContext(), 0, maps) {
+        object : ArrayAdapter<OfflineMap>(requireContext(), 0, downloadableMaps) {
             private val workManager by lazy { WorkManager.getInstance(requireContext()) }
 
             @SuppressLint("ViewHolder")
@@ -99,9 +79,8 @@ class OfflineFragment : DialogFragment() {
 
     private fun download(map: OfflineMap): Long {
         val request = DownloadManager.Request(Uri.parse(map.path)).apply {
-            val fileName = map.path.substringAfterLast('/')
             setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
-            setTitle("Downloading $fileName")
+            setTitle(map.path.substringAfterLast('/'))
             setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
         }
         val manager = requireActivity().getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
