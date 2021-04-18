@@ -12,6 +12,7 @@ data class OfflineMap(
     val urlTemplate: String
 ) {
     val fileName get() = path.substringAfterLast('/')
+    fun localFile(context: Context) = context.getDatabasePath(fileName)
 }
 
 val downloadableMaps = listOf(

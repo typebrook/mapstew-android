@@ -90,7 +90,7 @@ object MBTilesServer : Runnable {
                 println("HTTP/1.0 200 OK")
                 println("Content-Type: " + detectMimeType(source.format))
                 println("Content-Length: " + bytes.size)
-                if (source.isVector) println("Content-Encoding: gzip")
+//                if (source.isVector) println("Content-Encoding: gzip")
                 println()
                 write(bytes)
                 flush()
