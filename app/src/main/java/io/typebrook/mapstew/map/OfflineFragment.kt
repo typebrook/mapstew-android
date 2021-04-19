@@ -12,53 +12,68 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.activityViewModels
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.typebrook.mapstew.R
 import io.typebrook.mapstew.databinding.OfflineMapItemBinding
-import io.typebrook.mapstew.main.MapViewModel
 import io.typebrook.mapstew.offline.DownloadProgressLiveData
 import io.typebrook.mapstew.offline.OfflineMap
-import io.typebrook.mapstew.offline.getLocalMBTiles
 import io.typebrook.mapstew.offline.downloadableMaps
 import kotlinx.android.synthetic.main.offline_map_item.view.*
-import timber.log.Timber
 
 
 // TODO i18n for texts
 class OfflineFragment : DialogFragment() {
 
-    val mapModel by activityViewModels<MapViewModel>()
+    private val downloadProgress: DownloadProgressLiveData by lazy {
+        DownloadProgressLiveData(requireActivity())
+    }
+
+    enum class Status { DOWNLOADABLE, DOWNLOADING, DOWNLOADED }
+
+    val items = downloadableMaps.map { it to Status.DOWNLOADABLE }
 
     private val adapter by lazy {
-        object : ArrayAdapter<OfflineMap>(requireContext(), 0, downloadableMaps) {
+        object : ArrayAdapter<Pair<OfflineMap, Status>>(requireContext(), 0, items) {
 
             @SuppressLint("ViewHolder")
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-                val map = getItem(position)!!
+                val item = getItem(position)!!
                 val view = convertView ?: OfflineMapItemBinding.inflate(layoutInflater).root
 
-                view.name.text = map.displayName
+                view.name.text = item.first.displayName
 
                 with(view.button) {
-                    val localMBTiles = map.fileName
 
                     setOnClickListener {
                         isClickable = false
-                        val id = download(map)
-                        Timber.d("jojojo $id")
+                        download(item.first)
                     }
 
-                    mapModel.mbTilesList.observe(this@OfflineFragment) { list ->
-                        if (localMBTiles in list) {
+                    val localMBTiles = item.first.localFile(requireContext())
+                    val status = if (localMBTiles.exists())
+                        Status.DOWNLOADED else
+                        item.second
+
+                    when (status) {
+                        Status.DOWNLOADABLE -> {
+                            text = "Download"
+                            isClickable = true
+                            setBackgroundColor(
+                                MaterialColors.getColor(context, R.attr.colorAccent, Color.GRAY)
+                            )
+                        }
+                        Status.DOWNLOADING -> {
+                            text = "下載中"
+                            isClickable = false
+                            setBackgroundColor(
+                                MaterialColors.getColor(context, R.attr.colorPrimary, Color.GRAY)
+                            )
+                        }
+                        Status.DOWNLOADED -> {
                             text = getString(R.string.in_use)
                             isClickable = false
                             setBackgroundColor(resources.getColor(android.R.color.darker_gray))
-                        } else {
-                            text = "Download"
-                            isCheckable = true
-                            setBackgroundColor(MaterialColors.getColor(context, R.attr.colorAccent, Color.GRAY))
                         }
                     }
                 }
@@ -73,18 +88,34 @@ class OfflineFragment : DialogFragment() {
             setAdapter(adapter) { _, _ -> }
             create()
         }.apply {
-            mapModel.mbTilesList.value = requireContext().getLocalMBTiles()
             // Override dismiss dialog, do nothing instead
             listView.onItemClickListener = null
+
+            downloadProgress.observe(this@OfflineFragment) { progresses ->
+                val newItems: List<Pair<OfflineMap, Status>> = items.map { item ->
+                    item.first to when {
+                        item.first.path in progresses.map { it.uri } -> Status.DOWNLOADING
+                        item.first.localFile(requireContext()).exists() -> Status.DOWNLOADED
+                        else -> Status.DOWNLOADABLE
+                    }
+                }
+                if (newItems == items) return@observe
+                with(adapter) {
+                    clear()
+                    addAll(newItems)
+                    notifyDataSetChanged()
+                }
+            }
         }
 
     private fun download(map: OfflineMap): Long {
         val request = DownloadManager.Request(Uri.parse(map.path)).apply {
             setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, map.fileName)
-            setTitle(map.path.substringAfterLast('/'))
+            setTitle(map.fileName)
             setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
         }
-        val manager = requireActivity().getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+        val manager =
+            requireActivity().getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
         return manager.enqueue(request)
     }
 }
