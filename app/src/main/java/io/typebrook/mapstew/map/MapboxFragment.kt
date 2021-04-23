@@ -32,6 +32,8 @@ import com.mapbox.mapboxsdk.style.layers.LineLayer
 import com.mapbox.mapboxsdk.style.layers.Property
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
+import com.mapbox.pluginscalebar.ScaleBarOptions
+import com.mapbox.pluginscalebar.ScaleBarPlugin
 import io.typebrook.mapstew.R
 import io.typebrook.mapstew.db.Survey
 import io.typebrook.mapstew.db.db
@@ -143,6 +145,7 @@ class MapboxFragment : SupportMapFragment() {
             setCompassMargins(24, 180, 0, 0)
             isAttributionEnabled = false
             isLogoEnabled = false
+            addScaleBar()
         }
 
         styleBuilder.observe(this@MapboxFragment) { builder ->
@@ -400,6 +403,17 @@ class MapboxFragment : SupportMapFragment() {
         val uploadedMarker = ResourcesCompat.getDrawable(resources, R.drawable.purple_marker, null)
             ?: return
         addImage(IMAGE_NAME_UPLOADED_NOTE, uploadedMarker)
+    }
+
+    private fun MapboxMap.addScaleBar() {
+        val scaleBarPlugin = ScaleBarPlugin(mapView, this)
+        val scaleBarOptions = ScaleBarOptions(requireContext())
+            .setMarginTop(100f)
+            .setMarginLeft(16f)
+            .setTextBarMargin(15f)
+            .setTextSize(30F)
+
+        scaleBarPlugin.create(scaleBarOptions)
     }
 
     companion object {
