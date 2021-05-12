@@ -30,6 +30,7 @@ import io.typebrook.mapstew.offline.getLocalMBTiles
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
+import kotlin.math.roundToInt
 
 
 class MainFragment : Fragment() {
@@ -83,11 +84,15 @@ class MainFragment : Fragment() {
         }
 
         zoomInButton.setOnClickListener {
-            mapModel.target.value = mapModel.center.value.run { copy(third = zoom + 1) }
+            mapModel.target.value = mapModel.center.value.run {
+                copy(third = (zoom + 0.5).roundToInt().toFloat())
+            }
         }
 
         zoomOutButton.setOnClickListener {
-            mapModel.target.value = mapModel.center.value.run { copy(third = zoom - 1) }
+            mapModel.target.value = mapModel.center.value.run {
+                copy(third = (zoom - 0.51).roundToInt().toFloat())
+            }
         }
 
         locatingButton.setOnClickListener {
