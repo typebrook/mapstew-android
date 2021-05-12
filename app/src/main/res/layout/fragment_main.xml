@@ -106,7 +106,7 @@
             android:layout_height="60dp"
             android:contentDescription="@string/map_btn_zoom_out"
             android:scaleType="center"
-            android:src="@android:drawable/ic_menu_mylocation" />
+            android:src="@drawable/ic_gps_on" />
     </LinearLayout>
 
     <View
