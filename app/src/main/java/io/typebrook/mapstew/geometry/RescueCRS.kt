@@ -1,5 +1,14 @@
 package io.typebrook.mapstew.geometry
 
+/**
+ * This is just a experimental custom Coordinate System based on TaipowerCRS
+ * It just map squares in each zoom level to another human readable text, for example:
+ * T 76 80    DC  46
+ * 方屯山 60區 DC格 46號
+ *
+ * The prefixing mountain peak is the tallest one in area 8000mx5000m
+ */
+
 internal class RescueCRS : TaipowerCRS(displayName = "搜索分區") {
 
     val peaks = mutableMapOf<String, String>()
