@@ -23,7 +23,7 @@ import io.typebrook.mapstew.databinding.FragmentMainBinding
 import io.typebrook.mapstew.db.uploadSurveys
 import io.typebrook.mapstew.geometry.*
 import io.typebrook.mapstew.main.MapViewModel.Companion.ID_RAW_SURVEY
-import io.typebrook.mapstew.map.MapboxFragment
+import io.typebrook.mapstew.map.MaplibreFragment
 import io.typebrook.mapstew.map.OfflineFragment
 import io.typebrook.mapstew.map.TiledFeature.Companion.displayName
 import io.typebrook.mapstew.offline.getLocalMBTiles
@@ -47,7 +47,7 @@ class MainFragment : Fragment() {
 
         if (savedInstanceState == null) {
             requireActivity().supportFragmentManager.commit {
-                replace(R.id.map_container, MapboxFragment(), null)
+                replace(R.id.map_container, MaplibreFragment(), null)
                 replace(R.id.bottom_sheet_content, SimpleSurveyFragment(), null)
 //              add<TangramFragment>(R.id.map_container, null)
             }

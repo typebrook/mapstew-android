@@ -56,7 +56,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.FileReader
 
-class MapboxFragment : SupportMapFragment() {
+class MaplibreFragment : SupportMapFragment() {
 
     private val mapView get() = view as MapView
     private val model by activityViewModels<MapViewModel>()
@@ -148,7 +148,7 @@ class MapboxFragment : SupportMapFragment() {
             addScaleBar()
         }
 
-        styleBuilder.observe(this@MapboxFragment) { builder ->
+        styleBuilder.observe(this@MaplibreFragment) { builder ->
             setStyle(builder) { style -> onStyleLoaded(this, style) }
         }
 
@@ -171,7 +171,7 @@ class MapboxFragment : SupportMapFragment() {
         }
 
         // If user choose a point, query features nearby
-        model.focusPoint.observe(this@MapboxFragment.viewLifecycleOwner) { point ->
+        model.focusPoint.observe(this@MaplibreFragment.viewLifecycleOwner) { point ->
             // Remove all makers anyway when focus changes
             focusedMarker?.remove()
 
@@ -251,7 +251,7 @@ class MapboxFragment : SupportMapFragment() {
     private fun onStyleLoaded(mapboxMap: MapboxMap, style: Style) {
         style.addImagesByDrawables()
 
-        model.locateUser.observe(this@MapboxFragment) locate@{ enable ->
+        model.locateUser.observe(this@MaplibreFragment) locate@{ enable ->
             if (enable) mapboxMap.enableLocationComponent(style)
         }
 
