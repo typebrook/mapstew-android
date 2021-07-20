@@ -120,7 +120,10 @@ class MaplibreFragment : SupportMapFragment() {
                         MBTilesServer.sources.forEach {
                             val source = it.value
                             with(getAsJsonObject(source.id)) {
-                                add("tiles", JsonArray().apply { add(source.url) })
+                                add("tiles", JsonArray().apply {
+                                    val foo = "mbtiles://${context.getDatabasePath("${source.id}.mbtiles")}"
+                                    add("mbtiles://${context.getDatabasePath("${source.id}.mbtiles")}")
+                                })
                                 remove("url")
                             }
                         }
