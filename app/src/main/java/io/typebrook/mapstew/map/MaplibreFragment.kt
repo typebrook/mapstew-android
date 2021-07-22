@@ -43,9 +43,6 @@ import io.typebrook.mapstew.main.MapViewModel
 import io.typebrook.mapstew.main.MapViewModel.Companion.ID_RAW_SURVEY
 import io.typebrook.mapstew.main.zoom
 import io.typebrook.mapstew.network.GithubService
-import io.typebrook.mapstew.offline.MBTilesServer
-import io.typebrook.mapstew.offline.MBTilesSource
-import io.typebrook.mapstew.offline.MBTilesSourceException
 import io.typebrook.mapstew.preference.prefShowHint
 import kotlinx.android.synthetic.main.fragment_simple_bottom_sheet.view.*
 import kotlinx.android.synthetic.main.input_degree.*
@@ -101,28 +98,16 @@ class MaplibreFragment : SupportMapFragment() {
         }
 
         model.mbTilesList.observe(this) { list ->
-            list.forEach { mbtiles ->
-                // Create MBTilesSource
-                val file = context.getDatabasePath(mbtiles)
-                val sourceId = mbtiles.substringBefore(".mbtiles")
-                try {
-                    MBTilesSource(file, sourceId).apply { activate() }
-                } catch (e: MBTilesSourceException.CouldNotReadFileException) {
-                    // TODO Deal with error if fail to read MBTiles
-                }
-            }
-
             try {
                 with(JsonParser.parseReader(FileReader(styleFile)).asJsonObject) {
 
                     // Override sources with local MBTiles
                     getAsJsonObject("sources")?.run {
-                        MBTilesServer.sources.forEach {
-                            val source = it.value
-                            with(getAsJsonObject(source.id)) {
+                        list.forEach {
+                            val sourceId = it.substringBefore(".")
+                            with(getAsJsonObject(sourceId)) {
                                 add("tiles", JsonArray().apply {
-                                    val foo = "mbtiles://${context.getDatabasePath("${source.id}.mbtiles")}"
-                                    add("mbtiles://${context.getDatabasePath("${source.id}.mbtiles")}")
+                                    add("mbtiles://${context.getDatabasePath("$sourceId.mbtiles")}")
                                 })
                                 remove("url")
                             }
