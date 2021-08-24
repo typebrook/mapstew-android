@@ -129,8 +129,8 @@ class MaplibreFragment : SupportMapFragment() {
     override fun onMapReady(mapboxMap: MapboxMap) = with(mapboxMap) {
 
         with(uiSettings) {
-            compassGravity = Gravity.LEFT
-            setCompassMargins(24, 180, 0, 0)
+            compassGravity = Gravity.RIGHT
+            setCompassMargins(0, 530, 20, 0)
             isAttributionEnabled = false
             isLogoEnabled = false
             addScaleBar()
@@ -396,8 +396,8 @@ class MaplibreFragment : SupportMapFragment() {
     private fun MapboxMap.addScaleBar() {
         val scaleBarPlugin = ScaleBarPlugin(mapView, this)
         val scaleBarOptions = ScaleBarOptions(requireContext())
-            .setMarginTop(100f)
-            .setMarginLeft(16f)
+            .setMarginTop(180f)
+            .setMarginLeft(32f)
             .setTextBarMargin(15f)
             .setTextSize(30F)
 
