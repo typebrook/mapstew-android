@@ -1,10 +1,14 @@
 package io.typebrook.mapstew.map
 
+import android.content.res.Resources
+import android.graphics.PointF
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.LineString
 import com.mapbox.geojson.Point
+import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.geometry.LatLngBounds
+import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.style.expressions.Expression.get
 import com.mapbox.mapboxsdk.style.layers.LineLayer
 import com.mapbox.mapboxsdk.style.layers.Property
@@ -21,6 +25,7 @@ import io.typebrook.mapstew.geometry.TaipowerCRS.Companion.SECTION_WIDTH
 import io.typebrook.mapstew.geometry.TaipowerCRS.Companion.TOP_BOUNDARY
 import kotlin.math.ceil
 import kotlin.math.floor
+import kotlin.math.pow
 
 // region grid
 
@@ -286,3 +291,14 @@ object TaipowerSpacingAdapter : SpacingAdapter() {
 }
 
 // endregion
+
+fun MapboxMap.getCenterWhenFocusWithBottomSheet(focus: LatLng, zoomDiff: Double): LatLng {
+    val focusOnScreen = projection.toScreenLocation(focus)
+    val screenHeight = Resources.getSystem().displayMetrics.heightPixels
+    val centerPoint = PointF(
+        focusOnScreen.x,
+        focusOnScreen.y + screenHeight / 4 / (2.0).pow(zoomDiff).toFloat()
+    )
+
+    return projection.fromScreenLocation(centerPoint)
+}

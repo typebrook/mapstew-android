@@ -181,7 +181,7 @@ class MainFragment : Fragment() {
         }
 
         val screenHeight = Resources.getSystem().displayMetrics.heightPixels
-        bottomSheet.layoutParams.height = (screenHeight * 0.4).toInt()
+        bottomSheet.layoutParams.height = (screenHeight * 0.6).toInt()
 
         val bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet).apply {
             addBottomSheetCallback(object :

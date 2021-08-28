@@ -77,9 +77,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="32dp"
         android:orientation="vertical"
-        app:layout_anchor="@id/bottom_sheet"
-        app:layout_anchorGravity="right|top"
-        app:layout_dodgeInsetEdges="bottom">
+        android:layout_gravity="end|bottom">
 
         <ImageButton
             android:id="@+id/zoomInButton"
