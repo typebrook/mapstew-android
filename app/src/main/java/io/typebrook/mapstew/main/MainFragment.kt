@@ -173,8 +173,10 @@ class MainFragment : Fragment() {
                 setOnDismissListener {
                     lifecycleScope.launch {
                         delay(400)
-                        if (mapModel.focusedFeatureId.value == null)
+                        if (mapModel.focusedFeatureId.value == null){
                             mapModel.focusPoint.value = null
+                            mapModel.focusLngLat.value = null
+                        }
                     }
                 }
             }

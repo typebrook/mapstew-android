@@ -256,6 +256,7 @@ class MaplibreFragment : SupportMapFragment() {
 
         mapboxMap.addOnMapLongClickListener { latLng ->
             model.focusPoint.value = mapboxMap.projection.toScreenLocation(latLng)
+            model.focusLngLat.value = latLng.longitude to latLng.latitude
             true
         }
 

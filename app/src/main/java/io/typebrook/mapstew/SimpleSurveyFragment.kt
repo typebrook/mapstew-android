@@ -128,6 +128,7 @@ class SimpleSurveyFragment : Fragment() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        val lnglat = model.focusLngLat.value ?: return
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
 
             val id = model.focusedFeatureId.value ?: return
@@ -138,8 +139,8 @@ class SimpleSurveyFragment : Fragment() {
 
             val newSurvey = Survey(
                 relatedFeatureId = id.takeIf { it != ID_RAW_SURVEY },
-                lon = model.center.value.first,
-                lat = model.center.value.second,
+                lon = lnglat.first,
+                lat = lnglat.second,
                 content = binding.content.text.toString(),
                 photoUri = uri
             )
