@@ -18,7 +18,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
 import io.typebrook.mapstew.R
-import io.typebrook.mapstew.SimpleSurveyFragment
+import io.typebrook.mapstew.survey.SimpleSurveyFragment
 import io.typebrook.mapstew.databinding.FragmentMainBinding
 import io.typebrook.mapstew.db.uploadSurveys
 import io.typebrook.mapstew.geometry.*

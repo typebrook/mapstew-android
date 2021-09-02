@@ -1,4 +1,4 @@
-package io.typebrook.mapstew
+package io.typebrook.mapstew.survey
 
 import android.app.Activity.RESULT_OK
 import android.content.ActivityNotFoundException
@@ -14,13 +14,16 @@ import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.commit
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.internal.bind.util.ISO8601Utils
+import io.typebrook.mapstew.R
 import io.typebrook.mapstew.databinding.FragmentSimpleBottomSheetBinding
 import io.typebrook.mapstew.db.Survey
 import io.typebrook.mapstew.db.db
 import io.typebrook.mapstew.main.MapViewModel
 import io.typebrook.mapstew.main.MapViewModel.Companion.ID_RAW_SURVEY
+import io.typebrook.mapstew.map.MaplibreFragment
 import io.typebrook.mapstew.storage.getPickImageIntent
 import io.typebrook.mapstew.storage.newImageUri
 import kotlinx.android.synthetic.main.fragment_simple_bottom_sheet.*
@@ -43,6 +46,11 @@ class SimpleSurveyFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        if (savedInstanceState == null) {
+            childFragmentManager.commit {
+                replace(R.id.take_photo, AttachPhotoFragment(), null)
+            }
+        }
         return binding.root
     }
 
@@ -61,7 +69,7 @@ class SimpleSurveyFragment : Fragment() {
                 } catch (e: NumberFormatException) {
                     // If it is a new survey, take a photo directly
                     if (model.displayBottomSheet.value) {
-                        val uri = newImageUri("${ISO8601Utils.format(Date())}.png")
+                        val uri = newImageUri(null)
                         photoUri = uri
                         startActivityForResult(
                             Intent(ACTION_IMAGE_CAPTURE).putExtra(EXTRA_OUTPUT, uri),

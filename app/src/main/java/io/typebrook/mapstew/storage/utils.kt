@@ -7,16 +7,18 @@ import android.os.Parcelable
 import android.provider.MediaStore
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
+import com.google.gson.internal.bind.util.ISO8601Utils
 import io.typebrook.mapstew.BuildConfig
 import io.typebrook.mapstew.R
 import java.io.File
+import java.util.*
 
-fun Fragment.newImageUri(fileName: String): Uri = with(requireContext()) {
+fun Fragment.newImageUri(fileName: String?): Uri = with(requireContext()) {
     val folder = File("${getExternalFilesDir(Environment.DIRECTORY_DCIM)}").apply {
         mkdirs()
     }
 
-    val file = File(folder, fileName)
+    val file = File(folder, fileName ?: "${ISO8601Utils.format(Date())}.png")
     if (file.exists()) file.delete()
 
     file.createNewFile()
