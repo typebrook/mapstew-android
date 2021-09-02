@@ -27,6 +27,7 @@ import kotlinx.android.synthetic.main.fragment_simple_bottom_sheet.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.internal.toLongOrDefault
 import java.util.*
 
 class SimpleSurveyFragment : Fragment() {
@@ -49,14 +50,14 @@ class SimpleSurveyFragment : Fragment() {
 
         model.focusedFeatureId.observe(viewLifecycleOwner) { id ->
             survey = null
-            content.text.clear()
+            content.text?.clear()
             image.setImageURI(null)
             details.text = id
             id ?: return@observe
 
             lifecycleScope.launch setWithSurvey@{
                 val key = try {
-                    id.toLong()
+                    id.toLongOrDefault(0)
                 } catch (e: NumberFormatException) {
                     // If it is a new survey, take a photo directly
                     if (model.displayBottomSheet.value) {

@@ -21,6 +21,10 @@
     <!-- ++++++++++++++++++++++++++++++++ Alert Dialog +++++++++++++++++++++++++++++++++++++ -->
     <style name="AlertDialogTheme" parent="Theme.MaterialComponents.DayNight.Dialog.Alert"/>
 
-    <style name="foo" parent="Widget.AppCompat.Spinner">
+    <!-- ++++++++++++++++++++++++++++++++ TextInput for survey +++++++++++++++++++++++++++++++ -->
+    <style name="InputLayout.Survey" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:padding">18dp</item>
     </style>
 </resources>

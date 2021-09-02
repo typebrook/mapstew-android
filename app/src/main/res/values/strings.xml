@@ -45,4 +45,6 @@
     <string name="placeholder_bottomsheet_title" translatable="false">title</string>
     <string name="placeholder_path">unnamed path</string>
     <string name="hint_take_photo">Please take a photo</string>
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
 </resources>
