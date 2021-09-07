@@ -14,7 +14,7 @@ import io.typebrook.mapstew.R
 import io.typebrook.mapstew.view.ListAdapter
 import io.typebrook.mapstew.view.decodeScaledBitmapAndNormalize
 
-class SurveyImageAdaper(list: List<String>, private val context: Context) : ListAdapter<String>(list) {
+class SurveyImageAdapter(list: List<String>, private val context: Context) : ListAdapter<String>(list) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder<String> {
         val inflater = LayoutInflater.from(parent.context)
