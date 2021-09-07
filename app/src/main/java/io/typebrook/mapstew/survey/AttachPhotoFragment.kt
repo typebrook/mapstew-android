@@ -3,19 +3,17 @@ package io.typebrook.mapstew.survey
 import android.app.Activity.RESULT_OK
 import android.content.ActivityNotFoundException
 import android.graphics.Bitmap
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import androidx.core.view.isGone
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import io.typebrook.mapstew.ApplicationConstants.ATTACH_PHOTO_MAXHEIGHT
@@ -23,8 +21,8 @@ import io.typebrook.mapstew.ApplicationConstants.ATTACH_PHOTO_MAXWIDTH
 import io.typebrook.mapstew.ApplicationConstants.ATTACH_PHOTO_QUALITY
 import io.typebrook.mapstew.BuildConfig
 import io.typebrook.mapstew.R
-import io.typebrook.mapstew.databinding.FragmentAttachPhotoBinding
 import io.typebrook.mapstew.ktx.toast
+import io.typebrook.mapstew.livedata.SafeMutableLiveData
 import io.typebrook.mapstew.storage.getPickImageIntent
 import io.typebrook.mapstew.view.decodeScaledBitmapAndNormalize
 import kotlinx.android.synthetic.main.fragment_attach_photo.*
@@ -33,30 +31,25 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 
-class AttachPhotoFragment : Fragment() {
-
-    private val binding by lazy { FragmentAttachPhotoBinding.inflate(layoutInflater) }
-
-    val imagePaths: List<String> get() = noteImageAdapter.list
-    private val photosListView : RecyclerView by lazy { binding.photoListView }
-    private val photosAreUsefulrExplanation : TextView by lazy { binding.photosAreUsefulExplanation }
+class AttachPhotoFragment : Fragment(R.layout.fragment_attach_photo) {
 
     private var currentImagePath: String? = null
+    private lateinit var noteImageAdapter: SurveyImageAdapter
+    private val imageModel: ImageModel by viewModels({ requireParentFragment() })
 
-    private lateinit var noteImageAdapter: SurveyImageAdaper
-
-    private val takePhoto = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        onTakePhotoResult(it.resultCode == RESULT_OK, it.data?.data)
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        return binding.root
-    }
-
-    private fun updateHintVisibility(){
-        val isImagePathsEmpty = imagePaths.isEmpty()
-        photosListView.isGone = isImagePathsEmpty
-        photosAreUsefulrExplanation.isGone = !isImagePathsEmpty
+    private val takePhotoLauncher  = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        // If imageUri is not null, then image comes from other FileProvider
+        // We should copy it into currentImagePath
+        it.data?.data?.let { imageUri ->
+            try {
+                requireContext().contentResolver.openInputStream(imageUri)
+                    ?.copyTo(FileOutputStream(currentImagePath!!))
+            } catch (e: IOException) {
+                Timber.e("Unable to create file for photo $e")
+                context?.toast(R.string.quest_leave_new_note_create_image_error)
+            }
+        }
+        onTakePhotoResult(it.resultCode == RESULT_OK)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -73,25 +66,36 @@ class AttachPhotoFragment : Fragment() {
             currentImagePath = null
         }
 
-        noteImageAdapter = SurveyImageAdaper(paths, requireContext())
-        photosListView.layoutManager = LinearLayoutManager(
+        noteImageAdapter = SurveyImageAdapter(paths, requireContext())
+        photoListView.layoutManager = LinearLayoutManager(
             context,
             LinearLayoutManager.HORIZONTAL,
             false
         )
-        photosListView.adapter = noteImageAdapter
+        photoListView.adapter = noteImageAdapter
         noteImageAdapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
-            override fun onItemRangeChanged(start: Int, count: Int) { updateHintVisibility() }
-            override fun onItemRangeInserted(start: Int, count: Int) { updateHintVisibility() }
-            override fun onItemRangeRemoved(start: Int, count: Int) { updateHintVisibility() }
-            override fun onItemRangeMoved(from: Int, to: Int, count: Int) { updateHintVisibility() }
+            fun assignList() { imageModel.imagePaths.value = noteImageAdapter.list.toList() }
+            override fun onItemRangeChanged(start: Int, count: Int) { assignList() }
+            override fun onItemRangeInserted(start: Int, count: Int) { assignList() }
+            override fun onItemRangeRemoved(start: Int, count: Int) { assignList() }
+            override fun onItemRangeMoved(from: Int, to: Int, count: Int) { assignList() }
         })
-        updateHintVisibility()
+
+        imageModel.imagePaths.observe(viewLifecycleOwner) {
+            val showHint = it.isEmpty()
+            photoListView.isGone = showHint
+            photosAreUsefulExplanation.isGone = !showHint
+
+            if (it.size != noteImageAdapter.list.size) {
+                noteImageAdapter.list = it.toMutableList()
+                noteImageAdapter.notifyDataSetChanged()
+            }
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putStringArrayList(PHOTO_PATHS, ArrayList(imagePaths))
+        outState.putStringArrayList(PHOTO_PATHS, ArrayList(noteImageAdapter.list))
         outState.putString(CURRENT_PHOTO_PATH, currentImagePath)
     }
 
@@ -106,7 +110,7 @@ class AttachPhotoFragment : Fragment() {
                 photoFile.toUri()
             }
             currentImagePath = photoFile.path
-            takePhoto.launch(getPickImageIntent(photoUri))
+            takePhotoLauncher.launch(getPickImageIntent(photoUri))
         } catch (e: ActivityNotFoundException) {
             Timber.e("Could not find a camera app $e")
             context?.toast(R.string.no_camera_app)
@@ -119,27 +123,19 @@ class AttachPhotoFragment : Fragment() {
         }
     }
 
-    private fun onTakePhotoResult(saved: Boolean, imageUri: Uri?) {
-        // If imageUri is not null, then image comes from other FileProvider
-        // We should copy it into currentImagePath
-        if (imageUri != null) {
-            try {
-                requireContext().contentResolver.openInputStream(imageUri)
-                    ?.copyTo(FileOutputStream(currentImagePath!!))
-            } catch (e: IOException) {
-                Timber.e("Unable to create file for photo $e")
-                context?.toast(R.string.quest_leave_new_note_create_image_error)
-            }
-        }
-        if (saved) {
+    private fun onTakePhotoResult(saved: Boolean) {
+        val file = File(currentImagePath!!)
+        if (saved && file.exists() && file.totalSpace > 0) {
             try {
                 val path = currentImagePath!!
                 val bitmap = decodeScaledBitmapAndNormalize(path, ATTACH_PHOTO_MAXWIDTH, ATTACH_PHOTO_MAXHEIGHT) ?: throw IOException()
                 val out = FileOutputStream(path)
                 bitmap.compress(Bitmap.CompressFormat.JPEG, ATTACH_PHOTO_QUALITY, out)
 
-                noteImageAdapter.list.add(path)
-                noteImageAdapter.notifyItemInserted(imagePaths.size - 1)
+                with(noteImageAdapter) {
+                    list.add(path)
+                    notifyItemInserted(list.size - 1)
+                }
             } catch (e: IOException) {
                 Timber.e("Unable to rescale the photo $e")
                 context?.toast(R.string.quest_leave_new_note_create_image_error)
@@ -169,7 +165,7 @@ class AttachPhotoFragment : Fragment() {
     }
 
     fun deleteImages() {
-        for (path in imagePaths) {
+        for (path in noteImageAdapter.list) {
             val file = File(path)
             if (file.exists()) {
                 file.delete()
@@ -178,6 +174,9 @@ class AttachPhotoFragment : Fragment() {
     }
 
     companion object {
+        class ImageModel : ViewModel() {
+            val imagePaths = SafeMutableLiveData(listOf<String>())
+        }
         private const val PHOTO_PATHS = "photo_paths"
         private const val CURRENT_PHOTO_PATH = "current_photo_path"
     }
