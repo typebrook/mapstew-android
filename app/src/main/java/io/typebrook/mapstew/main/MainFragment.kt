@@ -175,7 +175,7 @@ class MainFragment : Fragment() {
                         delay(400)
                         if (mapModel.focusedFeatureId.value == null){
                             mapModel.focusPoint.value = null
-                            mapModel.focusLngLat.value = null
+//                            mapModel.focusLngLat.value = null
                         }
                     }
                 }
