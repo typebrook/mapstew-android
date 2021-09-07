@@ -38,7 +38,7 @@ fun Fragment.getPickImageIntent(uri: Uri): Intent? {
     val intentList = arrayListOf(pickIntent, takePhotoIntent)
 
     val chooserIntent = Intent.createChooser(
-        intentList.removeAt(intentList.size - 1),
+        Intent(),
         getString(R.string.select_capture_image)
     )
     chooserIntent.putExtra(

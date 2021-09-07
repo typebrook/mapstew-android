@@ -1,6 +1,5 @@
 package io.typebrook.mapstew.survey
 
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +8,7 @@ import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.commit
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import io.typebrook.mapstew.R
 import io.typebrook.mapstew.databinding.FragmentSimpleBottomSheetBinding
@@ -25,6 +25,7 @@ class SimpleSurveyFragment : Fragment() {
 
     private val binding by lazy { FragmentSimpleBottomSheetBinding.inflate(layoutInflater) }
     private val model by activityViewModels<MapViewModel>()
+    private val imageModel: AttachPhotoFragment.Companion.ImageModel by viewModels()
 
     private var survey: Survey? = null
 
@@ -49,24 +50,32 @@ class SimpleSurveyFragment : Fragment() {
             details.text = id
             id ?: return@observe
 
+            val lnglat = model.focusLngLat.value ?: return@observe
             lifecycleScope.launch setWithSurvey@{
                 val key = try {
                     id.toLong()
                 } catch (e: NumberFormatException) {
-                    return@setWithSurvey
+                    -1
                 }
 
                 survey = withContext(Dispatchers.IO) {
-                    db.surveyDao().getFromKey(key).firstOrNull()
-                }?.also { it ->
+                    db.surveyDao().getFromKey(key).firstOrNull() ?: Survey(
+                        lon = lnglat.first,
+                        lat = lnglat.second,
+                        content = binding.content.text.toString(),
+                        photoPaths = listOf()
+                    ).also { db.surveyDao().insert(it) }
+                }.also { survey ->
                     with(content) {
-                        setText(it.content)
-                        setSelection(it.content.length)
+                        setText(survey.content)
+                        setSelection(survey.content.length)
                     }
-                    if (it.osmNoteId != null) {
-                        details.text = "Note: ${it.osmNoteId}"
+                    if (survey.osmNoteId != null) {
+                        details.text = "Note: ${survey.osmNoteId}"
                     }
                 }
+
+                imageModel.imagePaths.value = survey?.photoPaths ?: listOf()
             }
         }
 
@@ -91,6 +100,11 @@ class SimpleSurveyFragment : Fragment() {
             }
         }
 
-        Unit
+        imageModel.imagePaths.observe(viewLifecycleOwner) {
+            val newSurvey = survey?.copy(photoPaths = it) ?: return@observe
+            lifecycleScope.launch(Dispatchers.IO) {
+                db.surveyDao().insert(newSurvey)
+            }
+        }
     }
 }
