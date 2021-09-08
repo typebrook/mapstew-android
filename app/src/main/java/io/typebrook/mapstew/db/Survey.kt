@@ -21,6 +21,6 @@ data class Survey(
     val lat: Double,
     val content: String,
     val dateModified: Date = Date(),
-    val photoUri: Uri,
+    val photoPaths: List<String>,
     val audioUri: Uri? = null
 )

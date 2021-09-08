@@ -35,4 +35,11 @@
     <string name="select_capture_image">新增照片</string>
     <string name="placeholder_path">無名步道</string>
     <string name="hint_take_photo">請先拍照</string>
+    <string name="confirm">確定</string>
+    <string name="cancel">取消</string>
+    <string name="quest_leave_new_note_photo_delete_title">要刪除照片嗎?</string>
+    <string name="quest_leave_new_note_photos_are_useful">新增照片會讓回報更有說服力</string>
+    <string name="quest_leave_new_note_photo">Attach photo</string>
+    <string name="no_camera_app">沒有可用的照相APP</string>
+    <string name="quest_leave_new_note_create_image_error">無法新增照片</string>
 </resources>

@@ -30,10 +30,10 @@ fun Fragment.uploadSurveys() {
         surveys.forEach { survey ->
             // Upload images
             val client = OkHttpClient.Builder().build()
-            val fileBody = ContentUriRequestBody(requireContext().contentResolver, survey.photoUri)
+//            val fileBody = ContentUriRequestBody(requireContext().contentResolver, survey.photoUri)
             val requestBody: RequestBody = MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart("file", survey.photoUri.lastPathSegment, fileBody)
+//                .addFormDataPart("file", survey.photoUri.lastPathSegment, fileBody)
                 .build()
             val request = Request.Builder()
                 .url("https://0x0.st")

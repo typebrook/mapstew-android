@@ -225,12 +225,16 @@ class MaplibreFragment : SupportMapFragment() {
                     .mapNotNull { getCameraForGeometry(it) }
                     .takeIf { it.isNotEmpty() }
                     ?: return@observe
+            val minZoom = positions.reduce { acc, pos -> if (acc.zoom < pos.zoom) acc else pos }.zoom
+            val targetZoom = if (minZoom < 18) minZoom - 1 else 18.0
             val averageLat = positions.fold(0.0) { acc, pos -> acc + pos.target.latitude } / positions.size
             val averageLng = positions.fold(0.0) { acc, pos -> acc + pos.target.longitude } / positions.size
-            val minZoom = positions.reduce { acc, pos -> if (acc.zoom < pos.zoom) acc else pos }.zoom
+            val mapCenter = getCenterWhenFocusWithBottomSheet(
+                LatLng(averageLat, averageLng),
+                targetZoom - cameraPosition.zoom
+            )
             val cameraUpdate = CameraUpdateFactory.newLatLngZoom(
-                    LatLng(averageLat, averageLng),
-                    if (minZoom < 18) minZoom - 1 else 18.0
+                mapCenter, if (minZoom < 18) minZoom - 1 else 18.0
             )
             animateCamera(cameraUpdate, 600)
         }
@@ -252,6 +256,7 @@ class MaplibreFragment : SupportMapFragment() {
 
         mapboxMap.addOnMapLongClickListener { latLng ->
             model.focusPoint.value = mapboxMap.projection.toScreenLocation(latLng)
+            model.focusLngLat.value = latLng.longitude to latLng.latitude
             true
         }
 
@@ -277,11 +282,11 @@ class MaplibreFragment : SupportMapFragment() {
         }
 
         style.addSource(selectedFeatureSource)
-        val highlightedCasing = LineLayer("foo", selectedFeatureSource.id).withProperties(
+        val highlightedCasing = LineLayer("highlight-outer", selectedFeatureSource.id).withProperties(
                 PropertyFactory.lineWidth(13f),
                 PropertyFactory.lineColor("red")
         )
-        val highlightedLine = LineLayer("bar", selectedFeatureSource.id).withProperties(
+        val highlightedLine = LineLayer("highlight-inner", selectedFeatureSource.id).withProperties(
                 PropertyFactory.lineWidth(9f),
                 PropertyFactory.lineColor("yellow")
         )
@@ -291,15 +296,20 @@ class MaplibreFragment : SupportMapFragment() {
         // Add symbols for surveys
         val symbolManager = SymbolManager(mapView, mapboxMap, style)
         symbolManager.addClickListener { symbol ->
-            val targetZoom = mapboxMap.cameraPosition.zoom.let { if (it > 16.0) it else 16.0 }
-                mapboxMap.animateCamera (
-                CameraUpdateFactory.newLatLngZoom(symbol.latLng, targetZoom),
-                object: MapboxMap.CancelableCallback {
+            val currentZoom = mapboxMap.cameraPosition.zoom
+            val targetZoom = if (currentZoom > 16.0) currentZoom else 16.0
+            val targetPoint =
+                mapboxMap.getCenterWhenFocusWithBottomSheet(symbol.latLng, targetZoom - currentZoom)
+            mapboxMap.animateCamera(
+                CameraUpdateFactory.newLatLngZoom(targetPoint, targetZoom),
+                object : MapboxMap.CancelableCallback {
                     override fun onFinish() {
-                        model.focusedFeatureId.value = symbol.data?.asJsonObject?.get("key")?.asString
+                        model.focusedFeatureId.value =
+                            symbol.data?.asJsonObject?.get("key")?.asString
                         model.displayBottomSheet.value = true
                     }
-                    override fun onCancel(){}
+
+                    override fun onCancel() {}
                 }
             )
             true

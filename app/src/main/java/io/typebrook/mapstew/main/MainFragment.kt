@@ -18,7 +18,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.yanzhenjie.permission.AndPermission
 import com.yanzhenjie.permission.runtime.Permission
 import io.typebrook.mapstew.R
-import io.typebrook.mapstew.SimpleSurveyFragment
+import io.typebrook.mapstew.survey.SimpleSurveyFragment
 import io.typebrook.mapstew.databinding.FragmentMainBinding
 import io.typebrook.mapstew.db.uploadSurveys
 import io.typebrook.mapstew.geometry.*
@@ -173,15 +173,17 @@ class MainFragment : Fragment() {
                 setOnDismissListener {
                     lifecycleScope.launch {
                         delay(400)
-                        if (mapModel.focusedFeatureId.value == null)
+                        if (mapModel.focusedFeatureId.value == null){
                             mapModel.focusPoint.value = null
+//                            mapModel.focusLngLat.value = null
+                        }
                     }
                 }
             }
         }
 
         val screenHeight = Resources.getSystem().displayMetrics.heightPixels
-        bottomSheet.layoutParams.height = (screenHeight * 0.4).toInt()
+        bottomSheet.layoutParams.height = (screenHeight * 0.6).toInt()
 
         val bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet).apply {
             addBottomSheetCallback(object :
