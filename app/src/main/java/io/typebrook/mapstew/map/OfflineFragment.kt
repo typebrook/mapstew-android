@@ -19,8 +19,6 @@ import io.typebrook.mapstew.databinding.OfflineMapItemBinding
 import io.typebrook.mapstew.offline.DownloadProgressLiveData
 import io.typebrook.mapstew.offline.OfflineMap
 import io.typebrook.mapstew.offline.downloadableMaps
-import kotlinx.android.synthetic.main.offline_map_item.view.*
-
 
 // TODO i18n for texts
 class OfflineFragment : DialogFragment() {
@@ -39,11 +37,13 @@ class OfflineFragment : DialogFragment() {
             @SuppressLint("ViewHolder")
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                 val item = getItem(position)!!
-                val view = convertView ?: OfflineMapItemBinding.inflate(layoutInflater).root
+                val binding = convertView?.let {
+                    OfflineMapItemBinding.bind(it)
+                } ?: OfflineMapItemBinding.inflate(layoutInflater)
 
-                view.name.text = item.first.displayName
+                binding.name.text = item.first.displayName
 
-                with(view.button) {
+                with(binding.button) {
 
                     setOnClickListener {
                         isClickable = false
@@ -78,7 +78,7 @@ class OfflineFragment : DialogFragment() {
                     }
                 }
 
-                return view
+                return binding.root
             }
         }
     }

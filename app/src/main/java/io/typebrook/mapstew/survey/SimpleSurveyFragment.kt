@@ -15,7 +15,6 @@ import io.typebrook.mapstew.databinding.FragmentSimpleBottomSheetBinding
 import io.typebrook.mapstew.db.Survey
 import io.typebrook.mapstew.db.db
 import io.typebrook.mapstew.main.MapViewModel
-import kotlinx.android.synthetic.main.fragment_simple_bottom_sheet.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext

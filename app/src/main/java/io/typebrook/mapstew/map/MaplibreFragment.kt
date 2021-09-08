@@ -44,8 +44,6 @@ import io.typebrook.mapstew.main.MapViewModel.Companion.ID_RAW_SURVEY
 import io.typebrook.mapstew.main.zoom
 import io.typebrook.mapstew.network.GithubService
 import io.typebrook.mapstew.preference.prefShowHint
-import kotlinx.android.synthetic.main.fragment_simple_bottom_sheet.view.*
-import kotlinx.android.synthetic.main.input_degree.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
