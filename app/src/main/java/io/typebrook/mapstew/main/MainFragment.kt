@@ -5,14 +5,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowManager
 import android.widget.*
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.commit
 import androidx.lifecycle.MediatorLiveData
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.yanzhenjie.permission.AndPermission
@@ -22,14 +19,9 @@ import io.typebrook.mapstew.survey.SimpleSurveyFragment
 import io.typebrook.mapstew.databinding.FragmentMainBinding
 import io.typebrook.mapstew.db.uploadSurveys
 import io.typebrook.mapstew.geometry.*
-import io.typebrook.mapstew.main.MapViewModel.Companion.ID_RAW_SURVEY
 import io.typebrook.mapstew.map.MaplibreFragment
 import io.typebrook.mapstew.map.OfflineFragment
-import io.typebrook.mapstew.map.TiledFeature.Companion.displayName
 import io.typebrook.mapstew.offline.getLocalMBTiles
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import java.util.*
 import kotlin.math.roundToInt
 
 
@@ -135,51 +127,6 @@ class MainFragment : Fragment() {
         mapModel.details.observe(viewLifecycleOwner) { text ->
             featuresDetails.visibility = if (text != null) View.VISIBLE else View.GONE
             featuresDetails.text = text
-        }
-
-        // If feature query is finished, show the popup window to let user do selection
-        mapModel.selectableFeatures.observe(viewLifecycleOwner) { features ->
-            val point = mapModel.focusPoint.value ?: return@observe
-
-            // TODO consider the case that there is only one feature
-            PopupWindow(requireContext()).apply {
-                contentView = ListView(requireContext()).apply {
-                    adapter = ArrayAdapter<String>(
-                            requireContext(),
-                            android.R.layout.simple_list_item_1
-                    ).apply {
-                        val items = listOf(getString(R.string.map_btn_create_survey)) + features.map {
-                            it.displayName(requireContext())
-                        }
-                        addAll(items)
-                    }
-                    setOnItemClickListener { _, _, position, _ ->
-                        mapModel.displayBottomSheet.value = true
-                        mapModel.focusedFeatureId.value = if (position != 0)
-                            features[position - 1].osmId else
-                            ID_RAW_SURVEY
-                        dismiss()
-                    }
-                }
-                height = WindowManager.LayoutParams.WRAP_CONTENT
-                width = 500
-                elevation = 40f
-                isOutsideTouchable = true
-                setBackgroundDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.shape_bottom_sheet))
-                showAsDropDown(contextMenuView.apply {
-                    translationX = point.x
-                    translationY = point.y
-                })
-                setOnDismissListener {
-                    lifecycleScope.launch {
-                        delay(400)
-                        if (mapModel.focusedFeatureId.value == null){
-                            mapModel.focusPoint.value = null
-//                            mapModel.focusLngLat.value = null
-                        }
-                    }
-                }
-            }
         }
 
         val screenHeight = Resources.getSystem().displayMetrics.heightPixels

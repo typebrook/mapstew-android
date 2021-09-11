@@ -1,10 +1,22 @@
 package io.typebrook.mapstew.main
 
 import android.graphics.PointF
+import android.view.View
+import android.view.WindowManager
+import android.widget.ArrayAdapter
+import android.widget.ListView
+import android.widget.PopupWindow
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.lifecycleScope
+import io.typebrook.mapstew.R
 import io.typebrook.mapstew.geometry.*
 import io.typebrook.mapstew.livedata.SafeMutableLiveData
 import io.typebrook.mapstew.map.TiledFeature
+import io.typebrook.mapstew.map.TiledFeature.Companion.displayName
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 typealias Camera = Triple<Double, Double, Float>
 
@@ -52,26 +64,22 @@ class MapViewModel : ViewModel() {
     }
 
     // Details of features rendered on map
-    val focusPoint = SafeMutableLiveData<PointF?>(null)
     val focusLngLat = SafeMutableLiveData<XYPair?>(null)
-    val selectableFeatures = object : SafeMutableLiveData<List<TiledFeature>>(emptyList()) {
-        override val predicate = { _: List<TiledFeature> -> true }
-    }
     val details = SafeMutableLiveData<String?>(null)
 
     val focusedFeatureId = object : SafeMutableLiveData<String?>(null) {
         override val predicate = { newValue: String? ->
             if (newValue == null) {
-                focusPoint.value = null
                 focusLngLat.value = null
             }
             value != newValue
         }
     }
+    val focusedFeature = SafeMutableLiveData<TiledFeature?>(null)
 
     val hideButtons = object : SafeMutableLiveData<Boolean>(false) {
         override val predicate = { _: Boolean ->
-            focusPoint.value == null && focusedFeatureId.value == null && !displayBottomSheet.value
+            focusedFeatureId.value == null && !displayBottomSheet.value
         }
     }
     val locateUser = object : SafeMutableLiveData<Boolean>(false) {

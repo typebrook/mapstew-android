@@ -38,6 +38,7 @@ import io.typebrook.mapstew.R
 import io.typebrook.mapstew.db.Survey
 import io.typebrook.mapstew.db.db
 import io.typebrook.mapstew.geometry.CRSWrapper
+import io.typebrook.mapstew.geometry.XYPair
 import io.typebrook.mapstew.livedata.SafeMutableLiveData
 import io.typebrook.mapstew.main.MapViewModel
 import io.typebrook.mapstew.main.MapViewModel.Companion.ID_RAW_SURVEY
@@ -51,10 +52,10 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.FileReader
 
-class MaplibreFragment : SupportMapFragment() {
+class MaplibreFragment : SupportMapFragment(), MapViewModelHolder {
 
     private val mapView get() = view as MapView
-    private val model by activityViewModels<MapViewModel>()
+    override val model by activityViewModels<MapViewModel>()
     private val styleFile by lazy {
         File(requireContext().filesDir.absolutePath + File.separator + "rudymap.json")
     }
@@ -156,46 +157,6 @@ class MaplibreFragment : SupportMapFragment() {
             true
         }
 
-        // If user choose a point, query features nearby
-        model.focusPoint.observe(this@MaplibreFragment.viewLifecycleOwner) { point ->
-            // Remove all makers anyway when focus changes
-            focusedMarker?.remove()
-
-            if (point == null) {
-                model.selectableFeatures.value = emptyList()
-                model.details.value = null
-                return@observe
-            }
-
-            // Add a new marker on the point
-            val markerOptions = MarkerOptions().position(projection.fromScreenLocation(point))
-            focusedMarker = addMarker(markerOptions)
-
-            // Query features with OSM ID nearby feature
-            val bbox = RectF(point.x - 30, point.y + 30, point.x + 30, point.y - 30)
-            selectedFeatures = queryRenderedFeatures(bbox)
-
-            // Update ViewModel with selectable unique OSM features
-            model.selectableFeatures.value = selectedFeatures.filter {
-                it.getStringProperty("class") == "path"
-            }.mapNotNull {
-                val osmId = it.getStringProperty("id") ?: return@mapNotNull null
-                TiledFeature(osmId = osmId, name = it.getStringProperty("name"))
-            }.fold(emptyList()) { acc, feature ->
-                // Remove features with same OSM ID
-                if (feature.osmId in acc.map { it.osmId })
-                    acc else
-                    acc + feature
-            }
-
-            // Update ViewModel with feature details if needed
-            model.details.value = if (requireContext().prefShowHint())
-                selectedFeatures.map { it.id() + " " + it.properties()?.toString() }
-                    .let { if (it.isEmpty()) null else it }
-                    ?.joinToString("\n\n") else
-                null
-        }
-
         model.target.observe(viewLifecycleOwner) { camera ->
             animateCamera {
                 CameraPosition.Builder()
@@ -205,15 +166,16 @@ class MaplibreFragment : SupportMapFragment() {
             }
         }
 
-        model.focusedFeatureId.observe(viewLifecycleOwner) { id ->
-            val features = when(id) {
+        model.focusedFeature.observe(viewLifecycleOwner) { feature ->
+            feature ?: return@observe
+
+            val features = when(feature.osmId) {
                 null -> emptyList()
-                ID_RAW_SURVEY -> model.focusPoint.value
-                    ?.let { it: PointF -> projection.fromScreenLocation(it) }
-                    ?.let { it: LatLng -> Point.fromLngLat(it.longitude, it.latitude) }
+                ID_RAW_SURVEY -> feature.relatedLngLat
+                    ?.let { it: XYPair -> Point.fromLngLat(it.first, it.second) }
                     ?.let { it: Point -> listOf(Feature.fromGeometry(it)) }
                     ?: emptyList()
-                else -> selectedFeatures.filter { it.getStringProperty("id") == id }
+                else -> selectedFeatures.filter { it.getStringProperty("id") == feature.osmId }
             }
             val featureCollection = FeatureCollection.fromFeatures(features)
             selectedFeatureSource.setGeoJson(featureCollection)
@@ -253,8 +215,7 @@ class MaplibreFragment : SupportMapFragment() {
         }
 
         mapboxMap.addOnMapLongClickListener { latLng ->
-            model.focusPoint.value = mapboxMap.projection.toScreenLocation(latLng)
-            model.focusLngLat.value = latLng.longitude to latLng.latitude
+            mapboxMap.handleFocus(latLng)
             true
         }
 
@@ -410,6 +371,41 @@ class MaplibreFragment : SupportMapFragment() {
             .setTextSize(30F)
 
         scaleBarPlugin.create(scaleBarOptions)
+    }
+
+    // If user choose a point, query features nearby
+    private fun MapboxMap.handleFocus(latLng: LatLng) {
+        val point = projection.toScreenLocation(latLng)
+        // Remove all makers anyway when focus changes
+        focusedMarker?.remove()
+
+        // Add a new marker on the point
+        val markerOptions = MarkerOptions().position(projection.fromScreenLocation(point))
+        focusedMarker = addMarker(markerOptions)
+
+        // Query features with OSM ID nearby feature
+        val bbox = RectF(point.x - 30, point.y + 30, point.x + 30, point.y - 30)
+        val ids = mutableListOf<String>()
+        val selectableFeatures = queryRenderedFeatures(bbox).filter {
+            it.getStringProperty("class") == "path"
+        }.mapNotNull {
+            val osmId = it.getStringProperty("id") ?: return@mapNotNull null
+            if (osmId !in ids) ids.add(osmId) else return@mapNotNull null
+            TiledFeature(
+                osmId = osmId,
+                name = it.getStringProperty("name"),
+                relatedLngLat = latLng.longitude to latLng.latitude
+            )
+        }
+
+        // Update ViewModel with feature details if needed
+        model.details.value = if (requireContext().prefShowHint())
+            selectedFeatures.map { it.id() + " " + it.properties()?.toString() }
+                .let { if (it.isEmpty()) null else it }
+                ?.joinToString("\n\n") else
+            null
+
+        showPopupWindow(point, selectableFeatures)
     }
 
     companion object {
