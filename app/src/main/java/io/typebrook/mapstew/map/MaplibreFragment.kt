@@ -405,7 +405,11 @@ class MaplibreFragment : SupportMapFragment(), MapViewModelHolder {
                 ?.joinToString("\n\n") else
             null
 
-        showPopupWindow(point, selectableFeatures)
+        showPopupWindow(
+            latLng.longitude to latLng.latitude,
+            point,
+            selectableFeatures
+        )
     }
 
     companion object {

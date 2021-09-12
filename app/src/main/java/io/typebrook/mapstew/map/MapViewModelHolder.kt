@@ -1,6 +1,5 @@
 package io.typebrook.mapstew.map
 
-import android.graphics.Point
 import android.graphics.PointF
 import android.view.Gravity
 import android.view.WindowManager
@@ -11,16 +10,20 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import io.typebrook.mapstew.R
+import io.typebrook.mapstew.db.Survey
+import io.typebrook.mapstew.db.db
+import io.typebrook.mapstew.geometry.XYPair
 import io.typebrook.mapstew.main.MapViewModel
 import io.typebrook.mapstew.map.TiledFeature.Companion.displayName
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 interface MapViewModelHolder {
     val model: MapViewModel
 
     fun Fragment.showPopupWindow(
-        point: PointF,
+        location: XYPair,
+        anchorPoint: PointF,
         selectableFeatures: List<TiledFeature>
     ) = PopupWindow(requireContext()).apply {
         contentView = ListView(requireContext()).apply {
@@ -33,13 +36,17 @@ interface MapViewModelHolder {
                 addAll(items)
             }
             setOnItemClickListener { _, _, position, _ ->
-                model.displayBottomSheet.value = true
-                model.focusedFeatureId.value = if (position != 0)
+                val featureId = if (position != 0)
                     selectableFeatures[position - 1].osmId else
                     MapViewModel.ID_RAW_SURVEY
-                model.focusedFeature.value = if (position != 0)
-                    selectableFeatures[position - 1] else
-                    TiledFeature()
+                val newSurvey = Survey(
+                    relatedFeatureId = featureId,
+                    lon = location.first,
+                    lat = location.second
+                )
+                lifecycleScope.launch(Dispatchers.IO) {
+                    db.surveyDao().insert(newSurvey)
+                }
                 dismiss()
             }
         }
@@ -53,14 +60,9 @@ interface MapViewModelHolder {
                 R.drawable.shape_bottom_sheet
             )
         )
-        showAtLocation(view, Gravity.NO_GRAVITY, point.x.toInt(), point.y.toInt())
+        showAtLocation(view, Gravity.NO_GRAVITY, anchorPoint.x.toInt(), anchorPoint.y.toInt())
         setOnDismissListener {
-            lifecycleScope.launch {
-                delay(400)
-                if (model.focusedFeatureId.value == null) {
-//                            mapModel.focusLngLat.value = null
-                }
-            }
+            model.focusedFeature.value = null
         }
     }
 }

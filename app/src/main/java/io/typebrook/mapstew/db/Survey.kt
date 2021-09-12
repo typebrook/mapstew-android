@@ -19,8 +19,12 @@ data class Survey(
     val osmNoteId: Long? = null,
     val lon: Double,
     val lat: Double,
-    val content: String,
-    val dateModified: Date = Date(),
-    val photoPaths: List<String>,
-    val audioUri: Uri? = null
+    val content: String? = null,
+    val photoPaths: List<String> = emptyList(),
+    val audioUri: Uri? = null,
+
+    // If epoch time is 0, this means this Survey is newly created and makes no sense
+    // This kind of Survey should only lives when user is editing a new Survey
+    // It should not be upload or reserved in db for a long time
+    val dateModified: Date = Date(0)
 )

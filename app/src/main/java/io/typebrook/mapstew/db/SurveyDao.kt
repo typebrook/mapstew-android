@@ -5,22 +5,26 @@ import androidx.room.*
 import java.util.*
 
 @Dao
-interface SurveyDao {
+abstract class SurveyDao {
     @Query("SELECT * FROM survey")
-    fun getAll(): LiveData<List<Survey>>
+    abstract fun getAll(): LiveData<List<Survey>>
 
     @Query("SELECT * FROM survey where osmNoteId is NULL")
-    fun listReadyToUpload(): List<Survey>
+    abstract fun listReadyToUpload(): List<Survey>
 
     @Query("SELECT * FROM survey where dateCreated = :timeStamp")
-    fun getFromKey(timeStamp: Long): List<Survey>
+    abstract fun getFromKey(timeStamp: Long): List<Survey>
 
     @Update(entity = Survey::class)
-    fun update(survey: Survey)
+    abstract fun updateInner(survey: Survey)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insert(survey: Survey)
+    abstract fun insert(survey: Survey)
 
     @Delete
-    fun delete(survey: Survey)
+    abstract fun delete(survey: Survey)
+
+    fun update(survey: Survey) = updateInner(
+        survey.copy(dateModified = Date())
+    )
 }

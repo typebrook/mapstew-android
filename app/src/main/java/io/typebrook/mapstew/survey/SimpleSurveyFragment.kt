@@ -67,7 +67,7 @@ class SimpleSurveyFragment : Fragment() {
                 }.also { survey ->
                     with(content) {
                         setText(survey.content)
-                        setSelection(survey.content.length)
+                        setSelection(survey.content?.length ?: 0)
                     }
                     if (survey.osmNoteId != null) {
                         details.text = "Note: ${survey.osmNoteId}"
