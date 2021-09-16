@@ -6,6 +6,7 @@ import android.content.Context
 import android.graphics.PointF
 import android.graphics.RectF
 import android.view.Gravity
+import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.MediatorLiveData
@@ -166,16 +167,10 @@ class MaplibreFragment : SupportMapFragment(), MapViewModelHolder {
             }
         }
 
-        model.focusedFeature.observe(viewLifecycleOwner) { feature ->
-            feature ?: return@observe
-
-            val features = when(feature.osmId) {
+        db.surveyDao().getNewlyCreated().observe(viewLifecycleOwner) { survey ->
+            val features = when(val osmId = survey?.relatedFeatureId) {
                 null -> emptyList()
-                ID_RAW_SURVEY -> feature.relatedLngLat
-                    ?.let { it: XYPair -> Point.fromLngLat(it.first, it.second) }
-                    ?.let { it: Point -> listOf(Feature.fromGeometry(it)) }
-                    ?: emptyList()
-                else -> selectedFeatures.filter { it.getStringProperty("id") == feature.osmId }
+                else -> selectedFeatures.filter { it.getStringProperty("id") == osmId }
             }
             val featureCollection = FeatureCollection.fromFeatures(features)
             selectedFeatureSource.setGeoJson(featureCollection)
@@ -263,8 +258,9 @@ class MaplibreFragment : SupportMapFragment(), MapViewModelHolder {
                 CameraUpdateFactory.newLatLngZoom(targetPoint, targetZoom),
                 object : MapboxMap.CancelableCallback {
                     override fun onFinish() {
-                        model.focusedFeatureId.value =
-                            symbol.data?.asJsonObject?.get("key")?.asString
+                        // FIXME
+//                        model.focusedFeatureId.value =
+//                            symbol.data?.asJsonObject?.get("key")?.asString
                         model.displayBottomSheet.value = true
                     }
 

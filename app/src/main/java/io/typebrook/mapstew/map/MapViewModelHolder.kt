@@ -17,6 +17,7 @@ import io.typebrook.mapstew.main.MapViewModel
 import io.typebrook.mapstew.map.TiledFeature.Companion.displayName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.*
 
 interface MapViewModelHolder {
     val model: MapViewModel
@@ -36,16 +37,17 @@ interface MapViewModelHolder {
                 addAll(items)
             }
             setOnItemClickListener { _, _, position, _ ->
-                val featureId = if (position != 0)
-                    selectableFeatures[position - 1].osmId else
-                    MapViewModel.ID_RAW_SURVEY
-                val newSurvey = Survey(
-                    relatedFeatureId = featureId,
-                    lon = location.first,
-                    lat = location.second
-                )
                 lifecycleScope.launch(Dispatchers.IO) {
+                    val featureId = if (position != 0)
+                        selectableFeatures[position - 1].osmId else
+                        MapViewModel.ID_RAW_SURVEY
+                    val newSurvey = Survey(
+                        relatedFeatureId = featureId,
+                        lon = location.first,
+                        lat = location.second
+                    )
                     db.surveyDao().insert(newSurvey)
+                    model.focusSurveyId.postValue(newSurvey.dateCreated)
                 }
                 dismiss()
             }
@@ -61,8 +63,5 @@ interface MapViewModelHolder {
             )
         )
         showAtLocation(view, Gravity.NO_GRAVITY, anchorPoint.x.toInt(), anchorPoint.y.toInt())
-        setOnDismissListener {
-            model.focusedFeature.value = null
-        }
     }
 }

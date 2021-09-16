@@ -17,6 +17,7 @@ import com.yanzhenjie.permission.runtime.Permission
 import io.typebrook.mapstew.R
 import io.typebrook.mapstew.survey.SimpleSurveyFragment
 import io.typebrook.mapstew.databinding.FragmentMainBinding
+import io.typebrook.mapstew.db.db
 import io.typebrook.mapstew.db.uploadSurveys
 import io.typebrook.mapstew.geometry.*
 import io.typebrook.mapstew.map.MaplibreFragment
@@ -40,7 +41,7 @@ class MainFragment : Fragment() {
         if (savedInstanceState == null) {
             requireActivity().supportFragmentManager.commit {
                 replace(R.id.map_container, MaplibreFragment(), null)
-                replace(R.id.bottom_sheet_content, SimpleSurveyFragment(), null)
+//                replace(R.id.bottom_sheet_content, SimpleSurveyFragment(), null)
 //              add<TangramFragment>(R.id.map_container, null)
             }
         }
@@ -148,6 +149,7 @@ class MainFragment : Fragment() {
                 }
             })
         }
+
         mapModel.displayBottomSheet.observe(viewLifecycleOwner) { display ->
             bottomSheetBehavior.state = if (display)
                 BottomSheetBehavior.STATE_EXPANDED else
@@ -161,6 +163,13 @@ class MainFragment : Fragment() {
                         .scaleX(if (hide) 0f else 1f)
                         .scaleY(if (hide) 0f else 1f)
                         .alpha(if (hide) 0f else 1f)
+            }
+        }
+
+        mapModel.focusSurvey.observe(viewLifecycleOwner) { survey ->
+            mapModel.displayBottomSheet.value = survey != null
+            childFragmentManager.commit {
+                replace(R.id.bottom_sheet_content, SimpleSurveyFragment(), null)
             }
         }
     }

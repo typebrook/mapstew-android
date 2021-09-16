@@ -26,8 +26,6 @@ class SimpleSurveyFragment : Fragment() {
     private val model by activityViewModels<MapViewModel>()
     private val imageModel: AttachPhotoFragment.Companion.ImageModel by viewModels()
 
-    private var survey: Survey? = null
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -43,45 +41,26 @@ class SimpleSurveyFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) = with(binding) {
 
-        model.focusedFeatureId.observe(viewLifecycleOwner) { id ->
-            survey = null
-            content.text?.clear()
-            details.text = id
-            id ?: return@observe
+        val survey: Survey? = model.focusSurvey.value
 
-            val lnglat = model.focusLngLat.value ?: return@observe
-            lifecycleScope.launch setWithSurvey@{
-                val key = try {
-                    id.toLong()
-                } catch (e: NumberFormatException) {
-                    -1
-                }
-
-                survey = withContext(Dispatchers.IO) {
-                    db.surveyDao().getFromKey(key).firstOrNull() ?: Survey(
-                        lon = lnglat.first,
-                        lat = lnglat.second,
-                        content = binding.content.text.toString(),
-                        photoPaths = listOf()
-                    ).also { db.surveyDao().insert(it) }
-                }.also { survey ->
-                    with(content) {
-                        setText(survey.content)
-                        setSelection(survey.content?.length ?: 0)
-                    }
-                    if (survey.osmNoteId != null) {
-                        details.text = "Note: ${survey.osmNoteId}"
-                    }
-                }
-
-                imageModel.imagePaths.value = survey?.photoPaths ?: listOf()
-            }
+        if (survey == null) {
+            model.displayBottomSheet.value = false
+            return@with
         }
+
+        with(content) {
+            setText(survey.content)
+            setSelection(survey.content?.length ?: 0)
+        }
+        if (survey.osmNoteId != null) {
+            details.text = "Note: ${survey.osmNoteId}"
+        }
+        imageModel.imagePaths.value = survey.photoPaths
 
         // FIXME Just a quick workaround
         details.setOnLongClickListener {
             lifecycleScope.launch(Dispatchers.IO) {
-                survey?.let { db.surveyDao().delete(it) }
+                survey.let { db.surveyDao().delete(it) }
                 withContext(Dispatchers.Main) {
                     model.displayBottomSheet.postValue(false)
                 }
@@ -91,7 +70,7 @@ class SimpleSurveyFragment : Fragment() {
 
         with(content) {
             addTextChangedListener {
-                val newSurvey = survey?.copy(content = it.toString()) ?: return@addTextChangedListener
+                val newSurvey = survey.copy(content = it.toString())
 
                 lifecycleScope.launch(Dispatchers.IO) {
                     db.surveyDao().insert(newSurvey)
@@ -100,7 +79,7 @@ class SimpleSurveyFragment : Fragment() {
         }
 
         imageModel.imagePaths.observe(viewLifecycleOwner) {
-            val newSurvey = survey?.copy(photoPaths = it) ?: return@observe
+            val newSurvey = survey.copy(photoPaths = it)
             lifecycleScope.launch(Dispatchers.IO) {
                 db.surveyDao().insert(newSurvey)
             }

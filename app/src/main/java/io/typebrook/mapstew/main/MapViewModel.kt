@@ -1,29 +1,25 @@
 package io.typebrook.mapstew.main
 
-import android.graphics.PointF
-import android.view.View
-import android.view.WindowManager
-import android.widget.ArrayAdapter
-import android.widget.ListView
-import android.widget.PopupWindow
-import androidx.core.content.ContextCompat
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.lifecycleScope
-import io.typebrook.mapstew.R
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.Transformations
+import androidx.lifecycle.viewModelScope
+import io.typebrook.mapstew.db.AppDatabase
+import io.typebrook.mapstew.db.Survey
 import io.typebrook.mapstew.geometry.*
 import io.typebrook.mapstew.livedata.SafeMutableLiveData
-import io.typebrook.mapstew.map.TiledFeature
-import io.typebrook.mapstew.map.TiledFeature.Companion.displayName
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.*
 
 typealias Camera = Triple<Double, Double, Float>
 
 val Camera.wgs84LongLat: XYPair get() = first to second
 val Camera.zoom: Float get() = third
 
-class MapViewModel : ViewModel() {
+class MapViewModel(application: Application) : AndroidViewModel(application) {
+
+    val db = AppDatabase.getDatabase(application)
 
     // Camera of center of map
     val center = object : SafeMutableLiveData<Camera>(
@@ -64,35 +60,23 @@ class MapViewModel : ViewModel() {
     }
 
     // Details of features rendered on map
-    val focusLngLat = SafeMutableLiveData<XYPair?>(null)
     val details = SafeMutableLiveData<String?>(null)
 
-    val focusedFeatureId = object : SafeMutableLiveData<String?>(null) {
-        override val predicate = { newValue: String? ->
-            if (newValue == null) {
-                focusLngLat.value = null
-            }
-            value != newValue
+    val focusSurveyId = object : SafeMutableLiveData<Date?>(null) {
+        override val transformer = { newState: Date? ->
+            
+            newState
         }
     }
-    val focusedFeature = SafeMutableLiveData<TiledFeature?>(null)
+    val focusSurvey = SafeMutableLiveData<Survey?>(null)
 
-    val hideButtons = object : SafeMutableLiveData<Boolean>(false) {
-        override val predicate = { _: Boolean ->
-            focusedFeatureId.value == null && !displayBottomSheet.value
-        }
-    }
+    val hideButtons = SafeMutableLiveData(false)
     val locateUser = object : SafeMutableLiveData<Boolean>(false) {
         override val predicate = { _: Boolean -> true }
     }
     val displayGrid = SafeMutableLiveData(false)
     val displayLayers = SafeMutableLiveData(false)
-    val displayBottomSheet = object : SafeMutableLiveData<Boolean>(false) {
-        override val predicate = { value: Boolean ->
-            if (!value) focusedFeatureId.value = null
-            true
-        }
-    }
+    val displayBottomSheet = SafeMutableLiveData(false)
 
     data class CrsState(
             val crsWrapper: CRSWrapper = CRSWrapper.WGS84,
